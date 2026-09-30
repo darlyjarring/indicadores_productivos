@@ -1,9 +1,9 @@
 <?php
-$host     = "db.tu-proyecto.supabase.co"; // Reemplazar con tus credenciales
+$host     = "db.owykvbhrvhopbqfyarzz.supabase.co"; // Reemplazar con tus credenciales
 $port     = "5432";
 $dbname   = "postgres";
 $user     = "postgres";
-$password = "TU_CONTRASEÑA_SUPABASE";
+$password = "KDLjar*-1990";
 
 try {
     $pdo = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $password, [
