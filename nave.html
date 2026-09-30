@@ -31,7 +31,7 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 .ahora{position:absolute;top:0;bottom:0;width:2px;background:#dc2626;z-index:20;pointer-events:none}.marca-etb{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);transform:translateX(-50%);border-radius:2px;z-index:4}.marca-ata{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);transform:translateX(-50%);border-radius:2px}.ahora-label{position:absolute;top:2px;left:4px;color:#dc2626;font-size:9px;font-weight:bold;white-space:nowrap;background:#fff;padding:1px 2px}
 .sin-datos{padding:40px;text-align:center;color:#64748b}
 .leyenda{background:#fff;margin-top:12px;padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.leyenda h3{margin:0 0 8px}.leyenda-item{display:inline-flex;align-items:center;margin:4px 14px 4px 0;font-size:12px}.color{width:15px;height:15px;border-radius:4px;margin-right:5px}
-.modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}.modal-header{background:var(--azul);color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}.modal-header h2{margin:0;font-size:19px}.cerrar{background:transparent;font-size:25px;padding:0 5px}.detalle{padding:14px}.detalle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.detalle-item{background:#f8fafc;padding:9px;border-radius:6px}.detalle-item strong{display:block;color:#64748b;font-size:10px;margin-bottom:3px}.estado-grande{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:6px;font-weight:bold;background:#e2e8f0}
+.modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}.modal-header{background:var(--azul);color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}.modal-header h2{margin:0;font-size:19px}.cerrar{background:transparent;font-size:25px;padding:0 5px;color:#fff;border:none;cursor:pointer}.detalle{padding:14px}.detalle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.detalle-item{background:#f8fafc;padding:9px;border-radius:6px}.detalle-item strong{display:block;color:#64748b;font-size:10px;margin-bottom:3px}.estado-grande{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:6px;font-weight:bold;background:#e2e8f0}
 .nota{font-size:11px;color:#64748b;margin-top:7px}
 @media(max-width:700px){header h1{font-size:20px}.panel{padding:0 7px}.controles{align-items:stretch}.campo{flex:1 1 130px}.zoom-box{flex:1 1 100%}.zoom-box input{flex:1}.detalle-grid{grid-template-columns:1fr}.timeline-scroll{max-height:75vh}.timeline{min-width:700px}.day{font-size:10px}.vessel .nombre{font-size:10px}.vessel .linea{font-size:8px}}
 </style>
@@ -69,12 +69,12 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <script>
 let NAVES=[];
 let NAVES_FALLBACK=[
- {nave:'CMA CGM GREENLAND',viaje:'CMA2026103',linea:'CMA',etb:'2026-09-18 17:00:00',etd:'2026-09-20 21:00:00',ata:'2026-09-18 16:36:00',atd:'2026-09-20 20:58:00',status:'DEPARTED',origen:'PECLL',destino:'PECLL',servicio:'ACSA'},
- {nave:'AS PALINA',viaje:'MAE2026113',linea:'MAE',etb:'2026-09-20 22:00:00',etd:'2026-09-22 02:00:00',ata:'2026-09-20 21:52:00',atd:'',status:'IN OPERATION',origen:'PABLB',destino:'PABLB',servicio:'WCSA-SHTL'},
- {nave:'HLC2026090 - ODYSSEUS',viaje:'639N',linea:'HLC',etb:'2026-09-22 09:00:00',etd:'2026-09-22 17:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PEPAI',destino:'PEPAI',servicio:'MSW'},
- {nave:'HLC2026085 - VALPARAISO EXPRESS',viaje:'6234S',linea:'HLC',etb:'2026-09-21 15:00:00',etd:'2026-09-22 06:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'COBUN',destino:'COBUN',servicio:'SWX_SB'},
- {nave:'MAERSK NOKWANDA',viaje:'634W',linea:'MAE',etb:'2026-09-26 23:00:00',etd:'2026-09-28 05:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'ECPBO',destino:'ECPBO',servicio:'ECUMED'},
- {nave:'CMA CGM HELIUM',viaje:'1MHTPW1MA',linea:'CMA',etb:'2026-09-25 22:00:00',etd:'2026-09-27 09:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PECLL',destino:'PECLL',servicio:'ACSA'}
+ {nave:'CMA CGM GREENLAND',viaje:'CMA2026103',linea:'CMA',etb:'2026-09-18 17:00:00',etd:'2026-09-20 21:00:00',ata:'2026-09-18 16:36:00',atd:'2026-09-20 20:58:00',status:'DEPARTED',origen:'PECLL',destino:'PECLL',servicio:'ACSA',total_ingresado:120,ingresado_dentro_cutoff:115,ingresado_fuera_cutoff:5},
+ {nave:'AS PALINA',viaje:'MAE2026113',linea:'MAE',etb:'2026-09-20 22:00:00',etd:'2026-09-22 02:00:00',ata:'2026-09-20 21:52:00',atd:'',status:'IN OPERATION',origen:'PABLB',destino:'PABLB',servicio:'WCSA-SHTL',total_ingresado:85,ingresado_dentro_cutoff:80,ingresado_fuera_cutoff:5},
+ {nave:'HLC2026090 - ODYSSEUS',viaje:'639N',linea:'HLC',etb:'2026-09-22 09:00:00',etd:'2026-09-22 17:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PEPAI',destino:'PEPAI',servicio:'MSW',total_ingresado:40,ingresado_dentro_cutoff:40,ingresado_fuera_cutoff:0},
+ {nave:'HLC2026085 - VALPARAISO EXPRESS',viaje:'6234S',linea:'HLC',etb:'2026-09-21 15:00:00',etd:'2026-09-22 06:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'COBUN',destino:'COBUN',servicio:'SWX_SB',total_ingresado:150,ingresado_dentro_cutoff:142,ingresado_fuera_cutoff:8},
+ {nave:'MAERSK NOKWANDA',viaje:'634W',linea:'MAE',etb:'2026-09-26 23:00:00',etd:'2026-09-28 05:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'ECPBO',destino:'ECPBO',servicio:'ECUMED',total_ingresado:95,ingresado_dentro_cutoff:90,ingresado_fuera_cutoff:5},
+ {nave:'CMA CGM HELIUM',viaje:'1MHTPW1MA',linea:'CMA',etb:'2026-09-25 22:00:00',etd:'2026-09-27 09:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PECLL',destino:'PECLL',servicio:'ACSA',total_ingresado:110,ingresado_dentro_cutoff:105,ingresado_fuera_cutoff:5}
 ];
 const COLORES=['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777','#475569','#65a30d','#7c3aed','#a16207','#0f766e'];
 let PX_HORA=42;
@@ -103,6 +103,7 @@ function limpiarNombre(n){return String(n||'').replace(/^\s*[^-]+\s+-\s+/,'').tr
 function normalizarNave(x){
  x=x||{};
  return {
+  id:x.id??'',
   nave:x.nave??x.Nave??x.nombre??x.nombre_nave??'',
   viaje:x.viaje??x.Viaje??'',
   linea:x.linea??x.Linea??x.LINEA??'',
@@ -110,7 +111,10 @@ function normalizarNave(x){
   status:x.status??x.STATUS??'',
   origen:x.origen??x['PTO.ORIGEN']??x.ptoOrigen??'',
   destino:x.destino??x['PTO.DESTINO']??x.ptoDestino??'',
-  servicio:x.servicio??x.SERVICIO??''
+  servicio:x.servicio??x.SERVICIO??'',
+  total_ingresado:x.total_ingresado??x.totalIngresado??0,
+  ingresado_dentro_cutoff:x.ingresado_dentro_cutoff??x.ingresadoDentroCutoff??0,
+  ingresado_fuera_cutoff:x.ingresado_fuera_cutoff??x.ingresadoFueraCutoff??0
  };
 }
 function estado(n){
@@ -131,35 +135,60 @@ function cambiarZoom(delta){const z=document.getElementById('zoom');z.value=Math
 function aplicarZoom(v){PX_HORA=+v;document.getElementById('zoom').value=v;document.getElementById('zoomNum').textContent=v+' px/h';if(ultimoInicio&&ultimoFin)dibujarTimeline(ultimoFiltrado,ultimoInicio,ultimoFin)}
 
 async function cargarDatos(){
+ const ds=document.getElementById('fechaDesde').value;
+ const hs=document.getElementById('fechaHasta').value;
+ if(!ds||!hs) return;
+
  const fuente=document.getElementById('fuente');
+ fuente.className='fuente';
+ fuente.textContent='Consultando base de datos PostgreSQL...';
+
  try{
-  const r=await fetch('datos.json?ts='+Date.now(),{cache:'no-store'});
+  // Cambia '/api/naves' por la ruta de tu API/endpoint en Node.js o backend
+  const url=`/api/naves?desde=${encodeURIComponent(ds)}&hasta=${encodeURIComponent(hs)}`;
+  const r=await fetch(url,{cache:'no-store'});
+  
   if(!r.ok)throw new Error('HTTP '+r.status);
+  
   const j=await r.json();
   const arr=Array.isArray(j)?j:(j.naves||j.NAVES||j.data||j.datos||[]);
-  if(!Array.isArray(arr)||!arr.length)throw new Error('datos.json no contiene naves');
+  
   NAVES=arr.map(normalizarNave);
-  fuente.className='fuente ok';fuente.textContent='Fuente: datos.json · '+NAVES.length+' naves · actualización '+new Date().toLocaleString('es-EC');
-  consultar();
+  fuente.className='fuente ok';
+  fuente.textContent=`Base de Datos PostgreSQL · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
+  
+  const inicio=new Date(ds+'T00:00:00-05:00');
+  const fin=new Date(hs+'T23:59:59-05:00');
+  ultimoInicio=inicio;
+  ultimoFin=fin;
+  ultimoFiltrado=NAVES;
+  dibujarTimeline(NAVES,inicio,fin);
  }catch(e){
+  // Si la API PostgreSQL falla o no está configurada, utiliza los datos locales
   NAVES=NAVES_FALLBACK.map(normalizarNave);
-  fuente.className='fuente error';fuente.textContent='No se pudo leer datos.json. Se muestran datos de respaldo. '+e.message;
-  consultar();
+  fuente.className='fuente error';
+  fuente.textContent='Sin conexión BD PostgreSQL (mostrando datos locales de reserva). ' + e.message;
+  
+  const inicio=new Date(ds+'T00:00:00-05:00');
+  const fin=new Date(hs+'T23:59:59-05:00');
+  
+  const filtradas=NAVES.filter(n=>{
+   const puntos=[fecha(n.etb),fecha(n.ata),fecha(n.etd),fecha(n.atd)].filter(Boolean);
+   if(!puntos.length)return false;
+   const inicioN=puntos[0],finN=puntos[puntos.length-1];
+   return puntos.some(x=>x>=inicio&&x<=fin)||(inicioN<=fin&&finN>=inicio);
+  }).sort((a,b)=>(fecha(a.etb)||fecha(a.ata)||0)-(fecha(b.etb)||fecha(b.ata)||0));
+  
+  ultimoInicio=inicio;ultimoFin=fin;ultimoFiltrado=filtradas;
+  dibujarTimeline(filtradas,inicio,fin);
  }
 }
 
 function consultar(){
  const ds=document.getElementById('fechaDesde').value,hs=document.getElementById('fechaHasta').value;
  if(!ds||!hs){hoy();return}
- let inicio=new Date(ds+'T00:00:00-05:00'),fin=new Date(hs+'T23:59:59-05:00');
- if(fin<inicio){alert('La fecha Hasta no puede ser menor que Desde.');return}
- const filtradas=NAVES.filter(n=>{
-  const puntos=[fecha(n.etb),fecha(n.ata),fecha(n.etd),fecha(n.atd)].filter(Boolean);
-  if(!puntos.length)return false;
-  const inicioN=puntos[0],finN=puntos[puntos.length-1];
-  return puntos.some(x=>x>=inicio&&x<=fin)||(inicioN<=fin&&finN>=inicio);
- }).sort((a,b)=>(fecha(a.etb)||fecha(a.ata)||0)-(fecha(b.etb)||fecha(b.ata)||0));
- ultimoInicio=inicio;ultimoFin=fin;ultimoFiltrado=filtradas;dibujarTimeline(filtradas,inicio,fin)
+ if(hs<ds){alert('La fecha Hasta no puede ser menor que Desde.');return}
+ cargarDatos();
 }
 
 function colorLinea(linea,mapa){const k=normalizar(linea)||'SIN LINEA';if(!mapa[k])mapa[k]=COLORES[Object.keys(mapa).length%COLORES.length];return mapa[k]}
@@ -258,7 +287,30 @@ function dibujarTimeline(naves,inicio,fin){
 function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
 function actualizarResumen(naves){document.getElementById('cantidad').textContent=naves.length;document.getElementById('porArribar').textContent=naves.filter(n=>estado(n)==='POR ARRIBAR').length;document.getElementById('trabajando').textContent=naves.filter(n=>estado(n)==='TRABAJANDO').length;document.getElementById('atrasadas').textContent=naves.filter(n=>estado(n)==='ATRASADA').length;document.getElementById('zarparon').textContent=naves.filter(n=>estado(n)==='ZARPÓ').length}
 function dibujarLeyenda(colores){const cont=document.getElementById('leyenda');cont.innerHTML='';Object.keys(colores).forEach(k=>{const i=document.createElement('div');i.className='leyenda-item';i.innerHTML=`<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`;cont.appendChild(i)});if(!Object.keys(colores).length)cont.textContent='No hay líneas navieras en el rango seleccionado.'}
-function abrirModal(n){document.getElementById('modalTitulo').textContent=limpiarNombre(n.nave)||'Nave';const datos=[['Nave',n.nave],['Viaje',n.viaje],['Línea naviera',n.linea],['ETB',n.etb],['ATA',n.ata],['ETD',n.etd],['ATD',n.atd],['STATUS DP World',n.status],['Origen',n.origen],['Destino',n.destino],['Servicio',n.servicio]];document.getElementById('modalDatos').innerHTML=datos.map(x=>`<div class="detalle-item"><strong>${escapeHtml(x[0])}</strong>${escapeHtml(x[1]||'—')}</div>`).join('');document.getElementById('modalEstado').innerHTML=`<div class="estado-grande">Estado actual: ${estado(n)}</div>`;document.getElementById('modalFondo').style.display='flex'}
+
+function abrirModal(n){
+ document.getElementById('modalTitulo').textContent=limpiarNombre(n.nave)||'Nave';
+ const datos=[
+  ['Nave',n.nave],
+  ['Viaje',n.viaje],
+  ['Línea naviera',n.linea],
+  ['ETB',n.etb],
+  ['ATA',n.ata],
+  ['ETD',n.etd],
+  ['ATD',n.atd],
+  ['STATUS',n.status],
+  ['Origen',n.origen],
+  ['Destino',n.destino],
+  ['Servicio',n.servicio],
+  ['Total Ingresados',n.total_ingresado ?? '0'],
+  ['Dentro Cut-Off',n.ingresado_dentro_cutoff ?? '0'],
+  ['Fuera Cut-Off',n.ingresado_fuera_cutoff ?? '0']
+ ];
+ document.getElementById('modalDatos').innerHTML=datos.map(x=>`<div class="detalle-item"><strong>${escapeHtml(x[0])}</strong>${escapeHtml(x[1]||'—')}</div>`).join('');
+ document.getElementById('modalEstado').innerHTML=`<div class="estado-grande">Estado actual: ${estado(n)}</div>`;
+ document.getElementById('modalFondo').style.display='flex';
+}
+
 function cerrarModal(e){if(!e||e.target===document.getElementById('modalFondo'))document.getElementById('modalFondo').style.display='none'}
 
 (function inicializarInteracciones(){
