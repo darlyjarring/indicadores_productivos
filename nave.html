@@ -135,55 +135,56 @@ function cambiarZoom(delta){const z=document.getElementById('zoom');z.value=Math
 function aplicarZoom(v){PX_HORA=+v;document.getElementById('zoom').value=v;document.getElementById('zoomNum').textContent=v+' px/h';if(ultimoInicio&&ultimoFin)dibujarTimeline(ultimoFiltrado,ultimoInicio,ultimoFin)}
 
 async function cargarDatos(){
- const ds=document.getElementById('fechaDesde').value;
- const hs=document.getElementById('fechaHasta').value;
- if(!ds||!hs) return;
+ const ds = document.getElementById('fechaDesde').value;
+ const hs = document.getElementById('fechaHasta').value;
+ if(!ds || !hs) return;
 
- const fuente=document.getElementById('fuente');
- fuente.className='fuente';
- fuente.textContent='Consultando base de datos PostgreSQL...';
+ const fuente = document.getElementById('fuente');
+ fuente.className = 'fuente';
+ fuente.textContent = 'Consultando Supabase PostgreSQL...';
 
- try{
-  // Cambia '/api/naves' por la ruta de tu API/endpoint en Node.js o backend
-  const url=`/api/naves?desde=${encodeURIComponent(ds)}&hasta=${encodeURIComponent(hs)}`;
-  const r=await fetch(url,{cache:'no-store'});
+ try {
+  // Llamada directa al script PHP intermediario
+  const url = `api_naves.php?desde=${encodeURIComponent(ds)}&hasta=${encodeURIComponent(hs)}`;
+  const r = await fetch(url, { cache: 'no-store' });
   
-  if(!r.ok)throw new Error('HTTP '+r.status);
+  if(!r.ok) throw new Error('HTTP ' + r.status);
   
-  const j=await r.json();
-  const arr=Array.isArray(j)?j:(j.naves||j.NAVES||j.data||j.datos||[]);
+  const j = await r.json();
+  if (j.error) throw new Error(j.message);
+
+  const arr = Array.isArray(j) ? j : (j.naves || []);
   
-  NAVES=arr.map(normalizarNave);
-  fuente.className='fuente ok';
-  fuente.textContent=`Base de Datos PostgreSQL · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
+  NAVES = arr.map(normalizarNave);
+  fuente.className = 'fuente ok';
+  fuente.textContent = `Supabase PostgreSQL · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
   
-  const inicio=new Date(ds+'T00:00:00-05:00');
-  const fin=new Date(hs+'T23:59:59-05:00');
-  ultimoInicio=inicio;
-  ultimoFin=fin;
-  ultimoFiltrado=NAVES;
-  dibujarTimeline(NAVES,inicio,fin);
- }catch(e){
-  // Si la API PostgreSQL falla o no está configurada, utiliza los datos locales
-  NAVES=NAVES_FALLBACK.map(normalizarNave);
-  fuente.className='fuente error';
-  fuente.textContent='Sin conexión BD PostgreSQL (mostrando datos locales de reserva). ' + e.message;
+  const inicio = new Date(ds + 'T00:00:00-05:00');
+  const fin = new Date(hs + 'T23:59:59-05:00');
+  ultimoInicio = inicio;
+  ultimoFin = fin;
+  ultimoFiltrado = NAVES;
+  dibujarTimeline(NAVES, inicio, fin);
+ } catch(e) {
+  // Resguardo local si falla la conexión a Supabase
+  NAVES = NAVES_FALLBACK.map(normalizarNave);
+  fuente.className = 'fuente error';
+  fuente.textContent = 'Error al conectar con Supabase (usando datos de respaldo): ' + e.message;
   
-  const inicio=new Date(ds+'T00:00:00-05:00');
-  const fin=new Date(hs+'T23:59:59-05:00');
+  const inicio = new Date(ds + 'T00:00:00-05:00');
+  const fin = new Date(hs + 'T23:59:59-05:00');
   
-  const filtradas=NAVES.filter(n=>{
-   const puntos=[fecha(n.etb),fecha(n.ata),fecha(n.etd),fecha(n.atd)].filter(Boolean);
-   if(!puntos.length)return false;
-   const inicioN=puntos[0],finN=puntos[puntos.length-1];
-   return puntos.some(x=>x>=inicio&&x<=fin)||(inicioN<=fin&&finN>=inicio);
-  }).sort((a,b)=>(fecha(a.etb)||fecha(a.ata)||0)-(fecha(b.etb)||fecha(b.ata)||0));
+  const filtradas = NAVES.filter(n => {
+   const puntos = [fecha(n.etb), fecha(n.ata), fecha(n.etd), fecha(n.atd)].filter(Boolean);
+   if(!puntos.length) return false;
+   const inicioN = puntos[0], finN = puntos[puntos.length-1];
+   return puntos.some(x => x >= inicio && x <= fin) || (inicioN <= fin && finN >= inicio);
+  }).sort((a,b) => (fecha(a.etb) || fecha(a.ata) || 0) - (fecha(b.etb) || fecha(b.ata) || 0));
   
-  ultimoInicio=inicio;ultimoFin=fin;ultimoFiltrado=filtradas;
-  dibujarTimeline(filtradas,inicio,fin);
+  ultimoInicio = inicio; ultimoFin = fin; ultimoFiltrado = filtradas;
+  dibujarTimeline(filtradas, inicio, fin);
  }
 }
-
 function consultar(){
  const ds=document.getElementById('fechaDesde').value,hs=document.getElementById('fechaHasta').value;
  if(!ds||!hs){hoy();return}
