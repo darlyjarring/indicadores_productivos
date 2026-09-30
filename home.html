@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores Operativos - DP World Posorja</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f9; }
+
+        /* Barra Superior */
+        header {
+            background-color: #0072ce;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .title-bar {
+            background-color: #ffffff;
+            padding: 10px 20px;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Grid de Tarjetas */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .card {
+            background-color: #0080c6;
+            color: white;
+            border-radius: 4px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-3px); }
+
+        /* Colores destacados como la imagen */
+        .card.orange { background-color: #ff8200; }
+        .card.green { background-color: #00a859; }
+        .card.dark-blue { background-color: #002b49; }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .card-link {
+            align-self: flex-end;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .card-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span>DP WORLD POSORJA - MESA DE SERVICIO</span>
+        <span>Usuario: jleonardo</span>
+    </header>
+
+    <div class="title-bar">
+        Indicadores Productivos
+    </div>
+
+    <div class="grid-container">
+        <!-- Tarjetas Azules Estándar -->
+        <div class="card">
+            <div class="card-title">Rendimientos Nave (MPH / BMPH)</div>
+            <a href="kpi_muelle.php" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">MUELLES: Planificación en Muelle</div>
+            <a href="#" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <div class="card">
+            <div class="card-title">EXPO: Tiempo en Cola</div>
+            <a href="#" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <!-- Tarjeta Naranja Destacada (Camiones Externos) -->
+        <div class="card orange">
+            <div class="card-title">Monitor de Camiones en Patios (Turn-Time)</div>
+            <a href="monitor_camiones.php" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <!-- Tarjeta Verde (Depósito) -->
+        <div class="card green">
+            <div class="card-title">DEPÓSITO: Otros Indicadores</div>
+            <a href="#" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <!-- Tarjeta Azul Oscuro (Equipos / Básculas) -->
+        <div class="card dark-blue">
+            <div class="card-title">SEGURIDAD: Cámaras</div>
+            <a href="#" class="card-link">Consultar &#10140;</a>
+        </div>
+
+        <div class="card orange">
+            <div class="card-title">EQUIPOS: Monitor de Equipos (RTG / QC)</div>
+            <a href="#" class="card-link">Consultar &#10140;</a>
+        </div>
+    </div>
+
+</body>
+</html>
