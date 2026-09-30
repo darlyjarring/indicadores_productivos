@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tráfico de Naves - Línea de Tiempo</title>
+<title>Tráfico de Naves - Posorja</title>
+<!-- Carga de la librería oficial de Supabase JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
 :root{--azul:#123b5d;--borde:#dbe2ea;--fondo:#eef1f5}
@@ -67,15 +69,14 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <div class="modal-fondo" id="modalFondo" onclick="cerrarModal(event)"><div class="modal"><div class="modal-header"><h2 id="modalTitulo">Nave</h2><button class="cerrar" onclick="cerrarModal()">×</button></div><div class="detalle"><div class="detalle-grid" id="modalDatos"></div><div id="modalEstado"></div></div></div></div>
 
 <script>
+// --- CONFIGURACIÓN DE SUPABASE ---
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+// Reemplaza esto con tu anon / public key desde Project Settings -> API en tu panel de Supabase:
+const SUPABASE_KEY = "TU_SUPABASE_ANON_KEY_AQUI"; 
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let NAVES=[];
-let NAVES_FALLBACK=[
- {nave:'CMA CGM GREENLAND',viaje:'CMA2026103',linea:'CMA',etb:'2026-09-18 17:00:00',etd:'2026-09-20 21:00:00',ata:'2026-09-18 16:36:00',atd:'2026-09-20 20:58:00',status:'DEPARTED',origen:'PECLL',destino:'PECLL',servicio:'ACSA',total_ingresado:120,ingresado_dentro_cutoff:115,ingresado_fuera_cutoff:5},
- {nave:'AS PALINA',viaje:'MAE2026113',linea:'MAE',etb:'2026-09-20 22:00:00',etd:'2026-09-22 02:00:00',ata:'2026-09-20 21:52:00',atd:'',status:'IN OPERATION',origen:'PABLB',destino:'PABLB',servicio:'WCSA-SHTL',total_ingresado:85,ingresado_dentro_cutoff:80,ingresado_fuera_cutoff:5},
- {nave:'HLC2026090 - ODYSSEUS',viaje:'639N',linea:'HLC',etb:'2026-09-22 09:00:00',etd:'2026-09-22 17:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PEPAI',destino:'PEPAI',servicio:'MSW',total_ingresado:40,ingresado_dentro_cutoff:40,ingresado_fuera_cutoff:0},
- {nave:'HLC2026085 - VALPARAISO EXPRESS',viaje:'6234S',linea:'HLC',etb:'2026-09-21 15:00:00',etd:'2026-09-22 06:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'COBUN',destino:'COBUN',servicio:'SWX_SB',total_ingresado:150,ingresado_dentro_cutoff:142,ingresado_fuera_cutoff:8},
- {nave:'MAERSK NOKWANDA',viaje:'634W',linea:'MAE',etb:'2026-09-26 23:00:00',etd:'2026-09-28 05:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'ECPBO',destino:'ECPBO',servicio:'ECUMED',total_ingresado:95,ingresado_dentro_cutoff:90,ingresado_fuera_cutoff:5},
- {nave:'CMA CGM HELIUM',viaje:'1MHTPW1MA',linea:'CMA',etb:'2026-09-25 22:00:00',etd:'2026-09-27 09:00:00',ata:'',atd:'',status:'TO ARRIVE',origen:'PECLL',destino:'PECLL',servicio:'ACSA',total_ingresado:110,ingresado_dentro_cutoff:105,ingresado_fuera_cutoff:5}
-];
 const COLORES=['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777','#475569','#65a30d','#7c3aed','#a16207','#0f766e'];
 let PX_HORA=42;
 let ultimoInicio=null,ultimoFin=null,ultimoFiltrado=[];
@@ -89,34 +90,31 @@ function fecha(valor){
    const iso=`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]||'00'}-05:00`;
    const d=new Date(iso); return isNaN(d.getTime())?null:d;
  }
- m=s.match(/^(\d{2})[\/-](\d{2})[\/-](\d{4})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
- if(m){
-   const iso=`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]||'00'}-05:00`;
-   const d=new Date(iso); return isNaN(d.getTime())?null:d;
- }
  let iso=s.replace(' ','T');
  if(!/[zZ]|[+-]\d\d:?\d\d$/.test(iso))iso+='-05:00';
  const d=new Date(iso); return isNaN(d.getTime())?null:d;
 }
 function normalizar(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim()}
 function limpiarNombre(n){return String(n||'').replace(/^\s*[^-]+\s+-\s+/,'').trim()}
+
 function normalizarNave(x){
  x=x||{};
  return {
   id:x.id??'',
-  nave:x.nave??x.Nave??x.nombre??x.nombre_nave??'',
+  nave:x.nave??x.Nave??'',
   viaje:x.viaje??x.Viaje??'',
-  linea:x.linea??x.Linea??x.LINEA??'',
-  etb:x.etb??x.ETB??'',etd:x.etd??x.ETD??'',ata:x.ata??x.ATA??'',atd:x.atd??x.ATD??'',
-  status:x.status??x.STATUS??'',
-  origen:x.origen??x['PTO.ORIGEN']??x.ptoOrigen??'',
-  destino:x.destino??x['PTO.DESTINO']??x.ptoDestino??'',
-  servicio:x.servicio??x.SERVICIO??'',
-  total_ingresado:x.total_ingresado??x.totalIngresado??0,
-  ingresado_dentro_cutoff:x.ingresado_dentro_cutoff??x.ingresadoDentroCutoff??0,
-  ingresado_fuera_cutoff:x.ingresado_fuera_cutoff??x.ingresadoFueraCutoff??0
+  linea:x.linea??x.Linea??'',
+  etb:x.etb??'',etd:x.etd??'',ata:x.ata??'',atd:x.atd??'',
+  status:x.status??'',
+  origen:x.origen??'',
+  destino:x.destino??'',
+  servicio:x.servicio??'',
+  total_ingresado:x.total_ingresado??0,
+  ingresado_dentro_cutoff:x.ingresado_dentro_cutoff??0,
+  ingresado_fuera_cutoff:x.ingresado_fuera_cutoff??0
  };
 }
+
 function estado(n){
  const s=normalizar(n.status),now=new Date(),etb=fecha(n.etb),ata=fecha(n.ata),atd=fecha(n.atd);
  if(atd)return 'ZARPÓ';
@@ -128,12 +126,14 @@ function estado(n){
  if(etb&&now>=etb&&!atd)return 'TRABAJANDO';
  return 'POR ARRIBAR';
 }
+
 function fechaLocalInput(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function hoy(){const a=new Date();document.getElementById('fechaDesde').value=fechaLocalInput(a);document.getElementById('fechaHasta').value=fechaLocalInput(a);consultar()}
 function rango7(){const a=new Date(),b=new Date(a);b.setDate(b.getDate()+6);document.getElementById('fechaDesde').value=fechaLocalInput(a);document.getElementById('fechaHasta').value=fechaLocalInput(b);consultar()}
 function cambiarZoom(delta){const z=document.getElementById('zoom');z.value=Math.max(+z.min,Math.min(+z.max,+z.value+delta));aplicarZoom(z.value)}
 function aplicarZoom(v){PX_HORA=+v;document.getElementById('zoom').value=v;document.getElementById('zoomNum').textContent=v+' px/h';if(ultimoInicio&&ultimoFin)dibujarTimeline(ultimoFiltrado,ultimoInicio,ultimoFin)}
 
+// --- CONSULTA DIRECTA A SUPABASE POSTGRESQL ---
 async function cargarDatos(){
  const ds=document.getElementById('fechaDesde').value;
  const hs=document.getElementById('fechaHasta').value;
@@ -141,48 +141,35 @@ async function cargarDatos(){
 
  const fuente=document.getElementById('fuente');
  fuente.className='fuente';
- fuente.textContent='Consultando Supabase PostgreSQL...';
+ fuente.textContent='Consultando Supabase...';
 
  try{
-  // Conexión directa al script PHP intermediario
-  const url=`api_naves.php?desde=${encodeURIComponent(ds)}&hasta=${encodeURIComponent(hs)}`;
-  const r=await fetch(url,{cache:'no-store'});
-  
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  
-  const j=await r.json();
-  if (j.error) throw new Error(j.message);
+  const desdeStr = ds + 'T00:00:00';
+  const hastaStr = hs + 'T23:59:59';
 
-  const arr=Array.isArray(j)?j:(j.naves||[]);
-  
-  NAVES=arr.map(normalizarNave);
-  fuente.className='fuente ok';
-  fuente.textContent=`Supabase PostgreSQL · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
-  
+  // Consulta directa a la tabla "naves"
+  const { data, error } = await supabase
+    .from('naves')
+    .select('*')
+    .or(`etb.gte.${desdeStr},ata.gte.${desdeStr}`)
+    .or(`etb.lte.${hastaStr},ata.lte.${hastaStr}`);
+
+  if (error) throw error;
+
+  NAVES = (data || []).map(normalizarNave);
+  fuente.className = 'fuente ok';
+  fuente.textContent = `Supabase Direct API · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
+
   const inicio=new Date(ds+'T00:00:00-05:00');
   const fin=new Date(hs+'T23:59:59-05:00');
   ultimoInicio=inicio;
   ultimoFin=fin;
   ultimoFiltrado=NAVES;
   dibujarTimeline(NAVES,inicio,fin);
+
  }catch(e){
-  // Carga fallback si falla la BD
-  NAVES=NAVES_FALLBACK.map(normalizarNave);
   fuente.className='fuente error';
-  fuente.textContent='Error al conectar con Supabase (usando datos de respaldo): ' + e.message;
-  
-  const inicio=new Date(ds+'T00:00:00-05:00');
-  const fin=new Date(hs+'T23:59:59-05:00');
-  
-  const filtradas=NAVES.filter(n=>{
-   const puntos=[fecha(n.etb),fecha(n.ata),fecha(n.etd),fecha(n.atd)].filter(Boolean);
-   if(!puntos.length)return false;
-   const inicioN=puntos[0],finN=puntos[puntos.length-1];
-   return puntos.some(x=>x>=inicio&&x<=fin)||(inicioN<=fin&&finN>=inicio);
-  }).sort((a,b)=>(fecha(a.etb)||fecha(a.ata)||0)-(fecha(b.etb)||fecha(b.ata)||0));
-  
-  ultimoInicio=inicio;ultimoFin=fin;ultimoFiltrado=filtradas;
-  dibujarTimeline(filtradas,inicio,fin);
+  fuente.textContent='Error al conectar con Supabase: ' + e.message;
  }
 }
 
