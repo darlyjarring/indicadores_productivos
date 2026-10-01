@@ -71,84 +71,85 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <script>
 // --- CONFIGURACIÓN DE SUPABASE ---
 const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
-// Reemplaza esto con tu anon / public key desde Project Settings -> API en tu panel de Supabase:
-const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T"; 
+// Pega aquí tu SUPABASE_PUBLISHABLE_KEY de tu panel de Supabase:
+const SUPABASE_KEY = "PEGA_AQUI_TU_SUPABASE_PUBLISHABLE_KEY";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Se renombra la variable a 'dbClient' para evitar conflictos con la librería global 'window.supabase'
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let NAVES=[];
-const COLORES=['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777','#475569','#65a30d','#7c3aed','#a16207','#0f766e'];
-let PX_HORA=42;
-let ultimoInicio=null,ultimoFin=null,ultimoFiltrado=[];
+let NAVES = [];
+const COLORES = ['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777','#475569','#65a30d','#7c3aed','#a16207','#0f766e'];
+let PX_HORA = 42;
+let ultimoInicio = null, ultimoFin = null, ultimoFiltrado = [];
 
 function fecha(valor){
- if(!valor)return null;
- let s=String(valor).trim();
- if(!s)return null;
- let m=s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+ if(!valor) return null;
+ let s = String(valor).trim();
+ if(!s) return null;
+ let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
  if(m){
-   const iso=`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]||'00'}-05:00`;
-   const d=new Date(iso); return isNaN(d.getTime())?null:d;
+   const iso = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]||'00'}-05:00`;
+   const d = new Date(iso); return isNaN(d.getTime()) ? null : d;
  }
- let iso=s.replace(' ','T');
- if(!/[zZ]|[+-]\d\d:?\d\d$/.test(iso))iso+='-05:00';
- const d=new Date(iso); return isNaN(d.getTime())?null:d;
+ let iso = s.replace(' ','T');
+ if(!/[zZ]|[+-]\d\d:?\d\d$/.test(iso)) iso += '-05:00';
+ const d = new Date(iso); return isNaN(d.getTime()) ? null : d;
 }
-function normalizar(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim()}
-function limpiarNombre(n){return String(n||'').replace(/^\s*[^-]+\s+-\s+/,'').trim()}
+function normalizar(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim() }
+function limpiarNombre(n){ return String(n||'').replace(/^\s*[^-]+\s+-\s+/,'').trim() }
 
 function normalizarNave(x){
- x=x||{};
+ x = x || {};
  return {
-  id:x.id??'',
-  nave:x.nave??x.Nave??'',
-  viaje:x.viaje??x.Viaje??'',
-  linea:x.linea??x.Linea??'',
-  etb:x.etb??'',etd:x.etd??'',ata:x.ata??'',atd:x.atd??'',
-  status:x.status??'',
-  origen:x.origen??'',
-  destino:x.destino??'',
-  servicio:x.servicio??'',
-  total_ingresado:x.total_ingresado??0,
-  ingresado_dentro_cutoff:x.ingresado_dentro_cutoff??0,
-  ingresado_fuera_cutoff:x.ingresado_fuera_cutoff??0
+  id: x.id ?? '',
+  nave: x.nave ?? x.Nave ?? '',
+  viaje: x.viaje ?? x.Viaje ?? '',
+  linea: x.linea ?? x.Linea ?? '',
+  etb: x.etb ?? '', etd: x.etd ?? '', ata: x.ata ?? '', atd: x.atd ?? '',
+  status: x.status ?? '',
+  origen: x.origen ?? '',
+  destino: x.destino ?? '',
+  servicio: x.servicio ?? '',
+  total_ingresado: x.total_ingresado ?? 0,
+  ingresado_dentro_cutoff: x.ingresado_dentro_cutoff ?? 0,
+  ingresado_fuera_cutoff: x.ingresado_fuera_cutoff ?? 0
  };
 }
 
 function estado(n){
- const s=normalizar(n.status),now=new Date(),etb=fecha(n.etb),ata=fecha(n.ata),atd=fecha(n.atd);
- if(atd)return 'ZARPÓ';
- if(s==='DEPARTED'||s.includes('SAILED'))return 'ZARPÓ';
- if(s.includes('IN OPERATION')||s.includes('OPERATING')||s==='WORKING')return 'TRABAJANDO';
- if(ata&&!atd)return 'TRABAJANDO';
- if(s.includes('TO ARRIVE')){if(etb&&now<etb)return 'POR ARRIBAR';if(etb&&now>=etb)return 'ATRASADA';return 'POR ARRIBAR'}
- if(etb&&now<etb)return 'POR ARRIBAR';
- if(etb&&now>=etb&&!atd)return 'TRABAJANDO';
+ const s = normalizar(n.status), now = new Date(), etb = fecha(n.etb), ata = fecha(n.ata), atd = fecha(n.atd);
+ if(atd) return 'ZARPÓ';
+ if(s==='DEPARTED' || s.includes('SAILED')) return 'ZARPÓ';
+ if(s.includes('IN OPERATION') || s.includes('OPERATING') || s==='WORKING') return 'TRABAJANDO';
+ if(ata && !atd) return 'TRABAJANDO';
+ if(s.includes('TO ARRIVE')){ if(etb && now<etb) return 'POR ARRIBAR'; if(etb && now>=etb) return 'ATRASADA'; return 'POR ARRIBAR'; }
+ if(etb && now<etb) return 'POR ARRIBAR';
+ if(etb && now>=etb && !atd) return 'TRABAJANDO';
  return 'POR ARRIBAR';
 }
 
-function fechaLocalInput(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function hoy(){const a=new Date();document.getElementById('fechaDesde').value=fechaLocalInput(a);document.getElementById('fechaHasta').value=fechaLocalInput(a);consultar()}
-function rango7(){const a=new Date(),b=new Date(a);b.setDate(b.getDate()+6);document.getElementById('fechaDesde').value=fechaLocalInput(a);document.getElementById('fechaHasta').value=fechaLocalInput(b);consultar()}
-function cambiarZoom(delta){const z=document.getElementById('zoom');z.value=Math.max(+z.min,Math.min(+z.max,+z.value+delta));aplicarZoom(z.value)}
-function aplicarZoom(v){PX_HORA=+v;document.getElementById('zoom').value=v;document.getElementById('zoomNum').textContent=v+' px/h';if(ultimoInicio&&ultimoFin)dibujarTimeline(ultimoFiltrado,ultimoInicio,ultimoFin)}
+function fechaLocalInput(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
+function hoy(){ const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(a); consultar(); }
+function rango7(){ const a = new Date(), b = new Date(a); b.setDate(b.getDate()+6); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(b); consultar(); }
+function cambiarZoom(delta){ const z = document.getElementById('zoom'); z.value = Math.max(+z.min, Math.min(+z.max, +z.value + delta)); aplicarZoom(z.value); }
+function aplicarZoom(v){ PX_HORA = +v; document.getElementById('zoom').value = v; document.getElementById('zoomNum').textContent = v + ' px/h'; if(ultimoInicio && ultimoFin) dibujarTimeline(ultimoFiltrado, ultimoInicio, ultimoFin); }
 
-// --- CONSULTA DIRECTA A SUPABASE POSTGRESQL ---
+// --- CONSULTA A SUPABASE ---
 async function cargarDatos(){
- const ds=document.getElementById('fechaDesde').value;
- const hs=document.getElementById('fechaHasta').value;
- if(!ds||!hs) return;
+ const ds = document.getElementById('fechaDesde').value;
+ const hs = document.getElementById('fechaHasta').value;
+ if(!ds || !hs) return;
 
- const fuente=document.getElementById('fuente');
- fuente.className='fuente';
- fuente.textContent='Consultando Supabase...';
+ const fuente = document.getElementById('fuente');
+ fuente.className = 'fuente';
+ fuente.textContent = 'Consultando Supabase...';
 
- try{
+ try {
   const desdeStr = ds + 'T00:00:00';
   const hastaStr = hs + 'T23:59:59';
 
-  // Consulta directa a la tabla "naves"
-  const { data, error } = await supabase
+  // Realizar la consulta a la tabla 'naves' usando dbClient
+  const { data, error } = await dbClient
     .from('naves')
     .select('*')
     .or(`etb.gte.${desdeStr},ata.gte.${desdeStr}`)
@@ -160,147 +161,147 @@ async function cargarDatos(){
   fuente.className = 'fuente ok';
   fuente.textContent = `Supabase Direct API · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
 
-  const inicio=new Date(ds+'T00:00:00-05:00');
-  const fin=new Date(hs+'T23:59:59-05:00');
-  ultimoInicio=inicio;
-  ultimoFin=fin;
-  ultimoFiltrado=NAVES;
-  dibujarTimeline(NAVES,inicio,fin);
+  const inicio = new Date(ds + 'T00:00:00-05:00');
+  const fin = new Date(hs + 'T23:59:59-05:00');
+  ultimoInicio = inicio;
+  ultimoFin = fin;
+  ultimoFiltrado = NAVES;
+  dibujarTimeline(NAVES, inicio, fin);
 
- }catch(e){
-  fuente.className='fuente error';
-  fuente.textContent='Error al conectar con Supabase: ' + e.message;
+ } catch(e) {
+  fuente.className = 'fuente error';
+  fuente.textContent = 'Error al conectar con Supabase: ' + e.message;
  }
 }
 
 function consultar(){
- const ds=document.getElementById('fechaDesde').value,hs=document.getElementById('fechaHasta').value;
- if(!ds||!hs){hoy();return}
- if(hs<ds){alert('La fecha Hasta no puede ser menor que Desde.');return}
+ const ds = document.getElementById('fechaDesde').value, hs = document.getElementById('fechaHasta').value;
+ if(!ds || !hs){ hoy(); return; }
+ if(hs < ds){ alert('La fecha Hasta no puede ser menor que Desde.'); return; }
  cargarDatos();
 }
 
-function colorLinea(linea,mapa){const k=normalizar(linea)||'SIN LINEA';if(!mapa[k])mapa[k]=COLORES[Object.keys(mapa).length%COLORES.length];return mapa[k]}
-function fechaLlegada(n){return fecha(n.etb)||fecha(n.ata)||fecha(n.etd)||fecha(n.atd);}
+function colorLinea(linea, mapa){ const k = normalizar(linea) || 'SIN LINEA'; if(!mapa[k]) mapa[k] = COLORES[Object.keys(mapa).length % COLORES.length]; return mapa[k]; }
+function fechaLlegada(n){ return fecha(n.etb) || fecha(n.ata) || fecha(n.etd) || fecha(n.atd); }
 
 function asignarNorteSur(naves){
- const orden=[...naves].sort((a,b)=>(fechaLlegada(a)||0)-(fechaLlegada(b)||0));
- const asignados=new Map(),ultimoPorDia={};
- orden.forEach((n,i)=>{
-  const d=fechaLlegada(n);const clave=d?d.toISOString().slice(0,10):'SINFECHA';
-  const anterior=ultimoPorDia[clave];
-  let lane=anterior==='NORTE'?'SUR':anterior==='SUR'?'NORTE':(i%2===0?'NORTE':'SUR');
-  asignados.set(n,lane);ultimoPorDia[clave]=lane;
+ const orden = [...naves].sort((a,b) => (fechaLlegada(a) || 0) - (fechaLlegada(b) || 0));
+ const asignados = new Map(), ultimoPorDia = {};
+ orden.forEach((n,i) => {
+  const d = fechaLlegada(n); const clave = d ? d.toISOString().slice(0,10) : 'SINFECHA';
+  const anterior = ultimoPorDia[clave];
+  let lane = anterior === 'NORTE' ? 'SUR' : anterior === 'SUR' ? 'NORTE' : (i % 2 === 0 ? 'NORTE' : 'SUR');
+  asignados.set(n, lane); ultimoPorDia[clave] = lane;
  });
  return asignados;
 }
 
-function dibujarTimeline(naves,inicio,fin){
- const timeline=document.getElementById('timeline');timeline.innerHTML='';
- const totalHoras=Math.max(24,(fin-inicio)/3600000),ancho=Math.max(900,totalHoras*PX_HORA+72);timeline.style.width=ancho+'px';
- const eje=document.createElement('div');eje.className='axis';const ei=document.createElement('div');ei.className='axis-inner';ei.style.width=ancho+'px';
+function dibujarTimeline(naves, inicio, fin){
+ const timeline = document.getElementById('timeline'); timeline.innerHTML = '';
+ const totalHoras = Math.max(24, (fin - inicio) / 3600000), ancho = Math.max(900, totalHoras * PX_HORA + 72); timeline.style.width = ancho + 'px';
+ const eje = document.createElement('div'); eje.className = 'axis'; const ei = document.createElement('div'); ei.className = 'axis-inner'; ei.style.width = ancho + 'px';
 
- let c=new Date(inicio);
- while(c<=fin){
-    const x=(c-inicio)/3600000*PX_HORA;
-    if(c.getHours()===0){
-      const d=document.createElement('div');d.className='day';d.style.left=(x+72)+'px';d.style.width=24*PX_HORA+'px';
-      d.textContent=c.toLocaleDateString('es-EC',{weekday:'short',day:'2-digit',month:'short'});ei.appendChild(d);
+ let c = new Date(inicio);
+ while(c <= fin){
+    const x = (c - inicio) / 3600000 * PX_HORA;
+    if(c.getHours() === 0){
+      const d = document.createElement('div'); d.className = 'day'; d.style.left = (x + 72) + 'px'; d.style.width = 24 * PX_HORA + 'px';
+      d.textContent = c.toLocaleDateString('es-EC', {weekday:'short', day:'2-digit', month:'short'}); ei.appendChild(d);
     }
-    const h=document.createElement('div');h.className='hour';h.style.left=(x+72)+'px';h.textContent=String(c.getHours()).padStart(2,'0')+':00';ei.appendChild(h);
-    c.setHours(c.getHours()+1);
+    const h = document.createElement('div'); h.className = 'hour'; h.style.left = (x + 72) + 'px'; h.textContent = String(c.getHours()).padStart(2,'0') + ':00'; ei.appendChild(h);
+    c.setHours(c.getHours() + 1);
  }
- eje.appendChild(ei);timeline.appendChild(eje);
- const rows=document.createElement('div');rows.className='rows';rows.style.width=ancho+'px';
- const asignados=asignarNorteSur(naves),colores={};
- ['NORTE','SUR'].forEach(laneName=>{
-  const lane=document.createElement('div');lane.className='lane';lane.style.width=ancho+'px';
-  const title=document.createElement('div');title.className='lane-title';title.textContent=laneName;lane.appendChild(title);
-  const content=document.createElement('div');content.className='lane-content';content.style.width=(ancho-72)+'px';
-  let g=new Date(inicio);g.setMinutes(0,0,0);while(g<=fin){const x=(g-inicio)/3600000*PX_HORA+72,l=document.createElement('div');l.className='row-line';l.style.left=x+'px';content.appendChild(l);g.setHours(g.getHours()+3)}
-  naves.filter(n=>asignados.get(n)===laneName).forEach(n=>{
-    const etb=fecha(n.etb),ata=fecha(n.ata),etd=fecha(n.etd),atd=fecha(n.atd);
-    const inicioN=etb||ata||etd||atd;
-    if(!inicioN)return;
-    const finN=atd||etd||new Date(inicioN.getTime()+2*3600000);
-    if(finN<=inicioN)return;
+ eje.appendChild(ei); timeline.appendChild(eje);
+ const rows = document.createElement('div'); rows.className = 'rows'; rows.style.width = ancho + 'px';
+ const asignados = asignarNorteSur(naves), colores = {};
+ ['NORTE','SUR'].forEach(laneName => {
+  const lane = document.createElement('div'); lane.className = 'lane'; lane.style.width = ancho + 'px';
+  const title = document.createElement('div'); title.className = 'lane-title'; title.textContent = laneName; lane.appendChild(title);
+  const content = document.createElement('div'); content.className = 'lane-content'; content.style.width = (ancho - 72) + 'px';
+  let g = new Date(inicio); g.setMinutes(0,0,0); while(g <= fin){ const x = (g - inicio) / 3600000 * PX_HORA + 72, l = document.createElement('div'); l.className = 'row-line'; l.style.left = x + 'px'; content.appendChild(l); g.setHours(g.getHours() + 3); }
+  naves.filter(n => asignados.get(n) === laneName).forEach(n => {
+    const etb = fecha(n.etb), ata = fecha(n.ata), etd = fecha(n.etd), atd = fecha(n.atd);
+    const inicioN = etb || ata || etd || atd;
+    if(!inicioN) return;
+    const finN = atd || etd || new Date(inicioN.getTime() + 2 * 3600000);
+    if(finN <= inicioN) return;
 
-    const pxDesdeInicio=d=>(d-inicio)/3600000*PX_HORA;
-    const x1=pxDesdeInicio(inicioN);
-    const x2=pxDesdeInicio(finN);
+    const pxDesdeInicio = d => (d - inicio) / 3600000 * PX_HORA;
+    const x1 = pxDesdeInicio(inicioN);
+    const x2 = pxDesdeInicio(finN);
 
-    if(x2<=0 || x1>=(ancho-72))return;
+    if(x2 <= 0 || x1 >= (ancho - 72)) return;
 
-    const left=x1;
-    const w=x2-x1;
+    const left = x1;
+    const w = x2 - x1;
 
-    const bar=document.createElement('div');
-    bar.className='vessel';
-    bar.style.left=left+'px';
-    bar.style.width=Math.max(2,w)+'px';
-    bar.style.background=colorLinea(n.linea,colores);
-    bar.title=`ETB: ${n.etb||'—'} | ETD: ${n.etd||'—'} | Click para ver información`;
-    bar.innerHTML=`<div class="nombre">${escapeHtml(limpiarNombre(n.nave)||'NAVE')}</div><div class="linea">${escapeHtml(n.linea||'')}</div><div class="estado">${escapeHtml(estado(n))}</div>`;
+    const bar = document.createElement('div');
+    bar.className = 'vessel';
+    bar.style.left = left + 'px';
+    bar.style.width = Math.max(2, w) + 'px';
+    bar.style.background = colorLinea(n.linea, colores);
+    bar.title = `ETB: ${n.etb||'—'} | ETD: ${n.etd||'—'} | Click para ver información`;
+    bar.innerHTML = `<div class="nombre">${escapeHtml(limpiarNombre(n.nave)||"NAVE")}</div><div class="linea">${escapeHtml(n.linea||'')}</div><div class="estado">${escapeHtml(estado(n))}</div>`;
 
-    if(etb && etb>=inicioN && etb<=finN){
+    if(etb && etb >= inicioN && etb <= finN){
       const posRelativa = (etb - inicioN) / (finN - inicioN);
-      const marca=document.createElement('span');
-      marca.className='marca-etb';
-      marca.style.left=(posRelativa*100)+'%';
-      marca.title='ETB: '+n.etb;
+      const marca = document.createElement('span');
+      marca.className = 'marca-etb';
+      marca.style.left = (posRelativa * 100) + '%';
+      marca.title = 'ETB: ' + n.etb;
       bar.appendChild(marca);
     }
 
-    if(ata && ata>=inicioN && ata<=finN){
-      const rel=(ata-inicioN)/(finN-inicioN);
-      const marca=document.createElement('span');
-      marca.className='marca-ata';
-      marca.style.left=(rel*100)+'%';
-      marca.title='ATA: '+n.ata;
+    if(ata && ata >= inicioN && ata <= finN){
+      const rel = (ata - inicioN) / (finN - inicioN);
+      const marca = document.createElement('span');
+      marca.className = 'marca-ata';
+      marca.style.left = (rel * 100) + '%';
+      marca.title = 'ATA: ' + n.ata;
       bar.appendChild(marca);
     }
 
-    bar.onclick=(e)=>{
+    bar.onclick = (e) => {
       e.stopPropagation();
       abrirModal(n);
     };
     content.appendChild(bar);
   });
-  lane.appendChild(content);rows.appendChild(lane);
+  lane.appendChild(content); rows.appendChild(lane);
  });
- const ahora=new Date();if(ahora>=inicio&&ahora<=fin){const x=(ahora-inicio)/3600000*PX_HORA+72,a=document.createElement('div');a.className='ahora';a.style.left=x+'px';a.innerHTML='<div class="ahora-label">AHORA</div>';rows.appendChild(a)}
- if(!naves.length){const s=document.createElement('div');s.className='sin-datos';s.textContent='No hay naves dentro del rango seleccionado.';rows.appendChild(s)}
- timeline.appendChild(rows);actualizarResumen(naves);dibujarLeyenda(colores)
+ const ahora = new Date(); if(ahora >= inicio && ahora <= fin){ const x = (ahora - inicio) / 3600000 * PX_HORA + 72, a = document.createElement('div'); a.className = 'ahora'; a.style.left = x + 'px'; a.innerHTML = '<div class="ahora-label">AHORA</div>'; rows.appendChild(a); }
+ if(!naves.length){ const s = document.createElement('div'); s.className = 'sin-datos'; s.textContent = 'No hay naves dentro del rango seleccionado.'; rows.appendChild(s); }
+ timeline.appendChild(rows); actualizarResumen(naves); dibujarLeyenda(colores);
 }
 
-function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
-function actualizarResumen(naves){document.getElementById('cantidad').textContent=naves.length;document.getElementById('porArribar').textContent=naves.filter(n=>estado(n)==='POR ARRIBAR').length;document.getElementById('trabajando').textContent=naves.filter(n=>estado(n)==='TRABAJANDO').length;document.getElementById('atrasadas').textContent=naves.filter(n=>estado(n)==='ATRASADA').length;document.getElementById('zarparon').textContent=naves.filter(n=>estado(n)==='ZARPÓ').length}
-function dibujarLeyenda(colores){const cont=document.getElementById('leyenda');cont.innerHTML='';Object.keys(colores).forEach(k=>{const i=document.createElement('div');i.className='leyenda-item';i.innerHTML=`<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`;cont.appendChild(i)});if(!Object.keys(colores).length)cont.textContent='No hay líneas navieras en el rango seleccionado.'}
+function escapeHtml(s){ return String(s??'').replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])) }
+function actualizarResumen(naves){ document.getElementById('cantidad').textContent = naves.length; document.getElementById('porArribar').textContent = naves.filter(n => estado(n) === 'POR ARRIBAR').length; document.getElementById('trabajando').textContent = naves.filter(n => estado(n) === 'TRABAJANDO').length; document.getElementById('atrasadas').textContent = naves.filter(n => estado(n) === 'ATRASADA').length; document.getElementById('zarparon').textContent = naves.filter(n => estado(n) === 'ZARPÓ').length; }
+function dibujarLeyenda(colores){ const cont = document.getElementById('leyenda'); cont.innerHTML = ''; Object.keys(colores).forEach(k => { const i = document.createElement('div'); i.className = 'leyenda-item'; i.innerHTML = `<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`; cont.appendChild(i); }); if(!Object.keys(colores).length) cont.textContent = 'No hay líneas navieras en el rango seleccionado.'; }
 
 function abrirModal(n){
- document.getElementById('modalTitulo').textContent=limpiarNombre(n.nave)||'Nave';
- const datos=[
-  ['Nave',n.nave],
-  ['Viaje',n.viaje],
-  ['Línea naviera',n.linea],
-  ['ETB',n.etb],
-  ['ATA',n.ata],
-  ['ETD',n.etd],
-  ['ATD',n.atd],
-  ['STATUS',n.status],
-  ['Origen',n.origen],
-  ['Destino',n.destino],
-  ['Servicio',n.servicio],
-  ['Total Ingresados',n.total_ingresado ?? '0'],
-  ['Dentro Cut-Off',n.ingresado_dentro_cutoff ?? '0'],
-  ['Fuera Cut-Off',n.ingresado_fuera_cutoff ?? '0']
+ document.getElementById('modalTitulo').textContent = limpiarNombre(n.nave) || 'Nave';
+ const datos = [
+  ['Nave', n.nave],
+  ['Viaje', n.viaje],
+  ['Línea naviera', n.linea],
+  ['ETB', n.etb],
+  ['ATA', n.ata],
+  ['ETD', n.etd],
+  ['ATD', n.atd],
+  ['STATUS', n.status],
+  ['Origen', n.origen],
+  ['Destino', n.destino],
+  ['Servicio', n.servicio],
+  ['Total Ingresados', n.total_ingresado ?? '0'],
+  ['Dentro Cut-Off', n.ingresado_dentro_cutoff ?? '0'],
+  ['Fuera Cut-Off', n.ingresado_fuera_cutoff ?? '0']
  ];
- document.getElementById('modalDatos').innerHTML=datos.map(x=>`<div class="detalle-item"><strong>${escapeHtml(x[0])}</strong>${escapeHtml(x[1]||'—')}</div>`).join('');
- document.getElementById('modalEstado').innerHTML=`<div class="estado-grande">Estado actual: ${estado(n)}</div>`;
- document.getElementById('modalFondo').style.display='flex';
+ document.getElementById('modalDatos').innerHTML = datos.map(x => `<div class="detalle-item"><strong>${escapeHtml(x[0])}</strong>${escapeHtml(x[1]||'—')}</div>`).join('');
+ document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)}</div>`;
+ document.getElementById('modalFondo').style.display = 'flex';
 }
 
-function cerrarModal(e){if(!e||e.target===document.getElementById('modalFondo'))document.getElementById('modalFondo').style.display='none'}
+function cerrarModal(e){ if(!e || e.target === document.getElementById('modalFondo')) document.getElementById('modalFondo').style.display = 'none'; }
 
 (function inicializarInteracciones(){
   const slider = document.getElementById('scroll');
@@ -347,13 +348,13 @@ function cerrarModal(e){if(!e||e.target===document.getElementById('modalFondo'))
 })();
 
 (async function(){
-  const a=new Date();document.getElementById('fechaDesde').value=fechaLocalInput(a);
-  const b=new Date(a);b.setDate(b.getDate()+6);document.getElementById('fechaHasta').value=fechaLocalInput(b);
+  const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a);
+  const b = new Date(a); b.setDate(b.getDate() + 6); document.getElementById('fechaHasta').value = fechaLocalInput(b);
   await cargarDatos();
 })();
 
-setInterval(()=>{if(ultimoInicio&&ultimoFin)consultar()},60000);
-setInterval(()=>cargarDatos(),15*60*1000);
+setInterval(() => { if(ultimoInicio && ultimoFin) consultar(); }, 60000);
+setInterval(() => cargarDatos(), 15 * 60 * 1000);
 </script>
 </body>
 </html>
