@@ -477,18 +477,11 @@ async function abrirModal(n) {
           Rendt. Neto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_neto || '0.00'}</span>
         </div>
         <button class="btn-gmph" style="width:100%; margin-bottom:8px;" onclick="alert('Generando reporte GMPH por Horas...')">GMPH por Horas</button>
-        <button class="btn-gmph" style="width:100%; background:#0284c7;" onclick="alert('Generando detalle de Preembarques...')">Ver Preembarques Detalle</button>
+        <button class="btn-gmph" style="width:100%; background:#0284c7;" onclick="alert('Generando detalle de Preembarques...')">GMPH Línea</button>
       </div>
     </div>
 
-    <!-- Panel Inferior GMPH -->
-    <div class="gmph-panel">
-      <div>
-        <span style="font-size:11px; color:#831843; font-weight:bold;">GMPH Línea:</span>
-        <span style="font-size:13px; font-weight:bold; margin-left:6px;">${n.gmph_linea || '0.00'}</span>
-      </div>
-      <button class="btn-gmph" onclick="alert('Mostrando gráfica GMPH...')">GMPH Gráfica</button>
-    </div>
+   
   `;
 
   document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)} | Muelle: ${n.muelle}</div>`;
