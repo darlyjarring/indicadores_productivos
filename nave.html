@@ -71,10 +71,8 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <script>
 // --- CONFIGURACIÓN DE SUPABASE ---
 const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
-// Pega aquí tu SUPABASE_PUBLISHABLE_KEY de tu panel de Supabase:
 const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 
-// Se renombra la variable a 'dbClient' para evitar conflictos con la librería global 'window.supabase'
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let NAVES = [];
@@ -105,6 +103,7 @@ function normalizarNave(x){
   nave: x.nave ?? x.Nave ?? '',
   viaje: x.viaje ?? x.Viaje ?? '',
   linea: x.linea ?? x.Linea ?? '',
+  muelle: x.muelle ?? x.Muelle ?? 'NORTE',
   etb: x.etb ?? '', etd: x.etd ?? '', ata: x.ata ?? '', atd: x.atd ?? '',
   status: x.status ?? '',
   origen: x.origen ?? '',
@@ -134,7 +133,7 @@ function rango7(){ const a = new Date(), b = new Date(a); b.setDate(b.getDate()+
 function cambiarZoom(delta){ const z = document.getElementById('zoom'); z.value = Math.max(+z.min, Math.min(+z.max, +z.value + delta)); aplicarZoom(z.value); }
 function aplicarZoom(v){ PX_HORA = +v; document.getElementById('zoom').value = v; document.getElementById('zoomNum').textContent = v + ' px/h'; if(ultimoInicio && ultimoFin) dibujarTimeline(ultimoFiltrado, ultimoInicio, ultimoFin); }
 
-// --- CONSULTA A SUPABASE ---
+// --- CONSULTA A LA TABLA naves ---
 async function cargarDatos(){
  const ds = document.getElementById('fechaDesde').value;
  const hs = document.getElementById('fechaHasta').value;
@@ -145,24 +144,27 @@ async function cargarDatos(){
  fuente.textContent = 'Consultando Supabase...';
 
  try {
-  const desdeStr = ds + 'T00:00:00';
-  const hastaStr = hs + 'T23:59:59';
-
-  // Realizar la consulta a la tabla 'naves' usando dbClient
+  // Apunta a la tabla 'naves'
   const { data, error } = await dbClient
     .from('naves')
-    .select('*')
-    .or(`etb.gte.${desdeStr},ata.gte.${desdeStr}`)
-    .or(`etb.lte.${hastaStr},ata.lte.${hastaStr}`);
+    .select('*');
 
   if (error) throw error;
 
-  NAVES = (data || []).map(normalizarNave);
+  const inicio = new Date(ds + 'T00:00:00-05:00');
+  const fin = new Date(hs + 'T23:59:59-05:00');
+
+  const todos = (data || []).map(normalizarNave);
+  
+  NAVES = todos.filter(n => {
+    const fLlegada = fecha(n.etb) || fecha(n.ata);
+    if (!fLlegada) return true;
+    return fLlegada >= inicio && fLlegada <= fin;
+  });
+
   fuente.className = 'fuente ok';
   fuente.textContent = `Supabase Direct API · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
 
-  const inicio = new Date(ds + 'T00:00:00-05:00');
-  const fin = new Date(hs + 'T23:59:59-05:00');
   ultimoInicio = inicio;
   ultimoFin = fin;
   ultimoFiltrado = NAVES;
@@ -182,18 +184,11 @@ function consultar(){
 }
 
 function colorLinea(linea, mapa){ const k = normalizar(linea) || 'SIN LINEA'; if(!mapa[k]) mapa[k] = COLORES[Object.keys(mapa).length % COLORES.length]; return mapa[k]; }
-function fechaLlegada(n){ return fecha(n.etb) || fecha(n.ata) || fecha(n.etd) || fecha(n.atd); }
 
-function asignarNorteSur(naves){
- const orden = [...naves].sort((a,b) => (fechaLlegada(a) || 0) - (fechaLlegada(b) || 0));
- const asignados = new Map(), ultimoPorDia = {};
- orden.forEach((n,i) => {
-  const d = fechaLlegada(n); const clave = d ? d.toISOString().slice(0,10) : 'SINFECHA';
-  const anterior = ultimoPorDia[clave];
-  let lane = anterior === 'NORTE' ? 'SUR' : anterior === 'SUR' ? 'NORTE' : (i % 2 === 0 ? 'NORTE' : 'SUR');
-  asignados.set(n, lane); ultimoPorDia[clave] = lane;
- });
- return asignados;
+function obtenerMuelle(n){
+ const m = normalizar(n.muelle);
+ if (m.includes('SUR')) return 'SUR';
+ return 'NORTE';
 }
 
 function dibujarTimeline(naves, inicio, fin){
@@ -213,18 +208,19 @@ function dibujarTimeline(naves, inicio, fin){
  }
  eje.appendChild(ei); timeline.appendChild(eje);
  const rows = document.createElement('div'); rows.className = 'rows'; rows.style.width = ancho + 'px';
- const asignados = asignarNorteSur(naves), colores = {};
+ const colores = {};
+
  ['NORTE','SUR'].forEach(laneName => {
   const lane = document.createElement('div'); lane.className = 'lane'; lane.style.width = ancho + 'px';
   const title = document.createElement('div'); title.className = 'lane-title'; title.textContent = laneName; lane.appendChild(title);
   const content = document.createElement('div'); content.className = 'lane-content'; content.style.width = (ancho - 72) + 'px';
   let g = new Date(inicio); g.setMinutes(0,0,0); while(g <= fin){ const x = (g - inicio) / 3600000 * PX_HORA + 72, l = document.createElement('div'); l.className = 'row-line'; l.style.left = x + 'px'; content.appendChild(l); g.setHours(g.getHours() + 3); }
-  naves.filter(n => asignados.get(n) === laneName).forEach(n => {
+
+  naves.filter(n => obtenerMuelle(n) === laneName).forEach(n => {
     const etb = fecha(n.etb), ata = fecha(n.ata), etd = fecha(n.etd), atd = fecha(n.atd);
     const inicioN = etb || ata || etd || atd;
     if(!inicioN) return;
     const finN = atd || etd || new Date(inicioN.getTime() + 2 * 3600000);
-    if(finN <= inicioN) return;
 
     const pxDesdeInicio = d => (d - inicio) / 3600000 * PX_HORA;
     const x1 = pxDesdeInicio(inicioN);
@@ -238,9 +234,9 @@ function dibujarTimeline(naves, inicio, fin){
     const bar = document.createElement('div');
     bar.className = 'vessel';
     bar.style.left = left + 'px';
-    bar.style.width = Math.max(2, w) + 'px';
+    bar.style.width = Math.max(100, w) + 'px';
     bar.style.background = colorLinea(n.linea, colores);
-    bar.title = `ETB: ${n.etb||'—'} | ETD: ${n.etd||'—'} | Click para ver información`;
+    bar.title = `ETB: ${n.etb||'—'} | ETD: ${n.etd||'—'} | Muelle: ${n.muelle} | Click para ver información`;
     bar.innerHTML = `<div class="nombre">${escapeHtml(limpiarNombre(n.nave)||"NAVE")}</div><div class="linea">${escapeHtml(n.linea||'')}</div><div class="estado">${escapeHtml(estado(n))}</div>`;
 
     if(etb && etb >= inicioN && etb <= finN){
@@ -284,6 +280,7 @@ function abrirModal(n){
   ['Nave', n.nave],
   ['Viaje', n.viaje],
   ['Línea naviera', n.linea],
+  ['Muelle', n.muelle],
   ['ETB', n.etb],
   ['ATA', n.ata],
   ['ETD', n.etd],
