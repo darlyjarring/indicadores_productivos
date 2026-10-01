@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indicadores Productivos - DP World Posorja</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7f9; }
 
+        /* Encabezado */
+        header {
+            background-color: #0072ce;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .title-bar {
+            background-color: #ffffff;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .section-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            margin: 15px 0 10px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Grid de Tarjetas */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background-color: #0080c6;
+            color: white;
+            border-radius: 4px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 110px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Colores según categoría */
+        .card.orange { background-color: #ff8200; }
+        .card.green { background-color: #00a859; }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            line-height: 1.3;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+            font-weight: normal;
+        }
+
+        .card-link {
+            align-self: flex-end;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .card-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span>DP WORLD POSORJA - MESA DE SERVICIO</span>
+        <span>Usuario: jleonardo</span>
+    </header>
+
+    <div class="title-bar">
+        Indicadores Productivos
+    </div>
+
+    <div class="container">
+
+        <!-- SECCIÓN A: OPERACIONES DE MUELLE Y BUQUES -->
+        <div class="section-label">A. Muelle y Buques (QC / Berth Operations)</div>
+        <div class="grid-container">
+            
+            <div class="card">
+                <div>
+                    <div class="card-title">Rendimientos Nave (MPH / BMPH)</div>
+                    <div class="card-subtitle">Moves Per Hour por QC y Productividad Global de Buque</div>
+                </div>
+                <a href="nave.html?view=mph" class="card-link">Consultar &#10140;</a>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-title">Tasa de Transferencia & Tiempos Muertos</div>
+                    <div class="card-subtitle">Gross vs Net Rate e Idle Time por Grúa QC</div>
+                </div>
+                <a href="tasaytiempos.html?view=idle" class="card-link">Consultar &#10140;</a>
+            </div>
+
+            <div class="card">
+                <div>
+                    <div class="card-title">MUELLES: Planificación en Muelle</div>
+                    <div class="card-subtitle">Secuencia de atranque y ventana de buques</div>
+                </div>
+                <a href="kpi_muelle.php?view=plan" class="card-link">Consultar &#10140;</a>
+            </div>
+
+        </div>
+
+        <!-- SECCIÓN B: FLUJO DE CAMIONES EXTERNOS -->
+        <div class="section-label">B. Flujo de Camiones Externos (Gate & Yard)</div>
+        <div class="grid-container">
+
+            <div class="card orange">
+                <div>
+                    <div class="card-title">Monitor de Camiones (Turn-Time Total)</div>
+                    <div class="card-subtitle">Tiempo total transcurrido desde Gate-In hasta Gate-Out</div>
+                </div>
+                <a href="monitor_camiones.php?view=turntime" class="card-link">Consultar &#10140;</a>
+            </div>
+
+            <div class="card orange">
+                <div>
+                    <div class="card-title">Tiempos en Patio & Cuellos de Botella</div>
+                    <div class="card-subtitle">Dwelling Time, tiempo de RTG y congestión por Bloque</div>
+                </div>
+                <a href="monitor_camiones.php?view=bloques" class="card-link">Consultar &#10140;</a>
+            </div>
+
+            <div class="card orange">
+                <div>
+                    <div class="card-title">EQUIPOS: Servicio de Atención Patio</div>
+                    <div class="card-subtitle">Desempeño y tiempos de atención de RTG / Side Loader</div>
+                </div>
+                <a href="monitor_camiones.php?view=equipos" class="card-link">Consultar &#10140;</a>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
