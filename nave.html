@@ -34,9 +34,9 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 .sin-datos{padding:40px;text-align:center;color:#64748b}
 .leyenda{background:#fff;margin-top:12px;padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.leyenda h3{margin:0 0 8px}.leyenda-item{display:inline-flex;align-items:center;margin:4px 14px 4px 0;font-size:12px}.color{width:15px;height:15px;border-radius:4px;margin-right:5px}
 
-/* MODAL OPERATIVO DETALLADO POSORJA */
+/* MODAL OPERATIVO DIS / LOA REMAIN & YARD */
 .modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}
-.modal{width:min(920px,98%);max-height:92vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.modal{width:min(950px,98%);max-height:92vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .modal-header{background:var(--azul);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
 .modal-header h2{margin:0;font-size:18px}
 .cerrar{background:transparent;font-size:25px;padding:0 5px;color:#fff;border:none;cursor:pointer}
@@ -314,7 +314,7 @@ function escapeHtml(s){ return String(s??'').replace(/[&<>'"]/g, m => ({'&':'&am
 function actualizarResumen(naves){ document.getElementById('cantidad').textContent = naves.length; document.getElementById('porArribar').textContent = naves.filter(n => estado(n) === 'POR ARRIBAR').length; document.getElementById('trabajando').textContent = naves.filter(n => estado(n) === 'TRABAJANDO').length; document.getElementById('atrasadas').textContent = naves.filter(n => estado(n) === 'ATRASADA').length; document.getElementById('zarparon').textContent = naves.filter(n => estado(n) === 'ZARPÓ').length; }
 function dibujarLeyenda(colores){ const cont = document.getElementById('leyenda'); cont.innerHTML = ''; Object.keys(colores).forEach(k => { const i = document.createElement('div'); i.className = 'leyenda-item'; i.innerHTML = `<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`; cont.appendChild(i); }); if(!Object.keys(colores).length) cont.textContent = 'No hay líneas navieras en el rango seleccionado.'; }
 
-// --- MODAL OPERATIVO DETALLADO CON LÓGICA DE PATIO Y PREEMBARQUES ---
+// --- MODAL OPERATIVO CON LÓGICA EXPLICADA DE DIS / LOA TOT VS REMAIN ---
 async function abrirModal(n) {
   document.getElementById('modalTitulo').textContent = `${limpiarNombre(n.nave)} - VIAJE ${n.viaje || '—'}`;
   
@@ -335,42 +335,54 @@ async function abrirModal(n) {
     console.warn('Error al cargar contenedores de la nave:', err);
   }
 
-  // 1. CÁLCULO DE MOVIMIENTOS DIS (Descarga) y LOA (Embarque)
-  const dis_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL').length;
-  const dis_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP').length;
-  const dis_rst = contenedores.filter(c => c.categoria === 'restiba').length;
-  const dis_sum = dis_fcl + dis_mty + dis_rst;
+  // ==========================================
+  // 1. LÓGICA TABLA IZQUIERDA: TOTALES (TOT)
+  // ==========================================
+  // DIS (Descarga / Importación Total Programada)
+  const dis_tot_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL').length;
+  const dis_tot_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP').length;
+  const dis_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
+  const dis_tot_sum = dis_tot_fcl + dis_tot_mty + dis_tot_rst;
 
-  const loa_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL').length;
-  const loa_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP').length;
-  const loa_rst = contenedores.filter(c => c.categoria === 'restiba').length;
-  const loa_sum = loa_fcl + loa_mty + loa_rst;
+  // LOA (Embarque / Exportación Total Programada)
+  const loa_tot_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL').length;
+  const loa_tot_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP').length;
+  const loa_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
+  const loa_tot_sum = loa_tot_fcl + loa_tot_mty + loa_tot_rst;
 
-  // 2. PATIO POSORJA (YARD): Contenedores sin fecha de embarque o stat != 'EMBARCADO'
-  const patio_contenedores = contenedores.filter(c => !c.fecha_embarque && c.stat !== 'EMBARCADO');
+  // ==========================================
+  // 2. LÓGICA TABLA DERECHA: REMANENTE (REMAIN)
+  // ==========================================
+  // DIS REMAIN: Descargas pendientes (Aún NO tienen fecha_descarga)
+  const dis_rem_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL' && !c.fecha_descarga).length;
+  const dis_rem_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP' && !c.fecha_descarga).length;
+  const dis_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_descarga).length;
+  const dis_rem_sum = dis_rem_fcl + dis_rem_mty + dis_rem_rst;
+
+  // LOA REMAIN: Embarques pendientes (Aún NO tienen fecha_embarque)
+  const loa_rem_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL' && !c.fecha_embarque).length;
+  const loa_rem_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP' && !c.fecha_embarque).length;
+  const loa_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_embarque).length;
+  const loa_rem_sum = loa_rem_fcl + loa_rem_mty + loa_rem_rst;
+
+  // ==========================================
+  // 3. PATIO POSORJA (YARD): Contenedores sin fecha_embarque o stat != 'EMBARCADO'
+  // ==========================================
+  const patio_contenedores = contenedores.filter(c => c.categoria === 'embarque' && !c.fecha_embarque && c.stat !== 'EMBARCADO');
   const yard_empty = patio_contenedores.filter(c => c.status === 'EMP').length;
   const yard_dry = patio_contenedores.filter(c => c.status === 'FCL' && c.tipo !== '40HR').length;
   const yard_rh = patio_contenedores.filter(c => c.tipo === '40HR').length; // Reefer
   const yard_total = yard_empty + yard_dry + yard_rh;
 
-  // 3. PREEMBARQUES Y BLOQUEOS
-  // Total preembarques asignados (tienen fecha_preembarque)
+  // ==========================================
+  // 4. PREEMBARQUES Y BLOQUEOS
+  // ==========================================
   const preembarque_total_inicial = contenedores.filter(c => c.fecha_preembarque != null).length;
-  
-  // Contenedores bloqueados (bloqueo_alarma = true o tienen fecha_bloqueo activa)
   const bloqueados_count = contenedores.filter(c => c.fecha_preembarque != null && (c.bloqueo_alarma === true || c.fecha_bloqueo != null)).length;
-  
-  // Total efectivo de preembarque considerando bloqueos
   const preembarque_total_efectivo = Math.max(0, preembarque_total_inicial - bloqueados_count);
-  
-  // Preembarques realizados (tienen fecha_realizacion_preembarque)
   const preembarques_realizados = contenedores.filter(c => c.fecha_preembarque != null && c.fecha_realizacion_preembarque != null).length;
-  
-  // Pendientes a realizar (se descuentan a medida que se completan)
   const preembarques_pendientes = Math.max(0, preembarque_total_efectivo - preembarques_realizados);
 
-  // 4. PROMEDIO DE GRÚAS QC (Quay Cranes)
-  // Promedio dinamico o asignado a la nave
   const promedio_qc = n.promedio_qc || '2.5';
 
   modalDatos.innerHTML = `
@@ -386,7 +398,7 @@ async function abrirModal(n) {
       </div>
     </div>
 
-    <!-- Tabla Movimientos Totales y Restantes -->
+    <!-- Tabla Movimientos TOT (Manifestado) vs REMAIN (Pendientes) -->
     <div class="ops-section">
       <table class="ops-table">
         <thead>
@@ -397,16 +409,28 @@ async function abrirModal(n) {
         </thead>
         <tbody>
           <tr>
-            <td><strong>DIS</strong></td><td>${dis_fcl}</td><td>${dis_mty}</td><td>${dis_rst}</td><td><strong>${dis_sum}</strong></td>
-            <td><strong>DIS</strong></td><td>0</td><td>0</td><td>0</td><td><strong>0</strong></td>
+            <td><strong>DIS</strong></td>
+            <td>${dis_tot_fcl}</td><td>${dis_tot_mty}</td><td>${dis_tot_rst}</td><td><strong>${dis_tot_sum}</strong></td>
+            <td><strong>DIS</strong></td>
+            <td>${dis_rem_fcl}</td><td>${dis_rem_mty}</td><td>${dis_rem_rst}</td><td><strong>${dis_rem_sum}</strong></td>
           </tr>
           <tr>
-            <td><strong>LOA</strong></td><td>${loa_fcl}</td><td>${loa_mty}</td><td>${loa_rst}</td><td><strong>${loa_sum}</strong></td>
-            <td><strong>LOA</strong></td><td>${yard_dry}</td><td>${yard_empty}</td><td>0</td><td><strong>${yard_total}</strong></td>
+            <td><strong>LOA</strong></td>
+            <td>${loa_tot_fcl}</td><td>${loa_tot_mty}</td><td>${loa_tot_rst}</td><td><strong>${loa_tot_sum}</strong></td>
+            <td><strong>LOA</strong></td>
+            <td>${loa_rem_fcl}</td><td>${loa_rem_mty}</td><td>${loa_rem_rst}</td><td><strong>${loa_rem_sum}</strong></td>
           </tr>
           <tr class="total-row">
-            <td>TOTAL</td><td>${dis_fcl + loa_fcl}</td><td>${dis_mty + loa_mty}</td><td>${dis_rst + loa_rst}</td><td>${dis_sum + loa_sum}</td>
-            <td>TOTAL</td><td>${yard_dry}</td><td>${yard_empty}</td><td>0</td><td>${yard_total}</td>
+            <td>TOTAL</td>
+            <td>${dis_tot_fcl + loa_tot_fcl}</td>
+            <td>${dis_tot_mty + loa_tot_mty}</td>
+            <td>${dis_tot_rst + loa_tot_rst}</td>
+            <td>${dis_tot_sum + loa_tot_sum}</td>
+            <td>TOTAL</td>
+            <td>${dis_rem_fcl + loa_rem_fcl}</td>
+            <td>${dis_rem_mty + loa_rem_mty}</td>
+            <td>${dis_rem_rst + loa_rem_rst}</td>
+            <td>${dis_rem_sum + loa_rem_sum}</td>
           </tr>
         </tbody>
       </table>
