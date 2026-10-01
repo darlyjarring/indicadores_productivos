@@ -3,113 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tráfico de Naves - Posorja</title>
-<!-- Carga de la librería oficial de Supabase JS desde CDN -->
+<title>Rendimientos Naves - DP World Posorja</title>
+<!-- Carga de la librería oficial de Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-:root{--azul:#123b5d;--borde:#dbe2ea;--fondo:#eef1f5}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1f2937}
-header{background:#a51f35;color:#fff;padding:16px 20px}
-header h1{margin:0 0 4px;font-size:25px} header p{margin:0;opacity:.92}
-.panel{max-width:1700px;margin:16px auto;padding:0 12px}
-.controles{background:#fff;padding:13px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;flex-wrap:wrap;align-items:end;gap:9px}
-.campo{display:flex;flex-direction:column;gap:4px}.campo label{font-size:12px;font-weight:bold}.campo input{height:38px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:6px}
-button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}button:hover{opacity:.9}button.secundario{background:#64748b}
-.zoom-box{display:flex;align-items:center;gap:7px;background:#f8fafc;border:1px solid var(--borde);padding:4px 7px;border-radius:7px;height:38px}.zoom-box label{font-size:12px;font-weight:bold}.zoom-box input{width:120px}.zoom-num{min-width:46px;text-align:center;font-size:12px;font-weight:bold}
-.fuente{margin-top:8px;font-size:12px;color:#64748b}.fuente.ok{color:#166534}.fuente.error{color:#b91c1c}
-.resumen{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}.resumen span{background:#fff;padding:8px 12px;border-radius:7px;box-shadow:0 2px 6px rgba(0,0,0,.06);font-size:13px}
-.timeline-box{margin-top:12px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
-.timeline-scroll{overflow:auto;position:relative;max-height:72vh;cursor:grab;user-select:none;-webkit-user-select:none}
-.timeline-scroll.active{cursor:grabbing}
-.timeline{position:relative;min-width:900px}
-.axis{position:sticky;top:0;z-index:30;height:66px;background:#f8fafc;border-bottom:2px solid #cbd5e1}
-.axis-inner{position:relative;height:100%}.day{position:absolute;top:0;height:66px;border-left:1px solid #cbd5e1;padding:8px 5px;font-weight:bold;color:#334155;white-space:nowrap;font-size:12px}.hour{position:absolute;bottom:6px;font-size:10px;color:#64748b;transform:translateX(-50%);white-space:nowrap}
-.lane-title{position:sticky;left:0;z-index:22;width:72px;min-width:72px;height:42px;background:#fff;border-right:1px solid #cbd5e1;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;color:#475569;box-shadow:2px 0 3px rgba(0,0,0,.05)}
-.rows{position:relative}.lane{position:relative;min-height:82px;border-bottom:1px solid #cbd5e1;display:flex;align-items:stretch}.lane-bg{position:absolute;inset:0;pointer-events:none}.row-line{position:absolute;top:0;bottom:0;width:1px;background:#eef2f7}.lane-content{position:absolute;left:72px;top:0;height:82px;margin-left:0}
-.vessel{position:absolute;top:14px;height:52px;min-width:42px;border-radius:6px;color:#fff;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.22);overflow:hidden;transition:transform .12s,box-shadow .12s;border:1px solid rgba(0,0,0,.12)}
-.vessel:hover{transform:translateY(-2px);box-shadow:0 5px 10px rgba(0,0,0,.25)}
-.vessel .nombre{padding:5px 7px 0;font-weight:bold;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.vessel .linea{padding:1px 7px;font-size:9px;white-space:nowrap}.estado{position:absolute;right:4px;bottom:3px;font-size:8px;background:rgba(0,0,0,.28);padding:2px 4px;border-radius:3px;white-space:nowrap}
-.ahora{position:absolute;top:0;bottom:0;width:2px;background:#dc2626;z-index:20;pointer-events:none}.marca-etb{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);transform:translateX(-50%);border-radius:2px;z-index:4}.marca-ata{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);transform:translateX(-50%);border-radius:2px}.ahora-label{position:absolute;top:2px;left:4px;color:#dc2626;font-size:9px;font-weight:bold;white-space:nowrap;background:#fff;padding:1px 2px}
-.sin-datos{padding:40px;text-align:center;color:#64748b}
-.leyenda{background:#fff;margin-top:12px;padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.leyenda h3{margin:0 0 8px}.leyenda-item{display:inline-flex;align-items:center;margin:4px 14px 4px 0;font-size:12px}.color{width:15px;height:15px;border-radius:4px;margin-right:5px}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;color:#333;font-size:13px}
 
-/* MODAL OPERATIVO DIS / LOA REMAIN & YARD */
-.modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}
-.modal{width:min(950px,98%);max-height:92vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
-.modal-header{background:var(--azul);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-.modal-header h2{margin:0;font-size:18px}
-.cerrar{background:transparent;font-size:25px;padding:0 5px;color:#fff;border:none;cursor:pointer}
-.detalle{padding:14px}
+/* HEADER Y CONTENEDOR */
+.main-header{background:#fff;padding:10px 20px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
+.main-header h2{margin:0;font-size:16px;color:#445362;font-weight:normal}
+.container{padding:15px;max-width:1600px;margin:0 auto}
 
-.ops-section { margin-bottom: 12px; }
-.ops-title-bar { background: #fce7f3; color: #831843; font-weight: bold; text-align: center; padding: 5px; font-size: 12px; border-radius: 4px 4px 0 0; }
-.grid-timeline { display: grid; grid-template-columns: repeat(5, 1fr); background: #fff; border: 1px solid #fbcfe8; text-align: center; font-size: 11px; padding: 6px; }
-.grid-timeline strong { display: block; color: #9d174d; margin-bottom: 2px; }
+/* GRID DE NAVES */
+.naves-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:15px;margin-bottom:15px}
 
-.ops-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-top: 4px; }
-.ops-table th { background: #fce7f3; color: #831843; font-weight: bold; border: 1px solid #fbcfe8; padding: 5px; }
-.ops-table td { border: 1px solid #e2e8f0; padding: 5px; }
-.ops-table tr.total-row { font-weight: bold; background: #f8fafc; }
+/* TARJETAS DE NAVES */
+.card-nave{border-radius:2px;color:#fff;padding:15px;position:relative;box-shadow:0 1px 3px rgba(0,0,0,0.12);display:flex;flex-direction:column;justify-space-between;min-height:210px}
+.card-nave.cyan{background:#00a7d0}
+.card-nave.green{background:#00a65a}
+.card-nave.orange{background:#f39c12}
+.card-nave.red{background:#dd4b39}
+.card-nave.teal{background:#17a2b8}
 
-.grid-ops-body { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 12px; margin-top: 10px; }
-.card-yard { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; }
-.rend-badge { background: #fef08a; color: #854d0e; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+.card-nave h3{margin:0 0 4px 0;font-size:16px;text-transform:uppercase;font-weight:bold}
+.card-nave .sub-info{font-size:11px;font-weight:bold;margin-bottom:8px;opacity:0.95}
+.card-nave .detalles-list{font-size:11px;line-height:1.4}
+.card-nave .ship-icon{position:absolute;right:15px;top:15px;opacity:0.25;font-size:50px}
 
-.info-box-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; margin-top: 6px; font-size: 11px; }
-.info-box-row strong { color: #334155; }
-.info-box-val { font-weight: bold; color: #9d174d; font-size: 12px; }
+.card-btn-consultar{background:rgba(0,0,0,0.15);color:#fff;text-align:center;padding:6px;margin-top:10px;text-decoration:none;font-weight:bold;font-size:12px;border-radius:2px;cursor:pointer;display:block}
+.card-btn-consultar:hover{background:rgba(0,0,0,0.25)}
 
-.btn-gmph { background: #16a34a; color: #fff; border: none; padding: 7px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px; }
-.btn-gmph:hover { background: #15803d; }
-.gmph-panel { background: #fce7f3; border-radius: 6px; padding: 10px; text-align: center; margin-top: 12px; display: flex; justify-content: space-around; align-items: center; }
-.estado-grande{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:6px;font-weight:bold;background:#e2e8f0;font-size:12px}
+/* TARJETA INDICADORES Y DESCARGAS */
+.card-indicadores{background:#17a2b8;color:#fff;padding:15px;border-radius:2px;min-height:210px;position:relative}
+.card-indicadores h3{margin:0 0 10px 0;font-size:15px;font-weight:bold}
+.descarga-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px;font-weight:bold}
+.descarga-link{color:#fff;text-decoration:underline;cursor:pointer}
+.download-icon{position:absolute;right:15px;top:40px;opacity:0.3;font-size:60px}
 
-.nota{font-size:11px;color:#64748b;margin-top:7px}
-@media(max-width:700px){header h1{font-size:20px}.panel{padding:0 7px}.controles{align-items:stretch}.campo{flex:1 1 130px}.zoom-box{flex:1 1 100%}.zoom-box input{flex:1}.grid-ops-body{grid-template-columns:1fr}.timeline-scroll{max-height:75vh}.timeline{min-width:700px}.day{font-size:10px}.vessel .nombre{font-size:10px}.vessel .linea{font-size:8px}}
+/* SECCIÓN DETALLE NAVE CONSULTADA */
+.panel-detalle{background:#fff;border:1px solid #ddd;border-top:3px solid #3c8dbc;padding:15px;margin-top:15px;display:none}
+.header-detalle{background:#f8f9fa;padding:8px 12px;border:1px solid #eee;margin-bottom:15px;font-weight:bold;color:#444}
+.bar-filtros{display:flex;gap:15px;align-items:center;margin-bottom:15px}
+.bar-filtros input, .bar-filtros button{padding:4px 8px;border:1px solid #ccc;border-radius:2px}
+.bar-filtros button{background:#3c8dbc;color:#fff;border:none;cursor:pointer}
+
+/* TABLA DIS / LOA */
+.table-rendimiento{width:100%;border-collapse:collapse;margin-bottom:15px;font-size:12px}
+.table-rendimiento th, .table-rendimiento td{padding:6px 10px;text-align:center;border-bottom:1px solid #eee}
+.table-rendimiento th{background:#fafafa;color:#666;font-weight:bold}
+
+.highlight-yellow{background:#ffff00;padding:2px 5px;font-weight:bold}
+
+/* TABLA HORA POR HORA */
+.tabla-horas{width:320px;margin:15px auto;border-collapse:collapse;font-size:12px}
+.tabla-horas th, .tabla-horas td{border:1px solid #ddd;padding:6px;text-align:center}
+.tabla-horas th{background:#f4f4f4}
+
+.btn-export{color:#007bff;text-decoration:none;font-weight:bold;cursor:pointer}
 </style>
 </head>
 <body>
-<header>
-<h1>RENDIMIENTOS DE NAVES - POSORJA</h1>
-<p>Línea de tiempo de arribos, operaciones y zarpes</p>
-</header>
-<div class="panel">
-<div class="controles">
-<div class="campo"><label>Desde</label><input type="date" id="fechaDesde"></div>
-<div class="campo"><label>Hasta</label><input type="date" id="fechaHasta"></div>
-<button onclick="consultar()">CONSULTAR</button>
-<button class="secundario" onclick="hoy()">HOY</button>
-<button class="secundario" onclick="rango7()">7 DÍAS</button>
-<div class="zoom-box">
-<label>ESCALA</label>
-<button type="button" class="secundario" onclick="cambiarZoom(-6)">−</button>
-<input type="range" id="zoom" min="12" max="120" value="42" step="2" oninput="aplicarZoom(this.value)">
-<button type="button" class="secundario" onclick="cambiarZoom(6)">+</button>
-<span class="zoom-num" id="zoomNum">42 px/h</span>
-</div>
-</div>
-<div class="fuente" id="fuente">Cargando datos...</div>
-<div class="resumen">
-<span>Naves: <b id="cantidad">0</b></span><span>Por arribar: <b id="porArribar">0</b></span><span>Trabajando: <b id="trabajando">0</b></span><span>Atrasadas: <b id="atrasadas">0</b></span><span>Zarparon: <b id="zarparon">0</b></span>
-</div>
-<div class="timeline-box"><div class="timeline-scroll" id="scroll"><div class="timeline" id="timeline"></div></div></div>
-<div class="nota">Arrastre con el mouse o con el dedo para desplazarse en el tiempo. Use la rueda del mouse para cambiar la escala de zoom.</div>
-<div class="leyenda"><h3>Líneas navieras</h3><div id="leyenda"></div></div>
+
+<div class="main-header">
+  <h2>Rendimientos Naves</h2>
+  <span style="font-size:18px; color:#999; cursor:pointer">&#803;</span>
 </div>
 
-<!-- MODAL OPERATIVO -->
-<div class="modal-fondo" id="modalFondo" onclick="cerrarModal(event)">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="modalTitulo">Nave</h2>
-      <button class="cerrar" onclick="cerrarModal()">×</button>
-    </div>
-    <div class="detalle">
-      <div id="modalDatos"></div>
-      <div id="modalEstado"></div>
-    </div>
+<div class="container">
+
+  <!-- GRID DE TARJETAS TIPO DASHBOARD -->
+  <div class="naves-grid" id="gridNaves">
+    <!-- Carga Dinámica desde JS / Supabase -->
   </div>
+
+  <!-- PANEL DE DETALLE DE RENDIMIENTO (SE DESPLIEGA AL CONSULTAR) -->
+  <div class="panel-detalle" id="panelDetalle">
+    <div class="header-detalle" id="headerNaveInfo">
+      Nave: SEASPAN ZAMBEZI / Consorcio: ASPA / Operación: 2026-291
+    </div>
+
+    <div class="bar-filtros">
+      <span>CONSULTAR ÚLTIMAS:</span>
+      <input type="number" value="3" style="width:50px">
+      <span>HORAS</span>
+      <button onclick="consultarMétricas()">🔍</button>
+
+      <div style="margin-left:auto; font-size:12px">
+        Fecha Inicio: <span class="highlight-yellow" id="lblFechaInicio">2026-09-27 09:48</span> &nbsp;&nbsp;&nbsp;
+        Fecha Término: <span class="highlight-yellow" id="lblFechaTermino">2026-09-30 15:34</span> &nbsp;&nbsp;&nbsp;
+        Fecha Consulta: <span class="highlight-yellow" id="lblFechaConsulta">2026-10-01 00:03</span>
+      </div>
+    </div>
+
+    <!-- TABLA DE MOVIMIENTOS DIS / LOA -->
+    <table class="table-rendimiento">
+      <thead>
+        <tr>
+          <th></th>
+          <th>TOT.</th>
+          <th>FCL</th>
+          <th>MTY</th>
+          <th>RST</th>
+          <th>SALDO</th>
+          <th>FCL</th>
+          <th>MTY</th>
+          <th>RST</th>
+        </tr>
+      </thead>
+      <tbody id="bodyResumenMovs">
+        <!-- Carga Dinámica -->
+      </tbody>
+    </table>
+
+    <div style="display:flex; justify-content:space-between; margin:15px 0; font-weight:bold">
+      <a class="btn-export" onclick="alert('Exportando a Excel...')">Exportar a Excel</a>
+      <div>Rendt. Bruto Prom Nave/Cnt/Hr: <span class="highlight-yellow" id="lblRendBruto">43.71</span></div>
+      <div>Rendt. Neto Prom Nave/Cnt/Hr: <span class="highlight-yellow" id="lblRendNeto">43.71</span></div>
+      <div></div>
+    </div>
+
+    <!-- TABLA RENDIMIENTO HORA POR HORA -->
+    <table class="tabla-horas">
+      <thead>
+        <tr>
+          <th>Hora</th>
+          <th>Rendt. Bruto</th>
+          <th>Rendt. Neto</th>
+        </tr>
+      </thead>
+      <tbody id="bodyHoras">
+        <!-- Carga Dinámica -->
+      </tbody>
+    </table>
+
+  </div>
+
 </div>
 
 <script>
@@ -119,428 +148,121 @@ const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let NAVES = [];
-const COLORES = ['#2563eb','#16a34a','#dc2626','#9333ea','#ea580c','#0891b2','#db2777','#475569','#65a30d','#7c3aed','#a16207','#0f766e'];
-let PX_HORA = 42;
-let ultimoInicio = null, ultimoFin = null, ultimoFiltrado = [];
-
-function fecha(valor){
- if(!valor) return null;
- let s = String(valor).trim();
- if(!s) return null;
- let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
- if(m){
-   const iso = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]||'00'}-05:00`;
-   const d = new Date(iso); return isNaN(d.getTime()) ? null : d;
- }
- let iso = s.replace(' ','T');
- if(!/[zZ]|[+-]\d\d:?\d\d$/.test(iso)) iso += '-05:00';
- const d = new Date(iso); return isNaN(d.getTime()) ? null : d;
-}
-function normalizar(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim() }
-function limpiarNombre(n){ return String(n||'').replace(/^\s*[^-]+\s+-\s+/,'').trim() }
-
-function normalizarNave(x){
- x = x || {};
- return {
-  id: x.id ?? '',
-  nave: x.nave ?? x.Nave ?? '',
-  viaje: x.viaje ?? x.Viaje ?? '',
-  linea: x.linea ?? x.Linea ?? '',
-  muelle: x.muelle ?? x.Muelle ?? 'NORTE',
-  etb: x.etb ?? '', etd: x.etd ?? '', ata: x.ata ?? '', atd: x.atd ?? '',
-  eta: x.eta ?? '', start_operation: x.start_operation ?? '', complete_operation: x.complete_operation ?? '',
-  status: x.status ?? '',
-  origen: x.origen ?? '', destino: x.destino ?? '', servicio: x.servicio ?? '',
-  rend_bruto: x.rend_bruto ?? '0.00', rend_neto: x.rend_neto ?? '0.00', gmph_linea: x.gmph_linea ?? '0.00'
- };
-}
-
-function estado(n){
- const s = normalizar(n.status), now = new Date(), etb = fecha(n.etb), ata = fecha(n.ata), atd = fecha(n.atd);
- if(atd) return 'ZARPÓ';
- if(s==='DEPARTED' || s.includes('SAILED')) return 'ZARPÓ';
- if(s.includes('IN OPERATION') || s.includes('OPERATING') || s==='WORKING') return 'TRABAJANDO';
- if(ata && !atd) return 'TRABAJANDO';
- if(s.includes('TO ARRIVE')){ if(etb && now<etb) return 'POR ARRIBAR'; if(etb && now>=etb) return 'ATRASADA'; return 'POR ARRIBAR'; }
- if(etb && now<etb) return 'POR ARRIBAR';
- if(etb && now>=etb && !atd) return 'TRABAJANDO';
- return 'POR ARRIBAR';
-}
-
-function fechaLocalInput(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
-function hoy(){ const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(a); consultar(); }
-function rango7(){ const a = new Date(), b = new Date(a); b.setDate(b.getDate()+6); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(b); consultar(); }
-function cambiarZoom(delta){ const z = document.getElementById('zoom'); z.value = Math.max(+z.min, Math.min(+z.max, +z.value + delta)); aplicarZoom(z.value); }
-function aplicarZoom(v){ PX_HORA = +v; document.getElementById('zoom').value = v; document.getElementById('zoomNum').textContent = v + ' px/h'; if(ultimoInicio && ultimoFin) dibujarTimeline(ultimoFiltrado, ultimoInicio, ultimoFin); }
-
-// --- CONSULTA A LA TABLA naves ---
-async function cargarDatos(){
- const ds = document.getElementById('fechaDesde').value;
- const hs = document.getElementById('fechaHasta').value;
- if(!ds || !hs) return;
-
- const fuente = document.getElementById('fuente');
- fuente.className = 'fuente';
- fuente.textContent = 'Consultando Supabase...';
-
- try {
-  const { data, error } = await dbClient
-    .from('naves')
-    .select('*');
-
-  if (error) throw error;
-
-  const inicio = new Date(ds + 'T00:00:00-05:00');
-  const fin = new Date(hs + 'T23:59:59-05:00');
-
-  const todos = (data || []).map(normalizarNave);
-  
-  NAVES = todos.filter(n => {
-    const fLlegada = fecha(n.etb) || fecha(n.ata);
-    if (!fLlegada) return true;
-    return fLlegada >= inicio && fLlegada <= fin;
-  });
-
-  fuente.className = 'fuente ok';
-  fuente.textContent = `Supabase Direct API · ${NAVES.length} naves cargadas · ${new Date().toLocaleTimeString('es-EC')}`;
-
-  ultimoInicio = inicio;
-  ultimoFin = fin;
-  ultimoFiltrado = NAVES;
-  dibujarTimeline(NAVES, inicio, fin);
-
- } catch(e) {
-  fuente.className = 'fuente error';
-  fuente.textContent = 'Error al conectar con Supabase: ' + e.message;
- }
-}
-
-function consultar(){
- const ds = document.getElementById('fechaDesde').value, hs = document.getElementById('fechaHasta').value;
- if(!ds || !hs){ hoy(); return; }
- if(hs < ds){ alert('La fecha Hasta no puede ser menor que Desde.'); return; }
- cargarDatos();
-}
-
-function colorLinea(linea, mapa){ const k = normalizar(linea) || 'SIN LINEA'; if(!mapa[k]) mapa[k] = COLORES[Object.keys(mapa).length % COLORES.length]; return mapa[k]; }
-
-function obtenerMuelle(n){
- const m = normalizar(n.muelle);
- if (m.includes('SUR')) return 'SUR';
- return 'NORTE';
-}
-
-function dibujarTimeline(naves, inicio, fin){
- const timeline = document.getElementById('timeline'); timeline.innerHTML = '';
- const totalHoras = Math.max(24, (fin - inicio) / 3600000), ancho = Math.max(900, totalHoras * PX_HORA + 72); timeline.style.width = ancho + 'px';
- const eje = document.createElement('div'); eje.className = 'axis'; const ei = document.createElement('div'); ei.className = 'axis-inner'; ei.style.width = ancho + 'px';
-
- let c = new Date(inicio);
- while(c <= fin){
-    const x = (c - inicio) / 3600000 * PX_HORA;
-    if(c.getHours() === 0){
-      const d = document.createElement('div'); d.className = 'day'; d.style.left = (x + 72) + 'px'; d.style.width = 24 * PX_HORA + 'px';
-      d.textContent = c.toLocaleDateString('es-EC', {weekday:'short', day:'2-digit', month:'short'}); ei.appendChild(d);
-    }
-    const h = document.createElement('div'); h.className = 'hour'; h.style.left = (x + 72) + 'px'; h.textContent = String(c.getHours()).padStart(2,'0') + ':00'; ei.appendChild(h);
-    c.setHours(c.getHours() + 1);
- }
- eje.appendChild(ei); timeline.appendChild(eje);
- const rows = document.createElement('div'); rows.className = 'rows'; rows.style.width = ancho + 'px';
- const colores = {};
-
- ['NORTE','SUR'].forEach(laneName => {
-  const lane = document.createElement('div'); lane.className = 'lane'; lane.style.width = ancho + 'px';
-  const title = document.createElement('div'); title.className = 'lane-title'; title.textContent = laneName; lane.appendChild(title);
-  const content = document.createElement('div'); content.className = 'lane-content'; content.style.width = (ancho - 72) + 'px';
-  let g = new Date(inicio); g.setMinutes(0,0,0); while(g <= fin){ const x = (g - inicio) / 3600000 * PX_HORA + 72, l = document.createElement('div'); l.className = 'row-line'; l.style.left = x + 'px'; content.appendChild(l); g.setHours(g.getHours() + 3); }
-
-  naves.filter(n => obtenerMuelle(n) === laneName).forEach(n => {
-    const etb = fecha(n.etb), ata = fecha(n.ata), etd = fecha(n.etd), atd = fecha(n.atd);
-    const inicioN = etb || ata || etd || atd;
-    if(!inicioN) return;
-    const finN = atd || etd || new Date(inicioN.getTime() + 2 * 3600000);
-
-    const pxDesdeInicio = d => (d - inicio) / 3600000 * PX_HORA;
-    const x1 = pxDesdeInicio(inicioN);
-    const x2 = pxDesdeInicio(finN);
-
-    if(x2 <= 0 || x1 >= (ancho - 72)) return;
-
-    const left = x1;
-    const w = x2 - x1;
-
-    const bar = document.createElement('div');
-    bar.className = 'vessel';
-    bar.style.left = left + 'px';
-    bar.style.width = Math.max(100, w) + 'px';
-    bar.style.background = colorLinea(n.linea, colores);
-    bar.title = `ETB: ${n.etb||'—'} | ETD: ${n.etd||'—'} | Muelle: ${n.muelle} | Click para ver información`;
-    bar.innerHTML = `<div class="nombre">${escapeHtml(limpiarNombre(n.nave)||"NAVE")}</div><div class="linea">${escapeHtml(n.linea||'')}</div><div class="estado">${escapeHtml(estado(n))}</div>`;
-
-    if(etb && etb >= inicioN && etb <= finN){
-      const posRelativa = (etb - inicioN) / (finN - inicioN);
-      const marca = document.createElement('span');
-      marca.className = 'marca-etb';
-      marca.style.left = (posRelativa * 100) + '%';
-      marca.title = 'ETB: ' + n.etb;
-      bar.appendChild(marca);
-    }
-
-    if(ata && ata >= inicioN && ata <= finN){
-      const rel = (ata - inicioN) / (finN - inicioN);
-      const marca = document.createElement('span');
-      marca.className = 'marca-ata';
-      marca.style.left = (rel * 100) + '%';
-      marca.title = 'ATA: ' + n.ata;
-      bar.appendChild(marca);
-    }
-
-    bar.onclick = (e) => {
-      e.stopPropagation();
-      abrirModal(n);
-    };
-    content.appendChild(bar);
-  });
-  lane.appendChild(content); rows.appendChild(lane);
- });
- const ahora = new Date(); if(ahora >= inicio && ahora <= fin){ const x = (ahora - inicio) / 3600000 * PX_HORA + 72, a = document.createElement('div'); a.className = 'ahora'; a.style.left = x + 'px'; a.innerHTML = '<div class="ahora-label">AHORA</div>'; rows.appendChild(a); }
- if(!naves.length){ const s = document.createElement('div'); s.className = 'sin-datos'; s.textContent = 'No hay naves dentro del rango seleccionado.'; rows.appendChild(s); }
- timeline.appendChild(rows); actualizarResumen(naves); dibujarLeyenda(colores);
-}
-
-function escapeHtml(s){ return String(s??'').replace(/[&<>'"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m])) }
-function actualizarResumen(naves){ document.getElementById('cantidad').textContent = naves.length; document.getElementById('porArribar').textContent = naves.filter(n => estado(n) === 'POR ARRIBAR').length; document.getElementById('trabajando').textContent = naves.filter(n => estado(n) === 'TRABAJANDO').length; document.getElementById('atrasadas').textContent = naves.filter(n => estado(n) === 'ATRASADA').length; document.getElementById('zarparon').textContent = naves.filter(n => estado(n) === 'ZARPÓ').length; }
-function dibujarLeyenda(colores){ const cont = document.getElementById('leyenda'); cont.innerHTML = ''; Object.keys(colores).forEach(k => { const i = document.createElement('div'); i.className = 'leyenda-item'; i.innerHTML = `<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`; cont.appendChild(i); }); if(!Object.keys(colores).length) cont.textContent = 'No hay líneas navieras en el rango seleccionado.'; }
-
-// --- MODAL OPERATIVO CON LÓGICA EXPLICADA DE DIS / LOA TOT VS REMAIN ---
-async function abrirModal(n) {
-  document.getElementById('modalTitulo').textContent = `${limpiarNombre(n.nave)} - VIAJE ${n.viaje || '—'}`;
-  
-  const modalDatos = document.getElementById('modalDatos');
-  modalDatos.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px;">Cargando contenedores y métricas de la nave...</div>';
-  document.getElementById('modalEstado').innerHTML = '';
-  document.getElementById('modalFondo').style.display = 'flex';
-
-  // Consulta contenedores de la nave en Supabase
-  let contenedores = [];
+async function cargarDashboardNaves() {
   try {
-    const { data, error } = await dbClient
-      .from('contenedores')
-      .select('*')
-      .eq('nave_id', n.id);
-    if (!error && data) contenedores = data;
+    const { data: naves, error } = await dbClient
+      .from('navis_rendimiento_naves')
+      .select('*');
+
+    if (error) throw error;
+
+    const grid = document.getElementById('gridNaves');
+    grid.innerHTML = '';
+
+    (naves || []).forEach(n => {
+      const cardHtml = `
+        <div class="card-nave ${n.color_card}">
+          <div class="ship-icon">🚢</div>
+          <h3>${n.nombre_nave}</h3>
+          <div class="sub-info">${n.consorcio_servicio}</div>
+          <div class="detalles-list">
+            Oper.: ${n.operacion}<br>
+            Fecha Arribo: ${fFechaSimple(n.fecha_arribo)}<br>
+            Fecha Zarpe: ${fFechaSimple(n.fecha_zarpe)}<br>
+            Cut Off<br>
+            Dry: ${fFechaCorta(n.cut_off_dry)}<br>
+            RH: ${fFechaCorta(n.cut_off_rh)}
+          </div>
+          <a class="card-btn-consultar" onclick="consultarDetalleNave(${n.id})">Consultar ➔</a>
+        </div>
+      `;
+      grid.innerHTML += cardHtml;
+    });
+
+    // Agregar la Tarjeta de Indicadores / Descargas al final del grid
+    grid.innerHTML += `
+      <div class="card-indicadores">
+        <div class="download-icon">📥</div>
+        <h3>INDICADORES DE RENDIMIENTOS</h3>
+        <div class="descarga-row"><span>NAVES POR MES</span> <a class="descarga-link">Descargar ⬇</a></div>
+        <div class="descarga-row"><span>NAVES POR SERVICIO</span> <a class="descarga-link">Descargar ⬇</a></div>
+        <div class="descarga-row"><span>USO DE MUELLE</span> <a class="descarga-link">Descargar ⬇</a></div>
+        <div class="descarga-row"><span>ESTADISTICA GPG</span> <a class="descarga-link">Descargar ⬇</a></div>
+        <div class="descarga-row"><span>KPI GENERALES</span> <a class="descarga-link">Descargar ⬇</a></div>
+      </div>
+    `;
+
   } catch (err) {
-    console.warn('Error al cargar contenedores de la nave:', err);
+    console.error("Error al cargar naves:", err.message);
   }
-
-  // ==========================================
-  // 1. LÓGICA TABLA IZQUIERDA: TOTALES (TOT)
-  // ==========================================
-  // DIS (Descarga / Importación Total Programada)
-  const dis_tot_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL').length;
-  const dis_tot_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP').length;
-  const dis_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
-  const dis_tot_sum = dis_tot_fcl + dis_tot_mty + dis_tot_rst;
-
-  // LOA (Embarque / Exportación Total Programada)
-  const loa_tot_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL').length;
-  const loa_tot_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP').length;
-  const loa_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
-  const loa_tot_sum = loa_tot_fcl + loa_tot_mty + loa_tot_rst;
-
-  // ==========================================
-  // 2. LÓGICA TABLA DERECHA: REMANENTE (REMAIN)
-  // ==========================================
-  // DIS REMAIN: Descargas pendientes (Aún NO tienen fecha_descarga)
-  const dis_rem_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL' && !c.fecha_descarga).length;
-  const dis_rem_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP' && !c.fecha_descarga).length;
-  const dis_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_descarga).length;
-  const dis_rem_sum = dis_rem_fcl + dis_rem_mty + dis_rem_rst;
-
-  // LOA REMAIN: Embarques pendientes (Aún NO tienen fecha_embarque)
-  const loa_rem_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL' && !c.fecha_embarque).length;
-  const loa_rem_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP' && !c.fecha_embarque).length;
-  const loa_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_embarque).length;
-  const loa_rem_sum = loa_rem_fcl + loa_rem_mty + loa_rem_rst;
-
-  // ==========================================
-  // 3. PATIO POSORJA (YARD): Contenedores sin fecha_embarque o stat != 'EMBARCADO'
-  // ==========================================
-  const patio_contenedores = contenedores.filter(c => c.categoria === 'embarque' && !c.fecha_embarque && c.stat !== 'EMBARCADO');
-  const yard_empty = patio_contenedores.filter(c => c.status === 'EMP').length;
-  const yard_dry = patio_contenedores.filter(c => c.status === 'FCL' && c.tipo !== '40HR').length;
-  const yard_rh = patio_contenedores.filter(c => c.tipo === '40HR').length; // Reefer
-  const yard_total = yard_empty + yard_dry + yard_rh;
-
-  // ==========================================
-  // 4. PREEMBARQUES Y BLOQUEOS
-  // ==========================================
-  const preembarque_total_inicial = contenedores.filter(c => c.fecha_preembarque != null).length;
-  const bloqueados_count = contenedores.filter(c => c.fecha_preembarque != null && (c.bloqueo_alarma === true || c.fecha_bloqueo != null)).length;
-  const preembarque_total_efectivo = Math.max(0, preembarque_total_inicial - bloqueados_count);
-  const preembarques_realizados = contenedores.filter(c => c.fecha_preembarque != null && c.fecha_realizacion_preembarque != null).length;
-  const preembarques_pendientes = Math.max(0, preembarque_total_efectivo - preembarques_realizados);
-
-  const promedio_qc = n.promedio_qc || '2.5';
-
-  modalDatos.innerHTML = `
-    <!-- Hitos Real Time -->
-    <div class="ops-section">
-      <div class="ops-title-bar">Real Time</div>
-      <div class="grid-timeline">
-        <div><strong>ETA</strong>${n.eta || n.etb || '—'}</div>
-        <div><strong>ATB</strong>${n.atb || n.ata || '—'}</div>
-        <div><strong>Start Operation</strong>${n.start_operation || n.ata || '—'}</div>
-        <div><strong>Complete Operation</strong>${n.complete_operation || n.atd || '—'}</div>
-        <div><strong>ATD</strong>${n.atd || '—'}</div>
-      </div>
-    </div>
-
-    <!-- Tabla Movimientos TOT (Manifestado) vs REMAIN (Pendientes) -->
-    <div class="ops-section">
-      <table class="ops-table">
-        <thead>
-          <tr>
-            <th>TOT</th><th>FCL</th><th>MTY</th><th>RST</th><th>SUM</th>
-            <th>REMAIN</th><th>FCL</th><th>MTY</th><th>RST</th><th>SUM</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>DIS</strong></td>
-            <td>${dis_tot_fcl}</td><td>${dis_tot_mty}</td><td>${dis_tot_rst}</td><td><strong>${dis_tot_sum}</strong></td>
-            <td><strong>DIS</strong></td>
-            <td>${dis_rem_fcl}</td><td>${dis_rem_mty}</td><td>${dis_rem_rst}</td><td><strong>${dis_rem_sum}</strong></td>
-          </tr>
-          <tr>
-            <td><strong>LOA</strong></td>
-            <td>${loa_tot_fcl}</td><td>${loa_tot_mty}</td><td>${loa_tot_rst}</td><td><strong>${loa_tot_sum}</strong></td>
-            <td><strong>LOA</strong></td>
-            <td>${loa_rem_fcl}</td><td>${loa_rem_mty}</td><td>${loa_rem_rst}</td><td><strong>${loa_rem_sum}</strong></td>
-          </tr>
-          <tr class="total-row">
-            <td>TOTAL</td>
-            <td>${dis_tot_fcl + loa_tot_fcl}</td>
-            <td>${dis_tot_mty + loa_tot_mty}</td>
-            <td>${dis_tot_rst + loa_tot_rst}</td>
-            <td>${dis_tot_sum + loa_tot_sum}</td>
-            <td>TOTAL</td>
-            <td>${dis_rem_fcl + loa_rem_fcl}</td>
-            <td>${dis_rem_mty + loa_rem_mty}</td>
-            <td>${dis_rem_rst + loa_rem_rst}</td>
-            <td>${dis_rem_sum + loa_rem_sum}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Sección de Patio Posorja (YARD) y Preembarques / Bloqueos -->
-    <div class="grid-ops-body">
-      <!-- Tabla Patio Posorja -->
-      <div class="card-yard">
-        <div style="text-align:center; font-weight:bold; color:#123b5d; margin-bottom:6px; font-size:11px;">YARD - Patio Posorja (Pendientes Embarque)</div>
-        <table class="ops-table">
-          <thead>
-            <tr><th>Tipo Cnt</th><th>Cantidad En Patio</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Empty (Vacíos)</td><td><strong>${yard_empty}</strong></td></tr>
-            <tr><td>Full Dry (Secos)</td><td><strong>${yard_dry}</strong></td></tr>
-            <tr><td>Full RH (Reefer)</td><td><strong>${yard_rh}</strong></td></tr>
-            <tr class="total-row"><td>TOTAL PATIO</td><td>${yard_total}</td></tr>
-          </tbody>
-        </table>
-
-        <!-- Métricas de Preembarques y Bloqueos -->
-        <div class="info-box-row" style="margin-top:10px;">
-          <strong>Preembarques (Pendientes / Total):</strong>
-          <span class="info-box-val">${preembarques_pendientes} / ${preembarque_total_efectivo}</span>
-        </div>
-        <div class="info-box-row">
-          <strong>Preembarques Bloqueados (Alarma):</strong>
-          <span class="info-box-val" style="color:#dc2626;">${bloqueados_count}</span>
-        </div>
-        <div class="info-box-row">
-          <strong>Promedio Grúas QC Operando:</strong>
-          <span class="info-box-val" style="color:#2563eb;">${promedio_qc} QC</span>
-        </div>
-      </div>
-
-      <!-- Rendimientos GMPH -->
-      <div class="card-yard">
-        <div style="font-size:11px; margin-bottom:8px;">
-          Rendt. Bruto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_bruto || '0.00'}</span>
-        </div>
-        <div style="font-size:11px; margin-bottom:12px;">
-          Rendt. Neto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_neto || '0.00'}</span>
-        </div>
-        <button class="btn-gmph" style="width:100%; margin-bottom:8px;" onclick="alert('Generando reporte GMPH por Horas...')">GMPH por Horas</button>
-        <button class="btn-gmph" style="width:100%; background:#0284c7;" onclick="alert('Generando detalle de Preembarques...')">GMPH Línea</button>
-      </div>
-    </div>
-
-   
-  `;
-
-  document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)} | Muelle: ${n.muelle}</div>`;
 }
 
-function cerrarModal(e){ if(!e || e.target === document.getElementById('modalFondo')) document.getElementById('modalFondo').style.display = 'none'; }
+async function consultarDetalleNave(naveId) {
+  try {
+    // 1. Obtener datos de la nave
+    const { data: nave } = await dbClient.from('navis_rendimiento_naves').select('*').eq('id', naveId).single();
+    // 2. Obtener resumen DIS/LOA
+    const { data: resumen } = await dbClient.from('navis_rendimiento_resumen').select('*').eq('nave_id', naveId);
+    // 3. Obtener rendimiento por horas
+    const { data: horas } = await dbClient.from('navis_rendimiento_horario').select('*').eq('nave_id', naveId);
 
-(function inicializarInteracciones(){
-  const slider = document.getElementById('scroll');
-  let isDown = false;
-  let startX, startY, scrollLeft, scrollTop;
+    if (!nave) return;
 
-  slider.addEventListener('mousedown', (e) => {
-    isDown = true;
-    slider.classList.add('active');
-    startX = e.pageX - slider.offsetLeft;
-    startY = e.pageY - slider.offsetTop;
-    scrollLeft = slider.scrollLeft;
-    scrollTop = slider.scrollTop;
-  });
+    document.getElementById('panelDetalle').style.display = 'block';
+    document.getElementById('headerNaveInfo').textContent = `Nave: ${nave.nombre_nave} / Consorcio: ${nave.consorcio_servicio} / Operación: ${nave.operacion}`;
+    document.getElementById('lblFechaInicio').textContent = fFechaHora(nave.fecha_inicio_op);
+    document.getElementById('lblFechaTermino').textContent = fFechaHora(nave.fecha_termino_op);
 
-  slider.addEventListener('mouseleave', () => {
-    isDown = false;
-    slider.classList.remove('active');
-  });
+    // Renderizar Tabla DIS / LOA
+    const bodyResumen = document.getElementById('bodyResumenMovs');
+    bodyResumen.innerHTML = (resumen || []).map(r => {
+      const tot = (r.fcl_tot || 0) + (r.mty_tot || 0) + (r.rst_tot || 0);
+      const saldoTot = (r.fcl_saldo || 0) + (r.mty_saldo || 0) + (r.rst_saldo || 0);
+      return `
+        <tr>
+          <td><b>${r.tipo}</b></td>
+          <td>${tot}</td>
+          <td>${r.fcl_tot}</td>
+          <td>${r.mty_tot}</td>
+          <td>${r.rst_tot}</td>
+          <td><b>${saldoTot}</b></td>
+          <td><b>${r.tipo}</b></td>
+          <td>${r.fcl_saldo}</td>
+          <td>${r.mty_saldo}</td>
+          <td>${r.rst_saldo}</td>
+        </tr>
+      `;
+    }).join('');
 
-  slider.addEventListener('mouseup', () => {
-    isDown = false;
-    slider.classList.remove('active');
-  });
+    // Renderizar Tabla de Horas
+    const bodyHoras = document.getElementById('bodyHoras');
+    bodyHoras.innerHTML = (horas || []).map(h => `
+      <tr>
+        <td>${h.num_hora}</td>
+        <td>${h.rendimiento_bruto.toFixed(1)}</td>
+        <td>${h.rendimiento_neto.toFixed(1)}</td>
+      </tr>
+    `).join('');
 
-  slider.addEventListener('mousemove', (e) => {
-    if(!isDown) return;
-    e.preventDefault();
-    const x = e.pageX - slider.offsetLeft;
-    const y = e.pageY - slider.offsetTop;
-    const walkX = (x - startX) * 1.5;
-    const walkY = (y - startY) * 1.5;
-    slider.scrollLeft = scrollLeft - walkX;
-    slider.scrollTop = scrollTop - walkY;
-  });
+    // Desplazar suavemente hasta el panel de detalles
+    document.getElementById('panelDetalle').scrollIntoView({ behavior: 'smooth' });
 
-  slider.addEventListener('wheel', (e) => {
-    if (e.ctrlKey || e.deltaY !== 0) {
-      e.preventDefault();
-      const direccion = e.deltaY < 0 ? 6 : -6;
-      cambiarZoom(direccion);
-    }
-  }, { passive: false });
-})();
+  } catch (err) {
+    console.error("Error al consultar detalle:", err.message);
+  }
+}
 
-(async function(){
-  const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a);
-  const b = new Date(a); b.setDate(b.getDate() + 6); document.getElementById('fechaHasta').value = fechaLocalInput(b);
-  await cargarDatos();
-})();
+function fFechaSimple(f) { return f ? f.split('T')[0] : '—'; }
+function fFechaHora(f) { return f ? f.replace('T', ' ').substring(0, 16) : '—'; }
+function fFechaCorta(f) {
+  if (!f) return '—';
+  const d = new Date(f);
+  return d.getDate() + ' ' + d.toLocaleString('es-EC', {month:'short'}) + ' ' + d.toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
+}
 
-setInterval(() => { if(ultimoInicio && ultimoFin) consultar(); }, 60000);
-setInterval(() => cargarDatos(), 15 * 60 * 1000);
+// Cargar dashboard al iniciar
+cargarDashboardNaves();
 </script>
+
 </body>
 </html>
