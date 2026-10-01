@@ -166,7 +166,7 @@ const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Instancias globales para los gráficos
+// Instancias globales para evitar duplica de renderizado en Chart.js
 let chartPaceInstance = null;
 let chartDelaysInstance = null;
 
@@ -175,9 +175,14 @@ async function cargarMétricasTasaTransferencia() {
   const qcId = document.getElementById('selectQC').value;
 
   try {
-    // Consultas a las tablas de Supabase
-    let queryDelays = dbClient.from('navis_qc_delays').select('*').eq('nave_id', naveId);
-    let queryEvents = dbClient.from('navis_qc_events').select('*').eq('nave_id', naveId);
+    // 1. Consultar demoras y eventos desde Supabase
+    let queryDelays = dbClient.from('navis_qc_delays').select('*');
+    let queryEvents = dbClient.from('navis_qc_events').select('*');
+
+    if (naveId) {
+      queryDelays = queryDelays.eq('nave_id', naveId);
+      queryEvents = queryEvents.eq('nave_id', naveId);
+    }
 
     if (qcId !== 'TODAS') {
       queryDelays = queryDelays.eq('qc_id', qcId);
@@ -189,15 +194,15 @@ async function cargarMétricasTasaTransferencia() {
       queryEvents
     ]);
 
-    if (errDelays) throw errDelays;
-    if (errEvents) throw errEvents;
+    if (errDelays) console.error("Error al obtener delays:", errDelays);
+    if (errEvents) console.error("Error al obtener eventos:", errEvents);
 
-    // --- 1. PROCESAMIENTO DE TIEMPOS MUERTOS (IDLE TIME) ---
+    // --- A. PROCESAMIENTO DE TIEMPOS MUERTOS (IDLE TIME) ---
     const idleTotalMin = (delays || []).reduce((acc, d) => acc + (d.duracion_minutos || 0), 0);
     document.getElementById('kpiIdleTime').textContent = `${idleTotalMin} min`;
     document.getElementById('kpiIdleSub').textContent = qcId === 'TODAS' ? 'Acumulado en Muelle' : `Acumulado en ${qcId}`;
 
-    // Agrupar causas para gráfico y causa principal
+    // Agrupar causas para gráfico y determinar Causa Principal
     const causasMap = {};
     (delays || []).forEach(d => {
       causasMap[d.causa_demora] = (causasMap[d.causa_demora] || 0) + d.duracion_minutos;
@@ -206,7 +211,7 @@ async function cargarMétricasTasaTransferencia() {
     const causasOrdenadas = Object.keys(causasMap).sort((a,b) => causasMap[b] - causasMap[a]);
     document.getElementById('kpiCausaPrincipal').textContent = causasOrdenadas.length > 0 ? causasOrdenadas[0] : 'Sin Demoras';
 
-    // --- TABLA DE DELAYS CON CONTENEDOR Y DETALLE ---
+    // --- B. RENDERIZAR TABLA DE DEMORAS Y CONTENEDORES CON DAÑOS ---
     const tablaDelays = document.getElementById('tablaDelays');
     if (delays && delays.length > 0) {
       tablaDelays.innerHTML = delays.map(d => `
@@ -220,10 +225,10 @@ async function cargarMétricasTasaTransferencia() {
         </tr>
       `).join('');
     } else {
-      tablaDelays.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#16a34a; font-weight:bold;">Sin tiempos muertos en el periodo seleccionado.</td></tr>`;
+      tablaDelays.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#16a34a; font-weight:bold;">Sin tiempos muertos registrados en el periodo.</td></tr>`;
     }
 
-    // --- 2. PROCESAMIENTO DE RITMO PACE (PACE POR HORA) ---
+    // --- C. PROCESAMIENTO DE PACE (MOVIMIENTOS / HORA) ---
     const qcsDisponibles = [...new Set((events || []).map(e => e.qc_id))];
     const horasDisponibles = [...new Set((events || []).map(e => new Date(e.timestamp_movimiento).getHours() + ":00"))].sort();
 
@@ -247,7 +252,7 @@ async function cargarMétricasTasaTransferencia() {
     document.getElementById('kpiTotalMovs').textContent = `${totalMovs} Mvs`;
     document.getElementById('kpiPacePromedio').textContent = `${paceProm} Mvs/Hr`;
 
-    // --- 3. RENDERIZADO DE GRÁFICOS CON CHART.JS ---
+    // --- D. DIBUJAR GRÁFICOS ---
     renderizarGraficoPace(horasDisponibles, qcsDisponibles, matrixPace);
     renderizarGraficoDelays(causasMap);
 
@@ -256,7 +261,7 @@ async function cargarMétricasTasaTransferencia() {
   }
 }
 
-// Renderiza el gráfico comparativo de Pace Hora por Hora
+// Dibujar gráfico de barras comparativo de Pace Hora por Hora
 function renderizarGraficoPace(horas, qcs, matrixPace) {
   const ctx = document.getElementById('chartPace').getContext('2d');
   if (chartPaceInstance) chartPaceInstance.destroy();
@@ -291,7 +296,7 @@ function renderizarGraficoPace(horas, qcs, matrixPace) {
   });
 }
 
-// Renderiza el gráfico donut de Distribución de Causas de Demora
+// Dibujar gráfico Donut de Distribución de Demoras
 function renderizarGraficoDelays(causasMap) {
   const ctx = document.getElementById('chartDelays').getContext('2d');
   if (chartDelaysInstance) chartDelaysInstance.destroy();
@@ -316,7 +321,7 @@ function renderizarGraficoDelays(causasMap) {
   });
 }
 
-// Cargar datos al iniciar
+// Cargar datos automáticamente al iniciar la página
 cargarMétricasTasaTransferencia();
 </script>
 
