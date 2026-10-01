@@ -33,9 +33,36 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 .ahora{position:absolute;top:0;bottom:0;width:2px;background:#dc2626;z-index:20;pointer-events:none}.marca-etb{position:absolute;top:-5px;bottom:-5px;width:2px;background:#111;box-shadow:0 0 0 1px rgba(255,255,255,.7);transform:translateX(-50%);border-radius:2px;z-index:4}.marca-ata{position:absolute;top:0;bottom:0;width:3px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);transform:translateX(-50%);border-radius:2px}.ahora-label{position:absolute;top:2px;left:4px;color:#dc2626;font-size:9px;font-weight:bold;white-space:nowrap;background:#fff;padding:1px 2px}
 .sin-datos{padding:40px;text-align:center;color:#64748b}
 .leyenda{background:#fff;margin-top:12px;padding:12px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.leyenda h3{margin:0 0 8px}.leyenda-item{display:inline-flex;align-items:center;margin:4px 14px 4px 0;font-size:12px}.color{width:15px;height:15px;border-radius:4px;margin-right:5px}
-.modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}.modal{width:min(680px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}.modal-header{background:var(--azul);color:#fff;padding:14px;display:flex;justify-content:space-between;align-items:center}.modal-header h2{margin:0;font-size:19px}.cerrar{background:transparent;font-size:25px;padding:0 5px;color:#fff;border:none;cursor:pointer}.detalle{padding:14px}.detalle-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.detalle-item{background:#f8fafc;padding:9px;border-radius:6px}.detalle-item strong{display:block;color:#64748b;font-size:10px;margin-bottom:3px}.estado-grande{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:6px;font-weight:bold;background:#e2e8f0}
+
+/* MODAL OPERATIVO DIS/LOA & GMPH */
+.modal-fondo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:15px}
+.modal{width:min(900px,98%);max-height:92vh;overflow:auto;background:#fff;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.modal-header{background:var(--azul);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.modal-header h2{margin:0;font-size:18px}
+.cerrar{background:transparent;font-size:25px;padding:0 5px;color:#fff;border:none;cursor:pointer}
+.detalle{padding:14px}
+
+.ops-section { margin-bottom: 12px; }
+.ops-title-bar { background: #fce7f3; color: #831843; font-weight: bold; text-align: center; padding: 5px; font-size: 12px; border-radius: 4px 4px 0 0; }
+.grid-timeline { display: grid; grid-template-columns: repeat(5, 1fr); background: #fff; border: 1px solid #fbcfe8; text-align: center; font-size: 11px; padding: 6px; }
+.grid-timeline strong { display: block; color: #9d174d; margin-bottom: 2px; }
+
+.ops-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: center; margin-top: 4px; }
+.ops-table th { background: #fce7f3; color: #831843; font-weight: bold; border: 1px solid #fbcfe8; padding: 5px; }
+.ops-table td { border: 1px solid #e2e8f0; padding: 5px; }
+.ops-table tr.total-row { font-weight: bold; background: #f8fafc; }
+
+.grid-ops-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.card-yard { background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px; }
+.rend-badge { background: #fef08a; color: #854d0e; font-weight: bold; padding: 2px 6px; border-radius: 4px; }
+
+.btn-gmph { background: #16a34a; color: #fff; border: none; padding: 7px 14px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 11px; }
+.btn-gmph:hover { background: #15803d; }
+.gmph-panel { background: #fce7f3; border-radius: 6px; padding: 10px; text-align: center; margin-top: 12px; display: flex; justify-content: space-around; align-items: center; }
+.estado-grande{display:inline-block;margin-top:10px;padding:7px 10px;border-radius:6px;font-weight:bold;background:#e2e8f0;font-size:12px}
+
 .nota{font-size:11px;color:#64748b;margin-top:7px}
-@media(max-width:700px){header h1{font-size:20px}.panel{padding:0 7px}.controles{align-items:stretch}.campo{flex:1 1 130px}.zoom-box{flex:1 1 100%}.zoom-box input{flex:1}.detalle-grid{grid-template-columns:1fr}.timeline-scroll{max-height:75vh}.timeline{min-width:700px}.day{font-size:10px}.vessel .nombre{font-size:10px}.vessel .linea{font-size:8px}}
+@media(max-width:700px){header h1{font-size:20px}.panel{padding:0 7px}.controles{align-items:stretch}.campo{flex:1 1 130px}.zoom-box{flex:1 1 100%}.zoom-box input{flex:1}.grid-ops-body{grid-template-columns:1fr}.timeline-scroll{max-height:75vh}.timeline{min-width:700px}.day{font-size:10px}.vessel .nombre{font-size:10px}.vessel .linea{font-size:8px}}
 </style>
 </head>
 <body>
@@ -66,7 +93,20 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <div class="nota">Arrastre con el mouse o con el dedo para desplazarse en el tiempo. Use la rueda del mouse para cambiar la escala de zoom.</div>
 <div class="leyenda"><h3>Líneas navieras</h3><div id="leyenda"></div></div>
 </div>
-<div class="modal-fondo" id="modalFondo" onclick="cerrarModal(event)"><div class="modal"><div class="modal-header"><h2 id="modalTitulo">Nave</h2><button class="cerrar" onclick="cerrarModal()">×</button></div><div class="detalle"><div class="detalle-grid" id="modalDatos"></div><div id="modalEstado"></div></div></div></div>
+
+<!-- MODAL OPERATIVO -->
+<div class="modal-fondo" id="modalFondo" onclick="cerrarModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitulo">Nave</h2>
+      <button class="cerrar" onclick="cerrarModal()">×</button>
+    </div>
+    <div class="detalle">
+      <div id="modalDatos"></div>
+      <div id="modalEstado"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 // --- CONFIGURACIÓN DE SUPABASE ---
@@ -105,13 +145,10 @@ function normalizarNave(x){
   linea: x.linea ?? x.Linea ?? '',
   muelle: x.muelle ?? x.Muelle ?? 'NORTE',
   etb: x.etb ?? '', etd: x.etd ?? '', ata: x.ata ?? '', atd: x.atd ?? '',
+  eta: x.eta ?? '', start_operation: x.start_operation ?? '', complete_operation: x.complete_operation ?? '',
   status: x.status ?? '',
-  origen: x.origen ?? '',
-  destino: x.destino ?? '',
-  servicio: x.servicio ?? '',
-  total_ingresado: x.total_ingresado ?? 0,
-  ingresado_dentro_cutoff: x.ingresado_dentro_cutoff ?? 0,
-  ingresado_fuera_cutoff: x.ingresado_fuera_cutoff ?? 0
+  origen: x.origen ?? '', destino: x.destino ?? '', servicio: x.servicio ?? '',
+  rend_bruto: x.rend_bruto ?? '0.00', rend_neto: x.rend_neto ?? '0.00', gmph_linea: x.gmph_linea ?? '0.00'
  };
 }
 
@@ -144,7 +181,6 @@ async function cargarDatos(){
  fuente.textContent = 'Consultando Supabase...';
 
  try {
-  // Apunta a la tabla 'naves'
   const { data, error } = await dbClient
     .from('naves')
     .select('*');
@@ -274,28 +310,124 @@ function escapeHtml(s){ return String(s??'').replace(/[&<>'"]/g, m => ({'&':'&am
 function actualizarResumen(naves){ document.getElementById('cantidad').textContent = naves.length; document.getElementById('porArribar').textContent = naves.filter(n => estado(n) === 'POR ARRIBAR').length; document.getElementById('trabajando').textContent = naves.filter(n => estado(n) === 'TRABAJANDO').length; document.getElementById('atrasadas').textContent = naves.filter(n => estado(n) === 'ATRASADA').length; document.getElementById('zarparon').textContent = naves.filter(n => estado(n) === 'ZARPÓ').length; }
 function dibujarLeyenda(colores){ const cont = document.getElementById('leyenda'); cont.innerHTML = ''; Object.keys(colores).forEach(k => { const i = document.createElement('div'); i.className = 'leyenda-item'; i.innerHTML = `<span class="color" style="background:${colores[k]}"></span><span>${escapeHtml(k)}</span>`; cont.appendChild(i); }); if(!Object.keys(colores).length) cont.textContent = 'No hay líneas navieras en el rango seleccionado.'; }
 
-function abrirModal(n){
- document.getElementById('modalTitulo').textContent = limpiarNombre(n.nave) || 'Nave';
- const datos = [
-  ['Nave', n.nave],
-  ['Viaje', n.viaje],
-  ['Línea naviera', n.linea],
-  ['Muelle', n.muelle],
-  ['ETB', n.etb],
-  ['ATA', n.ata],
-  ['ETD', n.etd],
-  ['ATD', n.atd],
-  ['STATUS', n.status],
-  ['Origen', n.origen],
-  ['Destino', n.destino],
-  ['Servicio', n.servicio],
-  ['Total Ingresados', n.total_ingresado ?? '0'],
-  ['Dentro Cut-Off', n.ingresado_dentro_cutoff ?? '0'],
-  ['Fuera Cut-Off', n.ingresado_fuera_cutoff ?? '0']
- ];
- document.getElementById('modalDatos').innerHTML = datos.map(x => `<div class="detalle-item"><strong>${escapeHtml(x[0])}</strong>${escapeHtml(x[1]||'—')}</div>`).join('');
- document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)}</div>`;
- document.getElementById('modalFondo').style.display = 'flex';
+// --- MODAL OPERATIVO REAL TIME Y TABLAS DP WORLD ---
+async function abrirModal(n) {
+  document.getElementById('modalTitulo').textContent = `${limpiarNombre(n.nave)} - VIAJE ${n.viaje || '—'}`;
+  
+  const modalDatos = document.getElementById('modalDatos');
+  modalDatos.innerHTML = '<div style="text-align:center; padding:20px; font-size:12px;">Cargando datos operativos de la nave...</div>';
+  document.getElementById('modalEstado').innerHTML = '';
+  document.getElementById('modalFondo').style.display = 'flex';
+
+  // Consulta contenedores vinculados en Supabase
+  let contenedores = [];
+  try {
+    const { data, error } = await dbClient
+      .from('contenedores')
+      .select('*')
+      .eq('nave_id', n.id);
+    if (!error && data) contenedores = data;
+  } catch (err) {
+    console.warn('Error al cargar contenedores de la nave:', err);
+  }
+
+  // Cálculos DIS (Descarga) y LOA (Embarque)
+  const dis_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL').length;
+  const dis_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP').length;
+  const dis_rst = contenedores.filter(c => c.categoria === 'restiba').length;
+  const dis_sum = dis_fcl + dis_mty + dis_rst;
+
+  const loa_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL').length;
+  const loa_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP').length;
+  const loa_rst = contenedores.filter(c => c.categoria === 'restiba').length;
+  const loa_sum = loa_fcl + loa_mty + loa_rst;
+
+  // Pendientes YARD
+  const yard_empty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP' && c.stat !== 'EMBARCADO').length;
+  const yard_dry = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL' && c.tipo !== '40HR' && c.stat !== 'EMBARCADO').length;
+  const yard_rh = contenedores.filter(c => c.categoria === 'embarque' && c.tipo === '40HR' && c.stat !== 'EMBARCADO').length;
+  const yard_total = yard_empty + yard_dry + yard_rh;
+
+  modalDatos.innerHTML = `
+    <!-- Hitos Real Time -->
+    <div class="ops-section">
+      <div class="ops-title-bar">Real Time</div>
+      <div class="grid-timeline">
+        <div><strong>ETA</strong>${n.eta || n.etb || '—'}</div>
+        <div><strong>ATB</strong>${n.atb || n.ata || '—'}</div>
+        <div><strong>Start Operation</strong>${n.start_operation || n.ata || '—'}</div>
+        <div><strong>Complete Operation</strong>${n.complete_operation || n.atd || '—'}</div>
+        <div><strong>ATD</strong>${n.atd || '—'}</div>
+      </div>
+    </div>
+
+    <!-- Tabla Movimientos Totales y Restantes -->
+    <div class="ops-section">
+      <table class="ops-table">
+        <thead>
+          <tr>
+            <th>TOT</th><th>FCL</th><th>MTY</th><th>RST</th><th>SUM</th>
+            <th>REMAIN</th><th>FCL</th><th>MTY</th><th>RST</th><th>SUM</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>DIS</strong></td><td>${dis_fcl}</td><td>${dis_mty}</td><td>${dis_rst}</td><td><strong>${dis_sum}</strong></td>
+            <td><strong>DIS</strong></td><td>0</td><td>0</td><td>0</td><td><strong>0</strong></td>
+          </tr>
+          <tr>
+            <td><strong>LOA</strong></td><td>${loa_fcl}</td><td>${loa_mty}</td><td>${loa_rst}</td><td><strong>${loa_sum}</strong></td>
+            <td><strong>LOA</strong></td><td>${yard_dry}</td><td>${yard_empty}</td><td>0</td><td><strong>${yard_total}</strong></td>
+          </tr>
+          <tr class="total-row">
+            <td>TOTAL</td><td>${dis_fcl + loa_fcl}</td><td>${dis_mty + loa_mty}</td><td>${dis_rst + loa_rst}</td><td>${dis_sum + loa_sum}</td>
+            <td>TOTAL</td><td>${yard_dry}</td><td>${yard_empty}</td><td>0</td><td>${yard_total}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sección de Yard y Rendimientos -->
+    <div class="grid-ops-body">
+      <!-- Tabla Yard -->
+      <div class="card-yard">
+        <div style="text-align:center; font-weight:bold; color:#123b5d; margin-bottom:6px; font-size:11px;">YARD - Pending Shipment</div>
+        <table class="ops-table">
+          <thead>
+            <tr><th>Type</th><th>T1</th><th>T2</th><th>T3</th><th>TOTAL</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Empty</td><td>${yard_empty}</td><td>0</td><td>0</td><td><strong>${yard_empty}</strong></td></tr>
+            <tr><td>Full Dry</td><td>${yard_dry}</td><td>0</td><td>0</td><td><strong>${yard_dry}</strong></td></tr>
+            <tr><td>Full RH</td><td>${yard_rh}</td><td>0</td><td>0</td><td><strong>${yard_rh}</strong></td></tr>
+            <tr class="total-row"><td>TOTAL</td><td>${yard_total}</td><td>0</td><td>0</td><td>${yard_total}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Rendimientos -->
+      <div class="card-yard">
+        <div style="font-size:11px; margin-bottom:8px;">
+          Rendt. Bruto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_bruto || '0.00'}</span>
+        </div>
+        <div style="font-size:11px; margin-bottom:12px;">
+          Rendt. Neto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_neto || '0.00'}</span>
+        </div>
+        <button class="btn-gmph" style="width:100%;" onclick="alert('Generando reporte GMPH por horas...')">GMPH por Horas</button>
+      </div>
+    </div>
+
+    <!-- Panel Inferior GMPH -->
+    <div class="gmph-panel">
+      <div>
+        <span style="font-size:11px; color:#831843; font-weight:bold;">GMPH Línea:</span>
+        <span style="font-size:13px; font-weight:bold; margin-left:6px;">${n.gmph_linea || '0.00'}</span>
+      </div>
+      <button class="btn-gmph" onclick="alert('Mostrando gráfica GMPH...')">GMPH Gráfica</button>
+    </div>
+  `;
+
+  document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)} | Muelle: ${n.muelle}</div>`;
 }
 
 function cerrarModal(e){ if(!e || e.target === document.getElementById('modalFondo')) document.getElementById('modalFondo').style.display = 'none'; }
