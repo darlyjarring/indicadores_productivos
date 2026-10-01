@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasa de Transferencia & Tiempos Muertos - DP World Posorja</title>
+<!-- Carga de la librería oficial de Supabase JS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+:root{--azul:#123b5d;--rojo:#a51f35;--borde:#cbd5e1;--fondo:#f8fafc}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1e293b}
+
+header{background:var(--rojo);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:20px}
+header p{margin:3px 0 0;font-size:12px;opacity:.9}
+
+.panel{max-width:1400px;margin:20px auto;padding:0 14px}
+
+.filtros-bar{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;gap:12px;align-items:end;margin-bottom:16px}
+.campo{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:bold}
+.campo select, .campo input{height:36px;padding:6px 10px;border:1px solid var(--borde);border-radius:6px}
+button{height:36px;padding:0 16px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+
+/* Kpis Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:16px}
+.kpi-card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid var(--azul)}
+.kpi-card.alert{border-left-color:#dc2626}
+.kpi-title{font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase}
+.kpi-value{font-size:24px;font-weight:bold;color:#0f172a;margin-top:4px}
+.kpi-subtext{font-size:10px;color:#64748b;margin-top:2px}
+
+/* Secciones Principales */
+.grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card-sec{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.card-title{font-size:14px;font-weight:bold;color:var(--azul);margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
+
+/* Tablas */
+table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+th{background:#f1f5f9;color:#475569;padding:8px;font-weight:bold;border-bottom:1px solid #cbd5e1}
+td{padding:8px;border-bottom:1px solid #e2e8f0}
+tr:hover{background:#f8fafc}
+.badge-cause{background:#fef2f2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:11px}
+
+/* Barras Pace */
+.pace-row{display:flex;align-items:center;margin-bottom:8px;font-size:12px}
+.pace-label{width:60px;font-weight:bold}
+.pace-bar-container{flex:1;background:#e2e8f0;height:18px;border-radius:4px;overflow:hidden;margin:0 10px;position:relative}
+.pace-bar-fill{background:#2563eb;height:100%;border-radius:4px;transition:width 0.4s}
+.pace-value{width:40px;text-align:right;font-weight:bold}
+
+@media(max-width:850px){.grid-detalles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>TASA DE TRANSFERENCIA & TIEMPOS MUERTOS</h1>
+    <p>Navis N4 Analytics / Muelle y Buques (QC Operations)</p>
+  </div>
+  <button onclick="location.href='#'" style="background:rgba(255,255,255,.2)"> Volver al Panel</button>
+</header>
+
+<div class="panel">
+
+  <!-- FILTROS DE CONSULTA -->
+  <div class="filtros-bar">
+    <div class="campo">
+      <label>Nave / Buque</label>
+      <select id="selectNave">
+        <option value="7">CMA CGM GREENLAND (Viaje CMA2026103)</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label>Grúa de Muelle (QC)</label>
+      <select id="selectQC">
+        <option value="QC-01">QC-01</option>
+        <option value="QC-02">QC-02</option>
+      </select>
+    </div>
+    <button onclick="cargarMétricasTasaTransferencia()">CONSULTAR NAVIS N4</button>
+  </div>
+
+  <!-- TARJETAS KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card alert">
+      <div class="kpi-title">Idle Time Total (Tiempo Muerto)</div>
+      <div class="kpi-value" id="kpiIdleTime">0 min</div>
+      <div class="kpi-subtext">Demoras registradas en turno</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Ritmo de Carga/Descarga (Pace)</div>
+      <div class="kpi-value" id="kpiPacePromedio">0 Mvs/Hr</div>
+      <div class="kpi-subtext">Promedio actual por hora</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Causa Principal de Demora</div>
+      <div class="kpi-value" id="kpiCausaPrincipal" style="font-size:16px; margin-top:8px;">—</div>
+      <div class="kpi-subtext">Mayor impacto operativo</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Total Movimientos QC</div>
+      <div class="kpi-value" id="kpiTotalMovs">0 Mvs</div>
+      <div class="kpi-subtext">Contenedores procesados</div>
+    </div>
+  </div>
+
+  <!-- DETALLES OPERATIVOS -->
+  <div class="grid-detalles">
+
+    <!-- DESGLOSE DE TIEMPOS MUERTOS -->
+    <div class="card-sec">
+      <div class="card-title">
+        <span>Desglose de Demoras (Tiempos Muertos)</span>
+        <span style="font-size:11px; color:#64748b;">Navis Delays</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Hora Inicio</th>
+            <th>Causa de Demora</th>
+            <th>Duración</th>
+          </tr>
+        </thead>
+        <tbody id="tablaDelays">
+          <tr><td colspan="3" style="text-align:center; color:#64748b;">Cargando registros...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- TASA DE TRANSFERENCIA HORA POR HORA (PACE) -->
+    <div class="card-sec">
+      <div class="card-title">
+        <span>Tasa de Carga / Descarga (Pace por Hora)</span>
+        <span style="font-size:11px; color:#64748b;">Movimientos / Hora</span>
+      </div>
+      <div id="contenedorPace">
+        <div style="text-align:center; color:#64748b; padding:20px;">Cargando ritmo de transferencia...</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// --- CONFIGURACIÓN DE SUPABASE ---
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function cargarMétricasTasaTransferencia() {
+  const naveId = document.getElementById('selectNave').value;
+  const qcId = document.getElementById('selectQC').value;
+
+  try {
+    // 1. Consultar Tiempos Muertos (Delays) desde Navis N4
+    const { data: delays, error: errDelays } = await dbClient
+      .from('navis_qc_delays')
+      .select('*')
+      .eq('nave_id', naveId)
+      .eq('qc_id', qcId);
+
+    if (errDelays) throw errDelays;
+
+    // 2. Consultar Movimientos (Pace) desde Navis N4
+    const { data: events, error: errEvents } = await dbClient
+      .from('navis_qc_events')
+      .select('*')
+      .eq('nave_id', naveId)
+      .eq('qc_id', qcId);
+
+    if (errEvents) throw errEvents;
+
+    // --- PROCESAMIENTO DE DATOS ---
+    
+    // A. Idle Time Total
+    const idleTotalMin = (delays || []).reduce((acc, d) => acc + (d.duracion_minutos || 0), 0);
+    document.getElementById('kpiIdleTime').textContent = `${idleTotalMin} min`;
+
+    // Causa Principal
+    if (delays && delays.length > 0) {
+      const mayorDemora = [...delays].sort((a,b) => b.duracion_minutos - a.duracion_minutos)[0];
+      document.getElementById('kpiCausaPrincipal').textContent = mayorDemora.causa_demora;
+    } else {
+      document.getElementById('kpiCausaPrincipal').textContent = 'Sin Demoras';
+    }
+
+    // B. Renderizar Tabla de Demoras
+    const tablaDelays = document.getElementById('tablaDelays');
+    if (delays && delays.length > 0) {
+      tablaDelays.innerHTML = delays.map(d => {
+        const hInicio = new Date(d.inicio_demora).toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
+        return `
+          <tr>
+            <td>${hInicio} hs</td>
+            <td><span class="badge-cause">${d.causa_demora}</span></td>
+            <td><strong>${d.duracion_minutos} min</strong></td>
+          </tr>
+        `;
+      }).join('');
+    } else {
+      tablaDelays.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#16a34a; font-weight:bold;">No hay tiempos muertos registrados para esta grúa.</td></tr>`;
+    }
+
+    // C. Pace (Movimientos por Hora)
+    const paceMap = {};
+    (events || []).forEach(e => {
+      const fechaObj = new Date(e.timestamp_movimiento);
+      const horaStr = String(fechaObj.getHours()).padStart(2,'0') + ":00";
+      paceMap[horaStr] = (paceMap[horaStr] || 0) + 1;
+    });
+
+    const totalMovs = (events || []).length;
+    const horasTrabajadas = Object.keys(paceMap).length || 1;
+    const pacePromedio = (totalMovs / horasTrabajadas).toFixed(1);
+
+    document.getElementById('kpiTotalMovs').textContent = `${totalMovs} Mvs`;
+    document.getElementById('kpiPacePromedio').textContent = `${pacePromedio} Mvs/Hr`;
+
+    // D. Renderizar Barras de Pace
+    const contenedorPace = document.getElementById('contenedorPace');
+    const horasKeys = Object.keys(paceMap);
+
+    if (horasKeys.length > 0) {
+      const maxMvs = Math.max(...Object.values(paceMap), 5); // Para escala de barra
+      contenedorPace.innerHTML = horasKeys.map(h => {
+        const mvs = paceMap[h];
+        const porcentaje = (mvs / maxMvs) * 100;
+        return `
+          <div class="pace-row">
+            <span class="pace-label">${h}</span>
+            <div class="pace-bar-container">
+              <div class="pace-bar-fill" style="width: ${porcentaje}%;"></div>
+            </div>
+            <span class="pace-value">${mvs} mvs</span>
+          </div>
+        `;
+      }).join('');
+    } else {
+      contenedorPace.innerHTML = `<div style="text-align:center; color:#64748b; padding:20px;">Sin movimientos registrados en este turno.</div>`;
+    }
+
+  } catch (err) {
+    console.error("Error al cargar datos:", err.message);
+    alert("Error al cargar los datos desde Supabase: " + err.message);
+  }
+}
+
+// Cargar datos automáticamente al abrir
+cargarMétricasTasaTransferencia();
+</script>
+
+</body>
+</html>
