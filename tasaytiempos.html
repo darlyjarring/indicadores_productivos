@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tasa de Transferencia & Tiempos Muertos - DP World Posorja</title>
-<!-- Carga de la librería oficial de Supabase JS desde CDN -->
+<!-- Carga de la librería oficial de Supabase JS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Carga de Chart.js para Gráficos Comparativos -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 *{box-sizing:border-box}
 :root{--azul:#123b5d;--rojo:#a51f35;--borde:#cbd5e1;--fondo:#f8fafc}
@@ -15,9 +18,9 @@ header{background:var(--rojo);color:#fff;padding:16px 20px;display:flex;justify-
 header h1{margin:0;font-size:20px}
 header p{margin:3px 0 0;font-size:12px;opacity:.9}
 
-.panel{max-width:1400px;margin:20px auto;padding:0 14px}
+.panel{max-width:1600px;margin:20px auto;padding:0 14px}
 
-.filtros-bar{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;gap:12px;align-items:end;margin-bottom:16px}
+.filtros-bar{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;gap:12px;align-items:end;margin-bottom:16px;flex-wrap:wrap}
 .campo{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:bold}
 .campo select, .campo input{height:36px;padding:6px 10px;border:1px solid var(--borde);border-radius:6px}
 button{height:36px;padding:0 16px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
@@ -27,12 +30,13 @@ button:hover{opacity:.9}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:16px}
 .kpi-card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid var(--azul)}
 .kpi-card.alert{border-left-color:#dc2626}
+.kpi-card.success{border-left-color:#16a34a}
 .kpi-title{font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase}
 .kpi-value{font-size:24px;font-weight:bold;color:#0f172a;margin-top:4px}
 .kpi-subtext{font-size:10px;color:#64748b;margin-top:2px}
 
-/* Secciones Principales */
-.grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* Contenedores de Gráficos y Tablas */
+.grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .card-sec{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
 .card-title{font-size:14px;font-weight:bold;color:var(--azul);margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center}
 
@@ -41,26 +45,22 @@ table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
 th{background:#f1f5f9;color:#475569;padding:8px;font-weight:bold;border-bottom:1px solid #cbd5e1}
 td{padding:8px;border-bottom:1px solid #e2e8f0}
 tr:hover{background:#f8fafc}
+.badge-qc{background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:11px}
 .badge-cause{background:#fef2f2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:bold;font-size:11px}
 
-/* Barras Pace */
-.pace-row{display:flex;align-items:center;margin-bottom:8px;font-size:12px}
-.pace-label{width:60px;font-weight:bold}
-.pace-bar-container{flex:1;background:#e2e8f0;height:18px;border-radius:4px;overflow:hidden;margin:0 10px;position:relative}
-.pace-bar-fill{background:#2563eb;height:100%;border-radius:4px;transition:width 0.4s}
-.pace-value{width:40px;text-align:right;font-weight:bold}
+.chart-container{position:relative;height:260px;width:100%}
 
-@media(max-width:850px){.grid-detalles{grid-template-columns:1fr}}
+@media(max-width:900px){.grid-detalles{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <header>
   <div>
-    <h1>TASA DE TRANSFERENCIA & TIEMPOS MUERTOS</h1>
-    <p>Navis N4 Analytics / Muelle y Buques (QC Operations)</p>
+    <h1>TASA DE TRANSFERENCIA & TIEMPOS MUERTOS (NAV IS N4)</h1>
+    <p>Monitoreo Multigrúa / Muelle y Buques (QC / Berth Operations)</p>
   </div>
-  <button onclick="location.href='#'" style="background:rgba(255,255,255,.2)"> Volver al Panel</button>
+  <button onclick="location.reload()" style="background:rgba(255,255,255,.2)">🔄 Actualizar Datos</button>
 </header>
 
 <div class="panel">
@@ -74,13 +74,14 @@ tr:hover{background:#f8fafc}
       </select>
     </div>
     <div class="campo">
-      <label>Grúa de Muelle (QC)</label>
+      <label>Selección de Grúa (QC)</label>
       <select id="selectQC">
+        <option value="TODAS">TODAS LAS GRÚAS (Consolidado Muelle)</option>
         <option value="QC-01">QC-01</option>
         <option value="QC-02">QC-02</option>
       </select>
     </div>
-    <button onclick="cargarMétricasTasaTransferencia()">CONSULTAR NAVIS N4</button>
+    <button onclick="cargarMétricasTasaTransferencia()">CONSULTAR DASHBOARD</button>
   </div>
 
   <!-- TARJETAS KPI -->
@@ -88,59 +89,69 @@ tr:hover{background:#f8fafc}
     <div class="kpi-card alert">
       <div class="kpi-title">Idle Time Total (Tiempo Muerto)</div>
       <div class="kpi-value" id="kpiIdleTime">0 min</div>
-      <div class="kpi-subtext">Demoras registradas en turno</div>
+      <div class="kpi-subtext" id="kpiIdleSub">Suma acumulada de demoras</div>
     </div>
-    <div class="kpi-card">
-      <div class="kpi-title">Ritmo de Carga/Descarga (Pace)</div>
+    <div class="kpi-card success">
+      <div class="kpi-title">Productividad Muelle (Pace)</div>
       <div class="kpi-value" id="kpiPacePromedio">0 Mvs/Hr</div>
-      <div class="kpi-subtext">Promedio actual por hora</div>
+      <div class="kpi-subtext" id="kpiPaceSub">Promedio Carga/Descarga</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-title">Causa Principal de Demora</div>
-      <div class="kpi-value" id="kpiCausaPrincipal" style="font-size:16px; margin-top:8px;">—</div>
-      <div class="kpi-subtext">Mayor impacto operativo</div>
+      <div class="kpi-title">Causa Principal Demoras</div>
+      <div class="kpi-value" id="kpiCausaPrincipal" style="font-size:15px; margin-top:8px;">—</div>
+      <div class="kpi-subtext">Mayor impacto en operación</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-title">Total Movimientos QC</div>
+      <div class="kpi-title">Total Movimientos</div>
       <div class="kpi-value" id="kpiTotalMovs">0 Mvs</div>
-      <div class="kpi-subtext">Contenedores procesados</div>
+      <div class="kpi-subtext" id="kpiMovsSub">Contenedores procesados</div>
     </div>
   </div>
 
-  <!-- DETALLES OPERATIVOS -->
+  <!-- SECCIÓN DE GRÁFICOS ANALÍTICOS -->
   <div class="grid-detalles">
-
-    <!-- DESGLOSE DE TIEMPOS MUERTOS -->
+    <!-- GRÁFICO 1: COMPARATIVO PACE HORA POR HORA (BARRAS/LÍNEAS) -->
     <div class="card-sec">
       <div class="card-title">
-        <span>Desglose de Demoras (Tiempos Muertos)</span>
-        <span style="font-size:11px; color:#64748b;">Navis Delays</span>
+        <span>Comparativo Pace Hora por Hora</span>
+        <span style="font-size:11px; color:#64748b;">Movimientos por QC / Hora</span>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Hora Inicio</th>
-            <th>Causa de Demora</th>
-            <th>Duración</th>
-          </tr>
-        </thead>
-        <tbody id="tablaDelays">
-          <tr><td colspan="3" style="text-align:center; color:#64748b;">Cargando registros...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- TASA DE TRANSFERENCIA HORA POR HORA (PACE) -->
-    <div class="card-sec">
-      <div class="card-title">
-        <span>Tasa de Carga / Descarga (Pace por Hora)</span>
-        <span style="font-size:11px; color:#64748b;">Movimientos / Hora</span>
-      </div>
-      <div id="contenedorPace">
-        <div style="text-align:center; color:#64748b; padding:20px;">Cargando ritmo de transferencia...</div>
+      <div class="chart-container">
+        <canvas id="chartPace"></canvas>
       </div>
     </div>
 
+    <!-- GRÁFICO 2: DISTRIBUCIÓN DE CAUSAS DE DEMORA (DONUT/PIE) -->
+    <div class="card-sec">
+      <div class="card-title">
+        <span>Distribución de Causas de Tiempos Muertos</span>
+        <span style="font-size:11px; color:#64748b;">Idle Time por Categoría</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="chartDelays"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN DE TABLA DETALLADA DE DEMORAS -->
+  <div class="card-sec">
+    <div class="card-title">
+      <span>Registro Detallado de Demoras y Tiempos Muertos</span>
+      <span style="font-size:11px; color:#64748b;">Eventos Registrados en Navis N4</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Grúa QC</th>
+          <th>Hora Inicio</th>
+          <th>Causa de Demora</th>
+          <th>Duración (Minutos)</th>
+        </tr>
+      </thead>
+      <tbody id="tablaDelays">
+        <tr><td colspan="4" style="text-align:center; color:#64748b;">Cargando registros...</td></tr>
+      </tbody>
+    </table>
   </div>
 
 </div>
@@ -152,105 +163,156 @@ const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Instancias globales para destruir y recrear gráficos
+let chartPaceInstance = null;
+let chartDelaysInstance = null;
+
 async function cargarMétricasTasaTransferencia() {
   const naveId = document.getElementById('selectNave').value;
   const qcId = document.getElementById('selectQC').value;
 
   try {
-    // 1. Consultar Tiempos Muertos (Delays) desde Navis N4
-    const { data: delays, error: errDelays } = await dbClient
-      .from('navis_qc_delays')
-      .select('*')
-      .eq('nave_id', naveId)
-      .eq('qc_id', qcId);
+    // Construir consultas dinámicas según el filtro (TODAS o Grúa específica)
+    let queryDelays = dbClient.from('navis_qc_delays').select('*').eq('nave_id', naveId);
+    let queryEvents = dbClient.from('navis_qc_events').select('*').eq('nave_id', naveId);
+
+    if (qcId !== 'TODAS') {
+      queryDelays = queryDelays.eq('qc_id', qcId);
+      queryEvents = queryEvents.eq('qc_id', qcId);
+    }
+
+    const [{ data: delays, error: errDelays }, { data: events, error: errEvents }] = await Promise.all([
+      queryDelays,
+      queryEvents
+    ]);
 
     if (errDelays) throw errDelays;
-
-    // 2. Consultar Movimientos (Pace) desde Navis N4
-    const { data: events, error: errEvents } = await dbClient
-      .from('navis_qc_events')
-      .select('*')
-      .eq('nave_id', naveId)
-      .eq('qc_id', qcId);
-
     if (errEvents) throw errEvents;
 
-    // --- PROCESAMIENTO DE DATOS ---
-    
-    // A. Idle Time Total
+    // --- 1. PROCESAMIENTO DE TIEMPOS MUERTOS (IDLE TIME) ---
     const idleTotalMin = (delays || []).reduce((acc, d) => acc + (d.duracion_minutos || 0), 0);
     document.getElementById('kpiIdleTime').textContent = `${idleTotalMin} min`;
+    document.getElementById('kpiIdleSub').textContent = qcId === 'TODAS' ? 'Acumulado en Muelle' : `Acumulado en ${qcId}`;
 
-    // Causa Principal
-    if (delays && delays.length > 0) {
-      const mayorDemora = [...delays].sort((a,b) => b.duracion_minutos - a.duracion_minutos)[0];
-      document.getElementById('kpiCausaPrincipal').textContent = mayorDemora.causa_demora;
-    } else {
-      document.getElementById('kpiCausaPrincipal').textContent = 'Sin Demoras';
-    }
+    // Agrupar causas para gráfico y causa principal
+    const causasMap = {};
+    (delays || []).forEach(d => {
+      causasMap[d.causa_demora] = (causasMap[d.causa_demora] || 0) + d.duracion_minutos;
+    });
 
-    // B. Renderizar Tabla de Demoras
+    const causasOrdenadas = Object.keys(causasMap).sort((a,b) => causasMap[b] - causasMap[a]);
+    document.getElementById('kpiCausaPrincipal').textContent = causasOrdenadas.length > 0 ? causasOrdenadas[0] : 'Sin Demoras';
+
+    // Tabla de Delays
     const tablaDelays = document.getElementById('tablaDelays');
     if (delays && delays.length > 0) {
-      tablaDelays.innerHTML = delays.map(d => {
-        const hInicio = new Date(d.inicio_demora).toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
-        return `
-          <tr>
-            <td>${hInicio} hs</td>
-            <td><span class="badge-cause">${d.causa_demora}</span></td>
-            <td><strong>${d.duracion_minutos} min</strong></td>
-          </tr>
-        `;
-      }).join('');
+      tablaDelays.innerHTML = delays.map(d => `
+        <tr>
+          <td><span class="badge-qc">${d.qc_id}</span></td>
+          <td>${new Date(d.inicio_demora).toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'})} hs</td>
+          <td><span class="badge-cause">${d.causa_demora}</span></td>
+          <td><strong>${d.duracion_minutos} min</strong></td>
+        </tr>
+      `).join('');
     } else {
-      tablaDelays.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#16a34a; font-weight:bold;">No hay tiempos muertos registrados para esta grúa.</td></tr>`;
+      tablaDelays.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#16a34a; font-weight:bold;">Sin tiempos muertos en el periodo seleccionado.</td></tr>`;
     }
 
-    // C. Pace (Movimientos por Hora)
-    const paceMap = {};
+    // --- 2. PROCESAMIENTO DE RITMO PACE (BARRAS Y LÍNEAS) ---
+    const qcsDisponibles = [...new Set((events || []).map(e => e.qc_id))];
+    const horasDisponibles = [...new Set((events || []).map(e => new Date(e.timestamp_movimiento).getHours() + ":00"))].sort();
+
+    // Estructura para almacenar matriz [qc][hora] = conteo
+    const matrixPace = {};
+    qcsDisponibles.forEach(q => {
+      matrixPace[q] = {};
+      horasDisponibles.forEach(h => matrixPace[q][h] = 0);
+    });
+
     (events || []).forEach(e => {
-      const fechaObj = new Date(e.timestamp_movimiento);
-      const horaStr = String(fechaObj.getHours()).padStart(2,'0') + ":00";
-      paceMap[horaStr] = (paceMap[horaStr] || 0) + 1;
+      const hStr = new Date(e.timestamp_movimiento).getHours() + ":00";
+      if (matrixPace[e.qc_id] && matrixPace[e.qc_id][hStr] !== undefined) {
+        matrixPace[e.qc_id][hStr]++;
+      }
     });
 
     const totalMovs = (events || []).length;
-    const horasTrabajadas = Object.keys(paceMap).length || 1;
-    const pacePromedio = (totalMovs / horasTrabajadas).toFixed(1);
+    const horasEfectivas = horasDisponibles.length || 1;
+    const paceProm = (totalMovs / horasEfectivas).toFixed(1);
 
     document.getElementById('kpiTotalMovs').textContent = `${totalMovs} Mvs`;
-    document.getElementById('kpiPacePromedio').textContent = `${pacePromedio} Mvs/Hr`;
+    document.getElementById('kpiPacePromedio').textContent = `${paceProm} Mvs/Hr`;
 
-    // D. Renderizar Barras de Pace
-    const contenedorPace = document.getElementById('contenedorPace');
-    const horasKeys = Object.keys(paceMap);
-
-    if (horasKeys.length > 0) {
-      const maxMvs = Math.max(...Object.values(paceMap), 5); // Para escala de barra
-      contenedorPace.innerHTML = horasKeys.map(h => {
-        const mvs = paceMap[h];
-        const porcentaje = (mvs / maxMvs) * 100;
-        return `
-          <div class="pace-row">
-            <span class="pace-label">${h}</span>
-            <div class="pace-bar-container">
-              <div class="pace-bar-fill" style="width: ${porcentaje}%;"></div>
-            </div>
-            <span class="pace-value">${mvs} mvs</span>
-          </div>
-        `;
-      }).join('');
-    } else {
-      contenedorPace.innerHTML = `<div style="text-align:center; color:#64748b; padding:20px;">Sin movimientos registrados en este turno.</div>`;
-    }
+    // --- 3. RENDERIZADO DE GRÁFICOS CON CHART.JS ---
+    renderizarGraficoPace(horasDisponibles, qcsDisponibles, matrixPace);
+    renderizarGraficoDelays(causasMap);
 
   } catch (err) {
-    console.error("Error al cargar datos:", err.message);
-    alert("Error al cargar los datos desde Supabase: " + err.message);
+    console.error("Error consultando métricas:", err.message);
   }
 }
 
-// Cargar datos automáticamente al abrir
+// Renderiza el gráfico de comparativo de Pace Hora por Hora
+function renderizarGraficoPace(horas, qcs, matrixPace) {
+  const ctx = document.getElementById('chartPace').getContext('2d');
+  if (chartPaceInstance) chartPaceInstance.destroy();
+
+  const coloresQC = {
+    'QC-01': '#2563eb',
+    'QC-02': '#ea580c',
+    'QC-03': '#16a34a',
+    'QC-04': '#9333ea'
+  };
+
+  const datasets = qcs.map(q => ({
+    label: q,
+    data: horas.map(h => matrixPace[q][h] || 0),
+    backgroundColor: coloresQC[q] || '#64748b',
+    borderColor: coloresQC[q] || '#64748b',
+    borderWidth: 1
+  }));
+
+  chartPaceInstance = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: horas, datasets: datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: 'Movimientos' } },
+        x: { title: { display: true, text: 'Hora del Turno' } }
+      }
+    }
+  });
+}
+
+// Renderiza el gráfico circular de Distribución de Causas de Demora
+function renderizarGraficoDelays(causasMap) {
+  const ctx = document.getElementById('chartDelays').getContext('2d');
+  if (chartDelaysInstance) chartDelaysInstance.destroy();
+
+  const labels = Object.keys(causasMap);
+  const data = Object.values(causasMap);
+
+  chartDelaysInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: ['#dc2626', '#f59e0b', '#2563eb', '#10b981', '#6b7280']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+}
+
+// Cargar datos al iniciar
 cargarMétricasTasaTransferencia();
 </script>
 
