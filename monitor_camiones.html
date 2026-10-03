@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Camiones (Turn-Time Total) - DP World Posorja</title>
+<!-- Librería oficial Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Chart.js para indicadores visuales -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+:root{--azul:#123b5d;--rojo:#a51f35;--naranja:#f39c12;--verde:#10b981;--fondo:#f8fafc;--borde:#e2e8f0}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1e293b}
+
+header{background:var(--naranja);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:20px}
+header p{margin:3px 0 0;font-size:12px;opacity:.95}
+
+.panel{max-width:1600px;margin:20px auto;padding:0 14px}
+
+.filtros-bar{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;gap:12px;align-items:end;margin-bottom:16px;flex-wrap:wrap}
+.campo{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:bold}
+.campo select, .campo input{height:36px;padding:6px 10px;border:1px solid var(--borde);border-radius:6px}
+button{height:36px;padding:0 16px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+
+/* Tarjetas KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:16px}
+.kpi-card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid var(--azul)}
+.kpi-card.warning{border-left-color:var(--naranja)}
+.kpi-card.success{border-left-color:var(--verde)}
+.kpi-card.danger{border-left-color:#dc2626}
+
+.kpi-title{font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase}
+.kpi-value{font-size:24px;font-weight:bold;color:#0f172a;margin-top:4px}
+.kpi-subtext{font-size:10px;color:#64748b;margin-top:2px}
+
+/* Estructura de Secciones */
+.grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.card-sec{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.card-title{font-size:14px;font-weight:bold;color:var(--azul);margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid var(--borde);display:flex;justify-content:space-between;align-items:center}
+
+/* Tablas */
+table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+th{background:#f1f5f9;color:#475569;padding:8px;font-weight:bold;border-bottom:1px solid #cbd5e1}
+td{padding:8px;border-bottom:1px solid var(--borde)}
+tr:hover{background:#f8fafc}
+
+.badge-status{padding:2px 6px;border-radius:4px;font-weight:bold;font-size:10px}
+.status-inside{background:#fef3c7;color:#92400e}
+.status-done{background:#d1fae5;color:#065f46}
+
+.chart-container{position:relative;height:240px;width:100%}
+
+@media(max-width:900px){.grid-detalles{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>MONITOR DE CAMIONES (TURN-TIME TOTAL)</h1>
+    <p>Flujo de Camiones Externos / Gate-In ➔ Gate-Out</p>
+  </div>
+  <button onclick="cargarMonitorCamiones()" style="background:rgba(255,255,255,.2)">🔄 Actualizar Datos</button>
+</header>
+
+<div class="panel">
+
+  <!-- FILTROS -->
+  <div class="filtros-bar">
+    <div class="campo">
+      <label>Trámite</label>
+      <select id="selectTramite" onchange="cargarMonitorCamiones()">
+        <option value="TODOS">TODOS LOS TRÁMITES</option>
+        <option value="RECEPCION">RECEPCIÓN (Exportación)</option>
+        <option value="DESPACHO">DESPACHO (Importación)</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label>Estado Camión</label>
+      <select id="selectStatus" onchange="cargarMonitorCamiones()">
+        <option value="TODOS">TODOS</option>
+        <option value="EN_TERMINAL">EN PATIO (Activos)</option>
+        <option value="COMPLETADO">COMPLETADOS</option>
+      </select>
+    </div>
+    <button onclick="cargarMonitorCamiones()">FILTRAR MONITOR</button>
+  </div>
+
+  <!-- TARJETAS KPIS -->
+  <div class="kpi-grid">
+    <div class="kpi-card warning">
+      <div class="kpi-title">Turn-Around Time Promedio</div>
+      <div class="kpi-value" id="kpiTTT">0 min</div>
+      <div class="kpi-subtext">Tiempo Gate-In hasta Gate-Out</div>
+    </div>
+    <div class="kpi-card success">
+      <div class="kpi-title">Tiempo Promedio Atención Patio</div>
+      <div class="kpi-value" id="kpiYardTime">0 min</div>
+      <div class="kpi-subtext">Atención y maniobra de RTG</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-title">Camiones Actualmente en Terminal</div>
+      <div class="kpi-value" id="kpiActivos">0</div>
+      <div class="kpi-subtext">Dentro del recinto portuario</div>
+    </div>
+    <div class="kpi-card danger">
+      <div class="kpi-title">Camiones Fuera de Meta (>45 min)</div>
+      <div class="kpi-value" id="kpiDemorados">0</div>
+      <div class="kpi-subtext">Turn-time excedido</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS -->
+  <div class="grid-detalles">
+    <div class="card-sec">
+      <div class="card-title">
+        <span>Desglose del Turn-Time (Minutos por Etapa)</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="chartDesglose"></canvas>
+      </div>
+    </div>
+
+    <div class="card-sec">
+      <div class="card-title">
+        <span>Distribución por Rango de Tiempo (Minutos)</span>
+      </div>
+      <div class="chart-container">
+        <canvas id="chartRangos"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA DE TRANSACCIONES EN TIEMPO REAL -->
+  <div class="card-sec">
+    <div class="card-title">
+      <span>Registro de Camiones Externos en Tiempo Real</span>
+      <span style="font-size:11px; color:#64748b;">Eventos Garita / Patio Navis N4</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Visita ID</th>
+          <th>Placa / Chofer</th>
+          <th>Trámite</th>
+          <th>Bloque / RTG</th>
+          <th>Gate-In</th>
+          <th>Yard In - Out</th>
+          <th>Gate-Out</th>
+          <th>Turn-Time Total</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaCamiones">
+        <tr><td colspan="9" style="text-align:center; color:#64748b;">Cargando registro de camiones...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// --- CONFIGURACIÓN SUPABASE ---
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let chartDesgloseInst = null;
+let chartRangosInst = null;
+
+async function cargarMonitorCamiones() {
+  const tramite = document.getElementById('selectTramite').value;
+  const status = document.getElementById('selectStatus').value;
+
+  try {
+    let query = dbClient.from('gate_truck_transactions').select('*');
+    if (tramite !== 'TODOS') query = query.eq('tipo_tramite', tramite);
+    if (status !== 'TODOS') query = query.eq('status', status);
+
+    const { data: camiones, error } = await query;
+    if (error) throw error;
+
+    let sumaTTT = 0;
+    let sumaYard = 0;
+    let completados = 0;
+    let activos = 0;
+    let fueraMeta = 0;
+
+    let totalGateToYard = 0;
+    let totalYardToOut = 0;
+
+    let R_menos30 = 0, R_30_45 = 0, R_mas45 = 0;
+
+    const filasHtml = (camiones || []).map(c => {
+      const gIn = new Date(c.gate_in);
+      const gOut = c.gate_out ? new Date(c.gate_out) : null;
+      const yIn = c.yard_in ? new Date(c.yard_in) : null;
+      const yOut = c.yard_out ? new Date(c.yard_out) : null;
+
+      let tttMin = 0;
+      if (gOut) {
+        tttMin = Math.round((gOut - gIn) / 60000);
+        sumaTTT += tttMin;
+        completados++;
+
+        if (tttMin <= 30) R_menos30++;
+        else if (tttMin <= 45) R_30_45++;
+        else { R_mas45++; fueraMeta++; }
+
+        if (yIn) totalGateToYard += Math.round((yIn - gIn) / 60000);
+        if (yIn && yOut) sumaYard += Math.round((yOut - yIn) / 60000);
+        if (yOut && gOut) totalYardToOut += Math.round((gOut - yOut) / 60000);
+
+      } else {
+        activos++;
+        tttMin = Math.round((new Date() - gIn) / 60000); // Tiempo transcurrido actual
+      }
+
+      const statusBadge = c.status === 'EN_TERMINAL' 
+        ? `<span class="badge-status status-inside">EN PATIO</span>`
+        : `<span class="badge-status status-done">COMPLETADO</span>`;
+
+      return `
+        <tr>
+          <td><strong>${c.visit_id}</strong></td>
+          <td><b>${c.placa_camion}</b><br><small style="color:#64748b;">${c.chofer || ''}</small></td>
+          <td>${c.tipo_tramite}</td>
+          <td><span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-weight:bold">${c.bloque_patio || '—'}</span> / ${c.rtg_id || '—'}</td>
+          <td>${fHora(gIn)}</td>
+          <td><small>In: ${fHora(yIn)}<br>Out: ${fHora(yOut)}</small></td>
+          <td>${fHora(gOut)}</td>
+          <td><strong style="color:${tttMin > 45 ? '#dc2626' : '#10b981'}">${tttMin} min</strong></td>
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('tablaCamiones').innerHTML = filasHtml || `<tr><td colspan="9" style="text-align:center">Sin datos de camiones registrados.</td></tr>`;
+
+    // Cálculo de indicadores
+    const promTTT = completados > 0 ? Math.round(sumaTTT / completados) : 0;
+    const promYard = completados > 0 ? Math.round(sumaYard / completados) : 0;
+
+    document.getElementById('kpiTTT').textContent = `${promTTT} min`;
+    document.getElementById('kpiYardTime').textContent = `${promYard} min`;
+    document.getElementById('kpiActivos').textContent = activos;
+    document.getElementById('kpiDemorados').textContent = fueraMeta;
+
+    // Renderizado de gráficos
+    renderGr_Desglose(
+      completados > 0 ? Math.round(totalGateToYard / completados) : 0,
+      promYard,
+      completados > 0 ? Math.round(totalYardToOut / completados) : 0
+    );
+
+    renderGr_Rangos(R_menos30, R_30_45, R_mas45);
+
+  } catch(err) {
+    console.error("Error cargando el monitor de camiones:", err.message);
+  }
+}
+
+function fHora(f) {
+  if (!f) return '—';
+  return f.toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
+}
+
+function renderGr_Desglose(gToY, yard, yToG) {
+  const ctx = document.getElementById('chartDesglose').getContext('2d');
+  if (chartDesgloseInst) chartDesgloseInst.destroy();
+
+  chartDesgloseInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Promedio Etapas (Minutos)'],
+      datasets: [
+        { label: 'Gate-In a Bloque', data: [gToY], backgroundColor: '#3b82f6' },
+        { label: 'Atención en Patio (RTG)', data: [yard], backgroundColor: '#f39c12' },
+        { label: 'Bloque a Gate-Out', data: [yToG], backgroundColor: '#10b981' }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+    }
+  });
+}
+
+function renderGr_Rangos(r1, r2, r3) {
+  const ctx = document.getElementById('chartRangos').getContext('2d');
+  if (chartRangosInst) chartRangosInst.destroy();
+
+  chartRangosInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['< 30 min (Excelente)', '30 - 45 min (Aceptable)', '> 45 min (Demorado)'],
+      datasets: [{
+        data: [r1, r2, r3],
+        backgroundColor: ['#10b981', '#f39c12', '#dc2626']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+}
+
+// Cargar al iniciar
+cargarMonitorCamiones();
+</script>
+
+</body>
+</html>
