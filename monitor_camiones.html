@@ -3,85 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitor de Camiones (Turn-Time Total) - DP World Posorja</title>
+<title>Dashboard Turn-Time Camiones - DP World Posorja</title>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Chart.js -->
+<!-- Chart.js + Plugin DataLabels para estilo Power BI -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 *{box-sizing:border-box}
-:root{--azul:#123b5d;--rojo:#a51f35;--naranja:#f39c12;--verde:#10b981;--fondo:#f8fafc;--borde:#e2e8f0}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1e293b}
+:root{
+  --navy:#0f172a;
+  --azul-pbi:#2563eb;
+  --celeste-pbi:#38bdf8;
+  --naranja-pbi:#f59e0b;
+  --verde-pbi:#10b981;
+  --rojo-pbi:#ef4444;
+  --bg-pbi:#f1f5f9;
+  --card-bg:#ffffff;
+  --border:#e2e8f0;
+  --text-primary:#0f172a;
+  --text-muted:#64748b;
+}
 
-header{background:var(--naranja);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
-header h1{margin:0;font-size:20px}
-header p{margin:3px 0 0;font-size:12px;opacity:.95}
+body{margin:0;font-family:'Inter','Segoe UI',sans-serif;background:var(--bg-pbi);color:var(--text-primary)}
 
-.panel{max-width:1600px;margin:20px auto;padding:0 14px}
+/* App Header */
+header{
+  background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color:#fff;
+  padding:16px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+header h1{margin:0;font-size:18px;font-weight:700;letter-spacing:-0.3px;display:flex;align-items:center;gap:8px}
+header p{margin:2px 0 0;font-size:12px;color:#94a3b8}
 
-.filtros-bar{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;gap:12px;align-items:end;margin-bottom:16px;flex-wrap:wrap}
-.campo{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:bold}
-.campo select, .campo input{height:36px;padding:6px 10px;border:1px solid var(--borde);border-radius:6px}
-button{height:36px;padding:0 16px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
-button:hover{opacity:.9}
+.btn-refresh{
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;
+  padding:8px 16px;
+  border-radius:6px;
+  font-weight:600;
+  font-size:12px;
+  cursor:pointer;
+  transition:all .2s;
+}
+.btn-refresh:hover{background:rgba(255,255,255,0.2)}
 
-/* KPI Cards */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:16px}
-.kpi-card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid var(--azul)}
-.kpi-card.warning{border-left-color:var(--naranja)}
-.kpi-card.success{border-left-color:var(--verde)}
-.kpi-card.danger{border-left-color:#dc2626}
+.panel{max-width:1650px;margin:20px auto;padding:0 16px}
 
-.kpi-title{font-size:11px;color:#64748b;font-weight:bold;text-transform:uppercase}
-.kpi-value{font-size:24px;font-weight:bold;color:#0f172a;margin-top:4px}
-.kpi-subtext{font-size:10px;color:#64748b;margin-top:2px}
+/* Slicer / Filtros Power BI Style */
+.slicer-bar{
+  background:var(--card-bg);
+  padding:14px 20px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  display:flex;
+  gap:16px;
+  align-items:end;
+  margin-bottom:20px;
+}
+.slicer-item{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase}
+.slicer-item select{
+  height:38px;
+  padding:0 12px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:#f8fafc;
+  color:var(--text-primary);
+  font-weight:600;
+  font-size:12px;
+  outline:none;
+}
+.slicer-item select:focus{border-color:var(--azul-pbi)}
 
-/* Secciones */
-.grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.card-sec{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
-.card-title{font-size:14px;font-weight:bold;color:var(--azul);margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid var(--borde);display:flex;justify-content:space-between;align-items:center}
+/* KPI Cards Power BI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:16px;margin-bottom:20px}
+.kpi-card{
+  background:var(--card-bg);
+  padding:18px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+  position:relative;
+  overflow:hidden;
+}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--azul-pbi)}
+.kpi-card.warning::before{background:var(--naranja-pbi)}
+.kpi-card.success::before{background:var(--verde-pbi)}
+.kpi-card.danger::before{background:var(--rojo-pbi)}
 
-/* Tablas */
+.kpi-header{display:flex;justify-content:space-between;align-items:center}
+.kpi-title{font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.kpi-value{font-size:28px;font-weight:800;color:var(--text-primary);margin:8px 0 4px;letter-spacing:-0.5px}
+.kpi-footer{font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+
+/* Target Progress Bar inside KPI */
+.progress-bg{width:100%;height:6px;background:#e2e8f0;border-radius:10px;margin-top:8px;overflow:hidden}
+.progress-fill{height:100%;background:var(--verde-pbi);width:0%;transition:width .5s ease}
+
+/* Section Cards Layout */
+.grid-analytics{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;margin-bottom:20px}
+.card-pbi{
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  box-shadow:0 1px 3px rgba(0,0,0,0.04);
+}
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:16px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.card-header h3{margin:0;font-size:14px;font-weight:700;color:var(--navy)}
+.card-header .subtitle{font-size:11px;color:var(--text-muted);font-weight:500}
+
+.chart-wrapper{position:relative;height:260px;width:100%}
+
+/* Tables Power BI Style */
 table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
-th{background:#f1f5f9;color:#475569;padding:8px;font-weight:bold;border-bottom:1px solid #cbd5e1}
-td{padding:8px;border-bottom:1px solid var(--borde)}
-tr:hover{background:#f8fafc}
+th{background:#f8fafc;color:var(--text-muted);padding:10px 12px;font-weight:700;border-bottom:2px solid var(--border);text-transform:uppercase;font-size:10px;letter-spacing:0.5px}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-primary)}
+tr:hover{background:#f1f5f9}
 
-.badge-status{padding:2px 6px;border-radius:4px;font-weight:bold;font-size:10px}
-.status-inside{background:#fef3c7;color:#92400e}
-.status-done{background:#d1fae5;color:#065f46}
+.badge{padding:3px 8px;border-radius:12px;font-weight:700;font-size:10px;display:inline-block}
+.badge-inside{background:#fef3c7;color:#b45309}
+.badge-done{background:#d1fae5;color:#047857}
 
-.chart-container{position:relative;height:240px;width:100%}
-
-@media(max-width:900px){.grid-detalles{grid-template-columns:1fr}}
+@media(max-width:1100px){.grid-analytics{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
 <header>
   <div>
-    <h1>MONITOR DE CAMIONES (TURN-TIME TOTAL)</h1>
-    <p>Flujo de Camiones Externos / Gate-In ➔ Gate-Out</p>
+    <h1>🚛 MONITOR OPERATIVO DE TRUCK TURN-TIME</h1>
+    <p>DP World Posorja — Análisis Telemétrico de Garita y Patio (Navis N4)</p>
   </div>
-  <button onclick="cargarMonitorCamiones()" style="background:rgba(255,255,255,.2)">🔄 Actualizar</button>
+  <button class="btn-refresh" onclick="cargarMonitorCamiones()">🔄 Actualizar Datos</button>
 </header>
 
 <div class="panel">
 
-  <!-- FILTROS -->
-  <div class="filtros-bar">
-    <div class="campo">
-      <label>Trámite / Flujo</label>
+  <!-- SLICERS / FILTROS -->
+  <div class="slicer-bar">
+    <div class="slicer-item">
+      <label>Trámite / Flujo Carga</label>
       <select id="selectTramite" onchange="cargarMonitorCamiones()">
         <option value="TODOS">TODOS LOS TRÁMITES</option>
         <option value="RECEPCION_FULL">RECEPCIÓN FULL (Exportación)</option>
         <option value="RECEPCION_VACIO">RECEPCIÓN VACÍO (Devolución)</option>
         <option value="DESPACHO_FULL">DESPACHO FULL (Importación)</option>
-        <option value="DESPACHO_VACIO">DESPACHO VACÍO (Para Carga)</option>
+        <option value="DESPACHO_VACIO">DESPACHO VACÍO (Retiro)</option>
       </select>
     </div>
-    <div class="campo">
+    <div class="slicer-item">
       <label>Estado Camión</label>
       <select id="selectStatus" onchange="cargarMonitorCamiones()">
         <option value="TODOS">TODOS</option>
@@ -89,59 +176,74 @@ tr:hover{background:#f8fafc}
         <option value="COMPLETADO">COMPLETADOS</option>
       </select>
     </div>
-    <button onclick="cargarMonitorCamiones()">FILTRAR MONITOR</button>
   </div>
 
-  <!-- TARJETAS KPIS -->
+  <!-- TARJETAS KPIS POWER BI -->
   <div class="kpi-grid">
     <div class="kpi-card warning">
-      <div class="kpi-title">Turn-Around Time Promedio</div>
+      <div class="kpi-header"><span class="kpi-title">Turn-Around Time Promedio</span></div>
       <div class="kpi-value" id="kpiTTT">0h 0m</div>
-      <div class="kpi-subtext">Tiempo Gate-In hasta Gate-Out</div>
+      <div class="kpi-footer">Target SLA: <b>45 min</b></div>
+      <div class="progress-bg"><div class="progress-fill" id="barSLA"></div></div>
     </div>
+
     <div class="kpi-card success">
-      <div class="kpi-title">Tiempo Promedio en Patio</div>
+      <div class="kpi-header"><span class="kpi-title">Tiempo Promedio en Patio</span></div>
       <div class="kpi-value" id="kpiYardTime">0h 0m</div>
-      <div class="kpi-subtext">Maniobra y atención de RTG / SL</div>
+      <div class="kpi-footer">Maniobra RTG / Side Loader</div>
     </div>
+
     <div class="kpi-card">
-      <div class="kpi-title">Camiones Actualmente en Terminal</div>
+      <div class="kpi-header"><span class="kpi-title">Camiones Actualmente en Terminal</span></div>
       <div class="kpi-value" id="kpiActivos">0</div>
-      <div class="kpi-subtext">Dentro del recinto portuario</div>
+      <div class="kpi-footer">Unidades dentro de recinto</div>
     </div>
+
     <div class="kpi-card danger">
-      <div class="kpi-title">Camiones Fuera de Meta (>45 min)</div>
+      <div class="kpi-header"><span class="kpi-title">Camiones Fuera de Meta (>45 min)</span></div>
       <div class="kpi-value" id="kpiDemorados">0</div>
-      <div class="kpi-subtext">Turn-time excedido</div>
+      <div class="kpi-footer" style="color:var(--rojo-pbi); font-weight:700;">Atención requerida</div>
     </div>
   </div>
 
-  <!-- GRÁFICOS -->
-  <div class="grid-detalles">
-    <div class="card-sec">
-      <div class="card-title">
-        <span>Desglose del Turn-Time (Minutos por Etapa)</span>
+  <!-- GRÁFICOS ANALÍTICOS (ESTILO POWER BI) -->
+  <div class="grid-analytics">
+    
+    <!-- NUEVO GRÁFICO: Funnel Horizontal de Etapas Operativas -->
+    <div class="card-pbi">
+      <div class="card-header">
+        <div>
+          <h3>Desglose de Tiempos por Etapa Operativa</h3>
+          <span class="subtitle">Promedio de tiempo transcurrido por fase (Minutos)</span>
+        </div>
       </div>
-      <div class="chart-container">
-        <canvas id="chartDesglose"></canvas>
+      <div class="chart-wrapper">
+        <canvas id="chartDesgloseHorizontal"></canvas>
       </div>
     </div>
 
-    <div class="card-sec">
-      <div class="card-title">
-        <span>Distribución por Rango de Tiempo</span>
+    <!-- GRÁFICO 2: Cumplimiento SLA Donut -->
+    <div class="card-pbi">
+      <div class="card-header">
+        <div>
+          <h3>Distribución por Rango de Cumplimiento SLA</h3>
+          <span class="subtitle">Evaluación de eficiencia respecto a meta de 45 min</span>
+        </div>
       </div>
-      <div class="chart-container">
+      <div class="chart-wrapper">
         <canvas id="chartRangos"></canvas>
       </div>
     </div>
+
   </div>
 
-  <!-- TABLA DE TRANSACCIONES -->
-  <div class="card-sec">
-    <div class="card-title">
-      <span>Registro de Camiones Externos en Tiempo Real</span>
-      <span style="font-size:11px; color:#64748b;">Hitos Navis N4</span>
+  <!-- TABLA DE DETALLE OPERATIVO -->
+  <div class="card-pbi">
+    <div class="card-header">
+      <div>
+        <h3>Registro de Transacciones en Tiempo Real</h3>
+        <span class="subtitle">Eventos de garita e hitos de atención de grúas en patio</span>
+      </div>
     </div>
     <table>
       <thead>
@@ -159,7 +261,7 @@ tr:hover{background:#f8fafc}
         </tr>
       </thead>
       <tbody id="tablaCamiones">
-        <tr><td colspan="10" style="text-align:center; color:#64748b;">Cargando registro de camiones...</td></tr>
+        <tr><td colspan="10" style="text-align:center; color:var(--text-muted);">Cargando telemetría de patio...</td></tr>
       </tbody>
     </table>
   </div>
@@ -172,10 +274,12 @@ const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Registrar Plugin DataLabels
+Chart.register(ChartDataLabels);
+
 let chartDesgloseInst = null;
 let chartRangosInst = null;
 
-// Función para formatear minutos en formato Horas y Minutos (Ej: 1h 15m ó 25m)
 function formatHorasMinutos(minutosTotales) {
   if (isNaN(minutosTotales) || minutosTotales <= 0) return '0m';
   const hrs = Math.floor(minutosTotales / 60);
@@ -216,7 +320,6 @@ async function cargarMonitorCamiones() {
       let tttMin = 0;
       let yardMin = 0;
 
-      // Calcular tiempo en patio (Yard In -> Yard Out o Tiempo actual en patio)
       if (yIn) {
         const finPatio = yOut ? yOut : (gOut ? gOut : new Date());
         yardMin = Math.round((finPatio - yIn) / 60000);
@@ -237,24 +340,24 @@ async function cargarMonitorCamiones() {
 
       } else {
         activos++;
-        tttMin = Math.round((new Date() - gIn) / 60000); // Tiempo transcurrido acumulado
+        tttMin = Math.round((new Date() - gIn) / 60000);
       }
 
       const statusBadge = c.status === 'EN_TERMINAL' 
-        ? `<span class="badge-status status-inside">EN PATIO</span>`
-        : `<span class="badge-status status-done">COMPLETADO</span>`;
+        ? `<span class="badge badge-inside">EN PATIO</span>`
+        : `<span class="badge badge-done">COMPLETADO</span>`;
 
       return `
         <tr>
           <td><strong>${c.visit_id}</strong></td>
-          <td><b>${c.placa_camion}</b><br><small style="color:#64748b;">${c.chofer || ''}</small></td>
-          <td><small style="font-weight:bold; color:#123b5d">${c.tipo_tramite}</small></td>
-          <td><span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-weight:bold">${c.bloque_patio || '—'}</span> / ${c.rtg_id || '—'}</td>
+          <td><b>${c.placa_camion}</b><br><small style="color:var(--text-muted);">${c.chofer || ''}</small></td>
+          <td><small style="font-weight:700; color:var(--navy)">${c.tipo_tramite}</small></td>
+          <td><span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-weight:700">${c.bloque_patio || '—'}</span> / ${c.rtg_id || '—'}</td>
           <td>${fHora(gIn)}</td>
           <td><small>In: ${fHora(yIn)}<br>Out: ${fHora(yOut)}</small></td>
           <td>${fHora(gOut)}</td>
           <td><b>${formatHorasMinutos(yardMin)}</b></td>
-          <td><strong style="color:${tttMin > 45 ? '#dc2626' : '#10b981'}">${formatHorasMinutos(tttMin)}</strong></td>
+          <td><strong style="color:${tttMin > 45 ? 'var(--rojo-pbi)' : 'var(--verde-pbi)'}">${formatHorasMinutos(tttMin)}</strong></td>
           <td>${statusBadge}</td>
         </tr>
       `;
@@ -271,13 +374,18 @@ async function cargarMonitorCamiones() {
     document.getElementById('kpiActivos').textContent = activos;
     document.getElementById('kpiDemorados').textContent = fueraMeta;
 
-    // Renderizar Gráficos
-    renderGr_Desglose(
-      completados > 0 ? Math.round(totalGateToYard / completados) : 0,
-      promYard,
-      completados > 0 ? Math.round(totalYardToOut / completados) : 0
-    );
+    // SLA Progress Fill
+    const pctSLA = Math.min(Math.round((promTTT / 45) * 100), 100);
+    const barFill = document.getElementById('barSLA');
+    barFill.style.width = `${pctSLA}%`;
+    barFill.style.background = promTTT > 45 ? 'var(--rojo-pbi)' : 'var(--verde-pbi)';
 
+    // Promedios por Etapa
+    const avgGateToYard = completados > 0 ? Math.round(totalGateToYard / completados) : 0;
+    const avgYardToOut = completados > 0 ? Math.round(totalYardToOut / completados) : 0;
+
+    // Renderizado de Gráficos Power BI
+    renderGr_DesglosePowerBI(avgGateToYard, promYard, avgYardToOut);
     renderGr_Rangos(R_menos30, R_30_45, R_mas45);
 
   } catch(err) {
@@ -290,28 +398,65 @@ function fHora(f) {
   return f.toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'});
 }
 
-function renderGr_Desglose(gToY, yard, yToG) {
-  const ctx = document.getElementById('chartDesglose').getContext('2d');
+/* ============================================================
+   NUEVO GRÁFICO POWER BI: Horizontal Stage Funnel Chart
+   ============================================================ */
+function renderGr_DesglosePowerBI(gToY, yard, yToG) {
+  const ctx = document.getElementById('chartDesgloseHorizontal').getContext('2d');
   if (chartDesgloseInst) chartDesgloseInst.destroy();
 
   chartDesgloseInst = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Promedio por Etapa (Min)'],
-      datasets: [
-        { label: 'Gate-In a Bloque', data: [gToY], backgroundColor: '#3b82f6' },
-        { label: 'Atención en Patio', data: [yard], backgroundColor: '#f39c12' },
-        { label: 'Bloque a Gate-Out', data: [yToG], backgroundColor: '#10b981' }
-      ]
+      labels: [
+        '1. Tránsito Garita ➔ Bloque Patio',
+        '2. Atención / Maniobra Grúa',
+        '3. Tránsito Bloque ➔ Gate-Out'
+      ],
+      datasets: [{
+        label: 'Tiempo Promedio (Minutos)',
+        data: [gToY, yard, yToG],
+        backgroundColor: [
+          '#3b82f6', // Azul Power BI
+          '#f59e0b', // Naranja Power BI
+          '#10b981'  // Verde Power BI
+        ],
+        borderRadius: 6,
+        barThickness: 28
+      }]
     },
     options: {
+      indexAxis: 'y', // Convertir a barras horizontales estilo Power BI
       responsive: true,
       maintainAspectRatio: false,
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'end',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 12 },
+          formatter: (value) => `${value} min`
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: '#f1f5f9' },
+          ticks: { font: { size: 11 } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { font: { size: 11, weight: '600' }, color: '#334155' }
+        }
+      }
     }
   });
 }
 
+/* ============================================================
+   GRÁFICO DONUT RANGOS SLA (POWER BI STYLE)
+   ============================================================ */
 function renderGr_Rangos(r1, r2, r3) {
   const ctx = document.getElementById('chartRangos').getContext('2d');
   if (chartRangosInst) chartRangosInst.destroy();
@@ -319,21 +464,41 @@ function renderGr_Rangos(r1, r2, r3) {
   chartRangosInst = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['< 30 min (Excelente)', '30 - 45 min (Aceptable)', '> 45 min (Demorado)'],
+      labels: ['< 30 min (Óptimo)', '30 - 45 min (En Meta)', '> 45 min (Fuera SLA)'],
       datasets: [{
         data: [r1, r2, r3],
-        backgroundColor: ['#10b981', '#f39c12', '#dc2626']
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+        borderWidth: 2,
+        borderColor: '#ffffff'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'right' } }
+      cutout: '68%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { font: { size: 11, weight: '600' }, usePointStyle: true, boxWidth: 8 }
+        },
+        datalabels: {
+          color: '#ffffff',
+          font: { weight: 'bold', size: 12 },
+          formatter: (value, ctx) => {
+            let sum = 0;
+            let dataArr = ctx.chart.data.datasets[0].data;
+            dataArr.map(data => { sum += data; });
+            if (value === 0 || sum === 0) return '';
+            let percentage = (value * 100 / sum).toFixed(0) + "%";
+            return percentage;
+          }
+        }
+      }
     }
   });
 }
 
-// Carga inicial
+// Cargar dashboard al iniciar
 cargarMonitorCamiones();
 </script>
 
