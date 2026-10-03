@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitor de Camiones (Turn-Time Total) - DP World Posorja</title>
-<!-- Librería oficial Supabase JS -->
+<!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Chart.js para indicadores visuales -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -26,7 +26,7 @@ header p{margin:3px 0 0;font-size:12px;opacity:.95}
 button{height:36px;padding:0 16px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
 button:hover{opacity:.9}
 
-/* Tarjetas KPI */
+/* KPI Cards */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;margin-bottom:16px}
 .kpi-card{background:#fff;padding:14px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06);border-left:4px solid var(--azul)}
 .kpi-card.warning{border-left-color:var(--naranja)}
@@ -37,7 +37,7 @@ button:hover{opacity:.9}
 .kpi-value{font-size:24px;font-weight:bold;color:#0f172a;margin-top:4px}
 .kpi-subtext{font-size:10px;color:#64748b;margin-top:2px}
 
-/* Estructura de Secciones */
+/* Secciones */
 .grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
 .card-sec{background:#fff;padding:16px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.06)}
 .card-title{font-size:14px;font-weight:bold;color:var(--azul);margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid var(--borde);display:flex;justify-content:space-between;align-items:center}
@@ -64,7 +64,7 @@ tr:hover{background:#f8fafc}
     <h1>MONITOR DE CAMIONES (TURN-TIME TOTAL)</h1>
     <p>Flujo de Camiones Externos / Gate-In ➔ Gate-Out</p>
   </div>
-  <button onclick="cargarMonitorCamiones()" style="background:rgba(255,255,255,.2)">🔄 Actualizar Datos</button>
+  <button onclick="cargarMonitorCamiones()" style="background:rgba(255,255,255,.2)">🔄 Actualizar</button>
 </header>
 
 <div class="panel">
@@ -72,11 +72,13 @@ tr:hover{background:#f8fafc}
   <!-- FILTROS -->
   <div class="filtros-bar">
     <div class="campo">
-      <label>Trámite</label>
+      <label>Trámite / Flujo</label>
       <select id="selectTramite" onchange="cargarMonitorCamiones()">
         <option value="TODOS">TODOS LOS TRÁMITES</option>
-        <option value="RECEPCION">RECEPCIÓN (Exportación)</option>
-        <option value="DESPACHO">DESPACHO (Importación)</option>
+        <option value="RECEPCION_FULL">RECEPCIÓN FULL (Exportación)</option>
+        <option value="RECEPCION_VACIO">RECEPCIÓN VACÍO (Devolución)</option>
+        <option value="DESPACHO_FULL">DESPACHO FULL (Importación)</option>
+        <option value="DESPACHO_VACIO">DESPACHO VACÍO (Para Carga)</option>
       </select>
     </div>
     <div class="campo">
@@ -94,13 +96,13 @@ tr:hover{background:#f8fafc}
   <div class="kpi-grid">
     <div class="kpi-card warning">
       <div class="kpi-title">Turn-Around Time Promedio</div>
-      <div class="kpi-value" id="kpiTTT">0 min</div>
+      <div class="kpi-value" id="kpiTTT">0h 0m</div>
       <div class="kpi-subtext">Tiempo Gate-In hasta Gate-Out</div>
     </div>
     <div class="kpi-card success">
-      <div class="kpi-title">Tiempo Promedio Atención Patio</div>
-      <div class="kpi-value" id="kpiYardTime">0 min</div>
-      <div class="kpi-subtext">Atención y maniobra de RTG</div>
+      <div class="kpi-title">Tiempo Promedio en Patio</div>
+      <div class="kpi-value" id="kpiYardTime">0h 0m</div>
+      <div class="kpi-subtext">Maniobra y atención de RTG / SL</div>
     </div>
     <div class="kpi-card">
       <div class="kpi-title">Camiones Actualmente en Terminal</div>
@@ -127,7 +129,7 @@ tr:hover{background:#f8fafc}
 
     <div class="card-sec">
       <div class="card-title">
-        <span>Distribución por Rango de Tiempo (Minutos)</span>
+        <span>Distribución por Rango de Tiempo</span>
       </div>
       <div class="chart-container">
         <canvas id="chartRangos"></canvas>
@@ -135,11 +137,11 @@ tr:hover{background:#f8fafc}
     </div>
   </div>
 
-  <!-- TABLA DE TRANSACCIONES EN TIEMPO REAL -->
+  <!-- TABLA DE TRANSACCIONES -->
   <div class="card-sec">
     <div class="card-title">
       <span>Registro de Camiones Externos en Tiempo Real</span>
-      <span style="font-size:11px; color:#64748b;">Eventos Garita / Patio Navis N4</span>
+      <span style="font-size:11px; color:#64748b;">Hitos Navis N4</span>
     </div>
     <table>
       <thead>
@@ -147,16 +149,17 @@ tr:hover{background:#f8fafc}
           <th>Visita ID</th>
           <th>Placa / Chofer</th>
           <th>Trámite</th>
-          <th>Bloque / RTG</th>
+          <th>Bloque / Equipo</th>
           <th>Gate-In</th>
           <th>Yard In - Out</th>
           <th>Gate-Out</th>
+          <th>Tiempo en Patio</th>
           <th>Turn-Time Total</th>
           <th>Estado</th>
         </tr>
       </thead>
       <tbody id="tablaCamiones">
-        <tr><td colspan="9" style="text-align:center; color:#64748b;">Cargando registro de camiones...</td></tr>
+        <tr><td colspan="10" style="text-align:center; color:#64748b;">Cargando registro de camiones...</td></tr>
       </tbody>
     </table>
   </div>
@@ -167,11 +170,19 @@ tr:hover{background:#f8fafc}
 // --- CONFIGURACIÓN SUPABASE ---
 const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
 const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
-
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let chartDesgloseInst = null;
 let chartRangosInst = null;
+
+// Función para formatear minutos en formato Horas y Minutos (Ej: 1h 15m ó 25m)
+function formatHorasMinutos(minutosTotales) {
+  if (isNaN(minutosTotales) || minutosTotales <= 0) return '0m';
+  const hrs = Math.floor(minutosTotales / 60);
+  const mins = Math.round(minutosTotales % 60);
+  if (hrs === 0) return `${mins}m`;
+  return `${hrs}h ${mins}m`;
+}
 
 async function cargarMonitorCamiones() {
   const tramite = document.getElementById('selectTramite').value;
@@ -203,6 +214,14 @@ async function cargarMonitorCamiones() {
       const yOut = c.yard_out ? new Date(c.yard_out) : null;
 
       let tttMin = 0;
+      let yardMin = 0;
+
+      // Calcular tiempo en patio (Yard In -> Yard Out o Tiempo actual en patio)
+      if (yIn) {
+        const finPatio = yOut ? yOut : (gOut ? gOut : new Date());
+        yardMin = Math.round((finPatio - yIn) / 60000);
+      }
+
       if (gOut) {
         tttMin = Math.round((gOut - gIn) / 60000);
         sumaTTT += tttMin;
@@ -218,7 +237,7 @@ async function cargarMonitorCamiones() {
 
       } else {
         activos++;
-        tttMin = Math.round((new Date() - gIn) / 60000); // Tiempo transcurrido actual
+        tttMin = Math.round((new Date() - gIn) / 60000); // Tiempo transcurrido acumulado
       }
 
       const statusBadge = c.status === 'EN_TERMINAL' 
@@ -229,29 +248,30 @@ async function cargarMonitorCamiones() {
         <tr>
           <td><strong>${c.visit_id}</strong></td>
           <td><b>${c.placa_camion}</b><br><small style="color:#64748b;">${c.chofer || ''}</small></td>
-          <td>${c.tipo_tramite}</td>
+          <td><small style="font-weight:bold; color:#123b5d">${c.tipo_tramite}</small></td>
           <td><span style="background:#e2e8f0; padding:2px 6px; border-radius:4px; font-weight:bold">${c.bloque_patio || '—'}</span> / ${c.rtg_id || '—'}</td>
           <td>${fHora(gIn)}</td>
           <td><small>In: ${fHora(yIn)}<br>Out: ${fHora(yOut)}</small></td>
           <td>${fHora(gOut)}</td>
-          <td><strong style="color:${tttMin > 45 ? '#dc2626' : '#10b981'}">${tttMin} min</strong></td>
+          <td><b>${formatHorasMinutos(yardMin)}</b></td>
+          <td><strong style="color:${tttMin > 45 ? '#dc2626' : '#10b981'}">${formatHorasMinutos(tttMin)}</strong></td>
           <td>${statusBadge}</td>
         </tr>
       `;
     }).join('');
 
-    document.getElementById('tablaCamiones').innerHTML = filasHtml || `<tr><td colspan="9" style="text-align:center">Sin datos de camiones registrados.</td></tr>`;
+    document.getElementById('tablaCamiones').innerHTML = filasHtml || `<tr><td colspan="10" style="text-align:center">Sin datos registrados.</td></tr>`;
 
-    // Cálculo de indicadores
+    // Métricas globales KPI
     const promTTT = completados > 0 ? Math.round(sumaTTT / completados) : 0;
     const promYard = completados > 0 ? Math.round(sumaYard / completados) : 0;
 
-    document.getElementById('kpiTTT').textContent = `${promTTT} min`;
-    document.getElementById('kpiYardTime').textContent = `${promYard} min`;
+    document.getElementById('kpiTTT').textContent = formatHorasMinutos(promTTT);
+    document.getElementById('kpiYardTime').textContent = formatHorasMinutos(promYard);
     document.getElementById('kpiActivos').textContent = activos;
     document.getElementById('kpiDemorados').textContent = fueraMeta;
 
-    // Renderizado de gráficos
+    // Renderizar Gráficos
     renderGr_Desglose(
       completados > 0 ? Math.round(totalGateToYard / completados) : 0,
       promYard,
@@ -261,7 +281,7 @@ async function cargarMonitorCamiones() {
     renderGr_Rangos(R_menos30, R_30_45, R_mas45);
 
   } catch(err) {
-    console.error("Error cargando el monitor de camiones:", err.message);
+    console.error("Error al cargar monitor de camiones:", err.message);
   }
 }
 
@@ -277,10 +297,10 @@ function renderGr_Desglose(gToY, yard, yToG) {
   chartDesgloseInst = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Promedio Etapas (Minutos)'],
+      labels: ['Promedio por Etapa (Min)'],
       datasets: [
         { label: 'Gate-In a Bloque', data: [gToY], backgroundColor: '#3b82f6' },
-        { label: 'Atención en Patio (RTG)', data: [yard], backgroundColor: '#f39c12' },
+        { label: 'Atención en Patio', data: [yard], backgroundColor: '#f39c12' },
         { label: 'Bloque a Gate-Out', data: [yToG], backgroundColor: '#10b981' }
       ]
     },
@@ -313,7 +333,7 @@ function renderGr_Rangos(r1, r2, r3) {
   });
 }
 
-// Cargar al iniciar
+// Carga inicial
 cargarMonitorCamiones();
 </script>
 
