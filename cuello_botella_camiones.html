@@ -31,7 +31,8 @@ body{margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;backgr
 
 .pbi-navbar{background:#0f172a;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 .pbi-navbar .title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
-.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px}
+.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;transition:0.2s}
+.pbi-navbar .actions button:hover{background:#1d4ed8}
 
 .pbi-canvas{padding:16px;max-width:1750px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 
@@ -135,7 +136,7 @@ table.pbi-matrix tr:hover{background:#f8fafc}
     </div>
   </div>
 
-  <!-- TARJETAS KPIS DEDICADAS -->
+  <!-- TARJETAS KPIS -->
   <div class="kpi-grid">
     <div class="kpi-card purple">
       <div class="kpi-title">Dwelling Time Promedio</div>
@@ -165,7 +166,7 @@ table.pbi-matrix tr:hover{background:#f8fafc}
   <!-- TRES GRÁFICOS DEDICADOS A LOS 3 EJES -->
   <div class="grid-analytics">
     
-    <!-- Gráfico 1: Tiempo de RTG por Bloque (Barras de Colores) -->
+    <!-- Gráfico 1: Tiempo de RTG por Bloque -->
     <div class="pbi-card-box">
       <div class="pbi-card-title">1. TIEMPO DE ESPERA RTG POR BLOQUE (MIN)</div>
       <div class="chart-container-pbi">
@@ -181,7 +182,7 @@ table.pbi-matrix tr:hover{background:#f8fafc}
       </div>
     </div>
 
-    <!-- Gráfico 3: Nivel de Congestión por Bloque -->
+    <!-- Gráfico 3: Nivel de Congestión -->
     <div class="pbi-card-box">
       <div class="pbi-card-title">3. SEVERIDAD DE CONGESTIÓN DE PATIO</div>
       <div class="chart-container-pbi">
@@ -191,7 +192,7 @@ table.pbi-matrix tr:hover{background:#f8fafc}
 
   </div>
 
-  <!-- MATRIZ TOP 10 BLOQUES Y BOTÓN AMPLIAR COMPLETO -->
+  <!-- MATRIZ TOP 10 Y BOTÓN AMPLIAR -->
   <div class="pbi-card-box">
     <div class="pbi-card-title">
       <span>MATRIZ TOP 10 CUELLOS DE BOTELLA Y DWELLING TIME POR BLOQUE</span>
@@ -278,8 +279,8 @@ async function cargarDashboardPBI() {
   try {
     let query = dbClient.from('yard_bottlenecks').select('*');
 
-    if (dateFrom) query = query.gte('fecha_evento', `${dateFrom}T00:00:00Z`);
-    if (dateTo) query = query.lte('fecha_evento', `${dateTo}T23:59:59Z`);
+    if (dateFrom) query = query.gte('fecha_evento', `${dateFrom}T00:00:00`);
+    if (dateTo) query = query.lte('fecha_evento', `${dateTo}T23:59:59`);
     if (bloqueSel !== 'TODOS') query = query.eq('bloque_patio', bloqueSel);
     if (equipoSel !== 'TODOS') query = query.eq('equipo_id', equipoSel);
     if (tipoSel !== 'TODOS') query = query.eq('tipo_carga', tipoSel);
@@ -288,7 +289,7 @@ async function cargarDashboardPBI() {
     if (error) throw error;
 
     datasetCache = eventos || [];
-    datasetCache.sort((a, b) => (b.tiempo_espera_min || 0) - (a.tiempo_espera_min || 0));
+    datasetCache.sort((a, b) => (parseFloat(b.tiempo_espera_min || 0)) - (parseFloat(a.tiempo_espera_min || 0)));
 
     let sumEsperaRTG = 0, sumDwelling = 0;
     let countTotal = datasetCache.length;
@@ -298,24 +299,26 @@ async function cargarDashboardPBI() {
     let cCritico = 0, cAlto = 0, cMedio = 0, cBajo = 0;
 
     datasetCache.forEach(e => {
-      const esp = e.tiempo_espera_min || 0;
-      const dw = Number(e.dwelling_time_horas || 0);
+      const esp = parseFloat(e.tiempo_espera_min || 0);
+      const dw = parseFloat(e.dwelling_time_horas || e.dwelling_time || 0);
 
       sumEsperaRTG += esp;
       sumDwelling += dw;
 
       // Acumular Espera por Bloque
-      const b = e.bloque_patio;
+      const b = e.bloque_patio || 'OTRO';
       if (!esperaPorBloque[b]) esperaPorBloque[b] = { sum: 0, count: 0 };
       esperaPorBloque[b].sum += esp;
       esperaPorBloque[b].count++;
 
-      // Acumular Dwelling por Carga
-      const tc = e.tipo_carga;
-      if (dwellingPorCarga[tc]) {
-        dwellingPorCarga[tc].sum += dw;
-        dwellingPorCarga[tc].count++;
-      }
+      // Normalización de llaves tipo_carga
+      const tcRaw = String(e.tipo_carga || '').toUpperCase();
+      let key = 'FULL_DRY';
+      if (tcRaw.includes('RH') || tcRaw.includes('REEFER')) key = 'FULL_RH';
+      else if (tcRaw.includes('VACIO') || tcRaw.includes('MTY')) key = 'VACIO';
+
+      dwellingPorCarga[key].sum += dw;
+      dwellingPorCarga[key].count++;
 
       // Congestión
       if (e.nivel_congestion === 'CRITICO') cCritico++;
@@ -344,7 +347,7 @@ async function cargarDashboardPBI() {
     document.getElementById('kpiBloqueMax').textContent = maxB;
     document.getElementById('kpiBloqueMaxTiempo').textContent = maxB !== '—' ? `Prom. ${Math.round(maxBTiempo)} min espera` : 'Sin datos';
 
-    // Renderizar Top 10 y Gráficos
+    // Renderizar
     renderTablaMatriz(datasetCache.slice(0, 10), 'bodyMatrizTop10', false);
     renderChartRTGBloques(esperaPorBloque);
     renderChartDwellingCarga(dwellingPorCarga);
@@ -357,8 +360,8 @@ async function cargarDashboardPBI() {
 
 function renderTablaMatriz(datos, elementId, esModal) {
   const html = datos.map(e => {
-    const esp = e.tiempo_espera_min || 0;
-    const dw = Number(e.dwelling_time_horas || 0);
+    const esp = parseFloat(e.tiempo_espera_min || 0);
+    const dw = parseFloat(e.dwelling_time_horas || e.dwelling_time || 0);
 
     const pctEspBar = Math.min((esp / 45) * 100, 100);
     const pctDwBar = Math.min((dw / 120) * 100, 100);
@@ -371,9 +374,9 @@ function renderTablaMatriz(datos, elementId, esModal) {
           <td><small>${new Date(e.fecha_evento).toLocaleDateString()}</small></td>
           <td><b>${e.contenedor_id}</b></td>
           <td>${e.origen_operacion === 'MUELLE_NAVE' ? '🚢 Muelle' : '🚛 Garita'}</td>
-          <td><b>${e.bloque_patio}</b> / ${e.equipo_id}</td>
-          <td>${e.flujo_operativo}</td>
-          <td><b>${e.tipo_carga}</b></td>
+          <td><b>${e.bloque_patio || '—'}</b> / ${e.equipo_id || '—'}</td>
+          <td>${e.flujo_operativo || '—'}</td>
+          <td><b>${e.tipo_carga || '—'}</b></td>
           <td>
             <div class="data-bar-bg">
               <span class="data-bar-fill" style="width:${pctEspBar}%; background:${colorEspBar}"></span>
@@ -383,11 +386,11 @@ function renderTablaMatriz(datos, elementId, esModal) {
           <td>
             <div class="data-bar-bg">
               <span class="data-bar-fill" style="width:${pctDwBar}%; background:var(--pbi-purple)"></span>
-              <span class="data-bar-text">${dw} hrs</span>
+              <span class="data-bar-text">${dw.toFixed(1)} hrs</span>
             </div>
           </td>
           <td><small style="font-weight:600;">${e.causa_congestiona || 'N/A'}</small></td>
-          <td><b style="color:${colorEspBar}">${e.nivel_congestion}</b></td>
+          <td><b style="color:${colorEspBar}">${e.nivel_congestion || 'MEDIO'}</b></td>
         </tr>
       `;
     }
@@ -395,9 +398,9 @@ function renderTablaMatriz(datos, elementId, esModal) {
     return `
       <tr>
         <td><b>${e.contenedor_id}</b></td>
-        <td><b>${e.bloque_patio}</b> / ${e.equipo_id}</td>
-        <td>${e.flujo_operativo}</td>
-        <td><b>${e.tipo_carga}</b></td>
+        <td><b>${e.bloque_patio || '—'}</b> / ${e.equipo_id || '—'}</td>
+        <td>${e.flujo_operativo || '—'}</td>
+        <td><b>${e.tipo_carga || '—'}</b></td>
         <td>
           <div class="data-bar-bg">
             <span class="data-bar-fill" style="width:${pctEspBar}%; background:${colorEspBar}"></span>
@@ -407,11 +410,11 @@ function renderTablaMatriz(datos, elementId, esModal) {
         <td>
           <div class="data-bar-bg">
             <span class="data-bar-fill" style="width:${pctDwBar}%; background:var(--pbi-purple)"></span>
-            <span class="data-bar-text">${dw} hrs</span>
+            <span class="data-bar-text">${dw.toFixed(1)} hrs</span>
           </div>
         </td>
         <td><small style="font-weight:600;">${e.causa_congestiona || 'N/A'}</small></td>
-        <td><b style="color:${colorEspBar}">${e.nivel_congestion}</b></td>
+        <td><b style="color:${colorEspBar}">${e.nivel_congestion || 'MEDIO'}</b></td>
       </tr>
     `;
   }).join('');
@@ -419,7 +422,7 @@ function renderTablaMatriz(datos, elementId, esModal) {
   document.getElementById(elementId).innerHTML = html || `<tr><td colspan="10" style="text-align:center">Sin datos registrados para los filtros seleccionados.</td></tr>`;
 }
 
-/* 1. GRÁFICO BARRAS VERTICALES: TIEMPO RTG POR BLOQUE */
+/* 1. GRÁFICO BARRAS: TIEMPO RTG POR BLOQUE */
 function renderChartRTGBloques(esperaPorBloque) {
   const ctx = document.getElementById('chartEsperaRTG').getContext('2d');
   if (chartRTGInst) chartRTGInst.destroy();
@@ -471,7 +474,7 @@ function renderChartDwellingCarga(dwData) {
 
   const labels = ['FULL REEFER (RH)', 'FULL DRY', 'VACÍO (MTY)'];
   const keys = ['FULL_RH', 'FULL_DRY', 'VACIO'];
-  const data = keys.map(k => dwData[k].count > 0 ? Number((dwData[k].sum / dwData[k].count).toFixed(1)) : 0);
+  const data = keys.map(k => dwData[k].c > 0 ? Number((dwData[k].sum / dwData[k].c).toFixed(1)) : 0);
 
   const maxVal = Math.max(...data, 10);
 
