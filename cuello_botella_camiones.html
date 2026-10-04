@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Executive Bottleneck Dashboard - DP World Posorja</title>
+<title>Executive Bottleneck & SLA Dashboard - DP World Posorja</title>
 <!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Chart.js + Plugin DataLabels -->
@@ -15,148 +15,229 @@
 
 *{box-sizing:border-box}
 :root{
-  --pbi-bg:#eaeaea;
+  --pbi-bg:#f0f2f5;
   --pbi-card:#ffffff;
-  --pbi-border:#d1d1d1;
-  --pbi-text:#252423;
-  --pbi-subtext:#605e5c;
-  --pbi-blue:#0078d4;
-  --pbi-teal:#00b7c3;
-  --pbi-green:#107c41;
-  --pbi-purple:#5c2d91;
-  --pbi-orange:#d83b01;
+  --pbi-border:#d1d5db;
+  --pbi-text:#1f2937;
+  --pbi-subtext:#4b5563;
+  --pbi-blue:#2563eb;
+  --pbi-orange:#f59e0b;
+  --pbi-red:#ef4444;
+  --pbi-green:#10b981;
 }
 
 body{margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:var(--pbi-bg);color:var(--pbi-text);font-size:12px}
 
 /* Top Navigation Bar */
-.pbi-navbar{background:#252423;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center}
-.pbi-navbar .title{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
-.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:4px 12px;font-size:11px;font-weight:600;cursor:pointer;border-radius:2px}
+.pbi-navbar{background:#0f172a;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.pbi-navbar .title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;transition:0.2s}
+.pbi-navbar .actions button:hover{background:#1d4ed8}
 
 /* Main Canvas */
-.pbi-canvas{padding:12px;max-width:1700px;margin:0 auto;display:grid;grid-template-columns:320px 1fr 1fr;gap:12px}
+.pbi-canvas{padding:16px;max-width:1750px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 
-/* PBI Card Container */
-.pbi-card-box{background:var(--pbi-card);border:1px solid var(--pbi-border);padding:12px;box-shadow:0 1.6px 3.6px rgba(0,0,0,0.13)}
-.pbi-card-title{font-size:11px;font-weight:700;color:var(--pbi-subtext);text-transform:uppercase;margin-bottom:8px;letter-spacing:0.3px}
+/* Slicers / Filtros Bar */
+.pbi-slicer-card{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:12px 16px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.slicer-group{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--pbi-subtext)}
+.slicer-group select, .slicer-group input{height:34px;padding:0 8px;border:1px solid var(--pbi-border);border-radius:4px;background:#f9fafb;font-size:12px;color:var(--pbi-text);font-weight:600}
 
-/* Grid de KPI Cards de Números Grandes */
+/* Grid Layout Principal */
+.grid-top{display:grid;grid-template-columns:300px 1fr 1fr;gap:16px}
+
+/* Card Box */
+.pbi-card-box{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;flex-direction:column;justify-content:space-between}
+.pbi-card-title{font-size:11px;font-weight:700;color:var(--pbi-subtext);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+/* KPI Callouts */
 .kpi-grid-vertical{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.kpi-callout{background:#f8f8f8;border:1px solid #e1e1e1;padding:10px;text-align:left}
-.kpi-callout .label{font-size:10px;color:var(--pbi-subtext);font-weight:600}
-.kpi-callout .val{font-size:24px;font-weight:700;color:#000;margin:4px 0 0 0}
+.kpi-callout{background:#f8fafc;border:1px solid #e2e8f0;padding:10px;border-radius:4px}
+.kpi-callout .label{font-size:10px;color:var(--pbi-subtext);font-weight:700}
+.kpi-callout .val{font-size:22px;font-weight:800;color:#0f172a;margin-top:2px}
 
-/* Charts Containers */
-.chart-container-pbi{position:relative;height:220px;width:100%}
+/* Chart Container Control */
+.chart-container-pbi{position:relative;height:240px;width:100%;overflow:hidden}
 
-/* Tables Matrix Style */
+/* Matriz Estilo Power BI */
 table.pbi-matrix{width:100%;border-collapse:collapse;font-size:11px}
-table.pbi-matrix th{background:#f3f2f1;color:var(--pbi-subtext);padding:6px;border-bottom:1px solid #c8c6c4;text-align:left;font-weight:700}
-table.pbi-matrix td{padding:5px 6px;border-bottom:1px solid #edebe9}
-table.pbi-matrix tr.total-row{font-weight:700;background:#f3f2f1;border-top:2px solid #a19f9d}
+table.pbi-matrix th{background:#f1f5f9;color:var(--pbi-subtext);padding:8px;border-bottom:2px solid var(--pbi-border);text-align:left;font-weight:700;text-transform:uppercase;font-size:10px}
+table.pbi-matrix td{padding:6px 8px;border-bottom:1px solid #e2e8f0}
+table.pbi-matrix tr:hover{background:#f8fafc}
 
-/* Data Bars dentro de celdas de tablas */
-.data-bar-bg{background:#e1dfdd;width:100%;height:14px;border-radius:2px;position:relative;overflow:hidden}
-.data-bar-fill{height:100%;background:var(--pbi-green);display:block}
-.data-bar-fill.purple{background:var(--pbi-purple)}
-.data-bar-fill.orange{background:var(--pbi-orange)}
-.data-bar-text{position:absolute;top:0;left:4px;font-size:10px;font-weight:700;color:#000;line-height:14px}
+.data-bar-bg{background:#e2e8f0;width:100%;height:16px;border-radius:3px;position:relative;overflow:hidden}
+.data-bar-fill{height:100%;display:block;border-radius:3px}
+.data-bar-text{position:absolute;top:0;left:6px;font-size:10px;font-weight:700;color:#0f172a;line-height:16px}
 
-.span-full{grid-column:1/-1}
-.span-2{grid-column:span 2}
+/* Modal Ampliar Tabla */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.6);display:none;justify-content:center;align-items:center;z-index:9999}
+.modal-content{background:#fff;border-radius:8px;width:90%;max-width:1400px;max-height:85vh;padding:20px;display:flex;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,0.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--pbi-border)}
+.modal-body{overflow-y:auto;flex-grow:1}
+.btn-close{background:var(--pbi-red);color:#fff;border:none;padding:6px 12px;font-weight:700;border-radius:4px;cursor:pointer}
 
-@media(max-width:1200px){.pbi-canvas{grid-template-columns:1fr}}
+@media(max-width:1200px){.grid-top{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 
+<!-- Navbar -->
 <div class="pbi-navbar">
-  <div class="title">📊 DP World Posorja — Executive Bottleneck & Dwelling Analytics</div>
+  <div class="title">📊 DP World Posorja — Bottleneck & Dwelling Executive Monitor</div>
   <div class="actions">
-    <button onclick="cargarDashboardPBI()">🔄 Refresh Data</button>
+    <button onclick="cargarDashboardPBI()">🔄 Actualizar Datos</button>
   </div>
 </div>
 
 <div class="pbi-canvas">
 
-  <!-- COLUMNA 1: KPIs Y GAUGE CHART -->
-  <div style="display:flex; flex-direction:column; gap:12px">
+  <!-- SLICERS CON FILTRO POR RANGO DE FECHAS -->
+  <div class="pbi-slicer-card">
+    <div class="slicer-group">
+      <label>Desde Fecha</label>
+      <input type="date" id="dateFrom" onchange="cargarDashboardPBI()">
+    </div>
+    <div class="slicer-group">
+      <label>Hasta Fecha</label>
+      <input type="date" id="dateTo" onchange="cargarDashboardPBI()">
+    </div>
+    <div class="slicer-group">
+      <label>Origen Operativo</label>
+      <select id="selectOrigen" onchange="cargarDashboardPBI()">
+        <option value="TODOS">TODOS (Muelle + Garita)</option>
+        <option value="MUELLE_NAVE">MUELLE / NAVE</option>
+        <option value="GATE_CAMIONES">GARITA / CAMIONES</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label>Flujo Operativo</label>
+      <select id="selectFlujo" onchange="cargarDashboardPBI()">
+        <option value="TODOS">TODOS LOS FLUJOS</option>
+        <option value="EMBARQUE">EMBARQUE</option>
+        <option value="DESCARGA">DESCARGA</option>
+        <option value="RECEPCION_EXTERNA">RECEPCIÓN (Expo)</option>
+        <option value="DESPACHO_EXTERNO">DESPACHO (Impo)</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label>Tipo Carga</label>
+      <select id="selectTipoCarga" onchange="cargarDashboardPBI()">
+        <option value="TODOS">TODAS LAS CARGAS</option>
+        <option value="FULL_RH">FULL REEFER (RH)</option>
+        <option value="FULL_DRY">FULL DRY</option>
+        <option value="VACIO">VACÍO (MTY)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- GRID SUPERIOR DE GRÁFICOS Y KPIS -->
+  <div class="grid-top">
     
-    <!-- Bloque de Métricas Callout -->
-    <div class="pbi-card-box">
-      <div class="pbi-card-title">Resumen de Métricas Operacionales</div>
-      <div class="kpi-grid-vertical">
-        <div class="kpi-callout">
-          <div class="label">Total Movimientos</div>
-          <div class="val" id="lblTotalMovs">0</div>
+    <!-- Columna 1: KPIs y Gauge -->
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <div class="pbi-card-box">
+        <div class="pbi-card-title">Resumen de Métricas</div>
+        <div class="kpi-grid-vertical">
+          <div class="kpi-callout">
+            <div class="label">Total Eventos</div>
+            <div class="val" id="lblTotalMovs">0</div>
+          </div>
+          <div class="kpi-callout">
+            <div class="label">Cumplimiento SLA</div>
+            <div class="val" id="lblSLA">0%</div>
+          </div>
+          <div class="kpi-callout">
+            <div class="label">Dwelling Prom.</div>
+            <div class="val" id="lblDwelling">0h</div>
+          </div>
+          <div class="kpi-callout">
+            <div class="label">Max. Espera</div>
+            <div class="val" id="lblMaxEspera">0m</div>
+          </div>
         </div>
-        <div class="kpi-callout">
-          <div class="label">SLA Cumplimiento</div>
-          <div class="val" id="lblSLA">0%</div>
-        </div>
-        <div class="kpi-callout">
-          <div class="label">Dwelling Prom.</div>
-          <div class="val" id="lblDwelling">0h</div>
-        </div>
-        <div class="kpi-callout">
-          <div class="label">Max. Espera</div>
-          <div class="val" id="lblMaxEspera">0m</div>
+      </div>
+
+      <div class="pbi-card-box">
+        <div class="pbi-card-title">Medidor SLA Espera vs Target (25m)</div>
+        <div class="chart-container-pbi" style="height:150px">
+          <canvas id="gaugeSLA"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Gauge Chart de Nivel de SLA -->
+    <!-- Columna 2: Gráfico de Barras Verticales en Color (Sin Desbordamiento) -->
     <div class="pbi-card-box">
-      <div class="pbi-card-title">Tiempo Promedio Espera vs Target (25 min)</div>
-      <div class="chart-container-pbi" style="height:150px">
-        <canvas id="gaugeSLA"></canvas>
+      <div class="pbi-card-title">Espera Promedio por Flujo Operativo (Min)</div>
+      <div class="chart-container-pbi">
+        <canvas id="chartBarrasFlujo"></canvas>
       </div>
     </div>
 
-    <!-- Pie Chart Desglose de Cargas -->
+    <!-- Columna 3: Donut Cargas -->
     <div class="pbi-card-box">
-      <div class="pbi-card-title">Distribución por Tipo de Carga</div>
-      <div class="chart-container-pbi" style="height:180px">
+      <div class="pbi-card-title">Distribución por Carga (RH / DRY / VACÍO)</div>
+      <div class="chart-container-pbi">
         <canvas id="pieCargas"></canvas>
       </div>
     </div>
 
   </div>
 
-  <!-- COLUMNA 2 Y 3: COMBO CHART Y MATRIZ DE DATOS CON DATA BARS -->
-  <div style="grid-column: span 2; display:flex; flex-direction:column; gap:12px">
-
-    <!-- Combo Chart: Barras + Línea -->
-    <div class="pbi-card-box">
-      <div class="pbi-card-title">Evolución de Tiempos de Espera (Min) y Volumen por Flujo Operativo</div>
-      <div class="chart-container-pbi" style="height:230px">
-        <canvas id="comboChart"></canvas>
-      </div>
+  <!-- MATRIZ DE DATOS CORTADA EN TOP 10 Y BOTÓN AMPLIAR -->
+  <div class="pbi-card-box">
+    <div class="pbi-card-title">
+      <span>TOP 10 CUELLOS DE BOTELLA MÁS CRÍTICOS</span>
+      <button onclick="abrirModal()" style="background:var(--pbi-blue); color:#fff; border:none; padding:5px 12px; font-weight:700; border-radius:4px; cursor:pointer;">🔍 Ampliar Registro Completo</button>
     </div>
+    <table class="pbi-matrix">
+      <thead>
+        <tr>
+          <th>Contenedor</th>
+          <th>Origen / Bloque</th>
+          <th>Flujo</th>
+          <th>Carga</th>
+          <th style="width:180px">Tiempo Espera (Min)</th>
+          <th style="width:180px">Dwelling Time (Hrs)</th>
+          <th>Causa Raíz</th>
+          <th>Severidad</th>
+        </tr>
+      </thead>
+      <tbody id="bodyMatrizTop10">
+        <tr><td colspan="8" style="text-align:center">Cargando top 10 registros...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-    <!-- Tabla Estilo Matriz Power BI con Data Bars Embebidas -->
-    <div class="pbi-card-box">
-      <div class="pbi-card-title">Matriz de Rendimiento y Cuellos de Botella por Bloque</div>
+</div>
+
+<!-- MODAL PARA VER EL REGISTRO COMPLETO -->
+<div class="modal-overlay" id="modalRegistro">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin:0; color:#0f172a;">📋 MATRIZ COMPLETA DE CUELLOS DE BOTELLA OPERATIVOS</h3>
+      <button class="btn-close" onclick="cerrarModal()">✕ Cerrar</button>
+    </div>
+    <div class="modal-body">
       <table class="pbi-matrix">
         <thead>
           <tr>
-            <th>Origen / Bloque</th>
+            <th>Fecha Evento</th>
+            <th>Contenedor</th>
+            <th>Origen / Nave / Camión</th>
             <th>Flujo</th>
             <th>Carga</th>
-            <th style="width:160px">Tiempo Espera (Min)</th>
-            <th style="width:160px">Dwelling Time (Hrs)</th>
+            <th>Bloque / Equipo</th>
+            <th style="width:160px">Tiempo Espera</th>
+            <th style="width:160px">Dwelling Time</th>
+            <th>Causa Raíz Congestión</th>
             <th>Severidad</th>
           </tr>
         </thead>
-        <tbody id="bodyMatrizPBI">
-          <tr><td colspan="6" style="text-align:center">Cargando matriz Power BI...</td></tr>
+        <tbody id="bodyMatrizCompleta">
+          <tr><td colspan="10" style="text-align:center">Cargando registros completos...</td></tr>
         </tbody>
       </table>
     </div>
-
   </div>
-
 </div>
 
 <script>
@@ -167,24 +248,51 @@ const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 Chart.register(ChartDataLabels);
 
 let gaugeInst = null;
+let barInst = null;
 let pieInst = null;
-let comboInst = null;
+let datasetCompletoCache = [];
+
+// Establecer rango inicial por defecto (últimos 30 días)
+const hoy = new Date();
+const haceUnMes = new Date();
+haceUnMes.setDate(hoy.getDate() - 30);
+document.getElementById('dateFrom').value = haceUnMes.toISOString().split('T')[0];
+document.getElementById('dateTo').value = hoy.toISOString().split('T')[0];
 
 async function cargarDashboardPBI() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  const origenSel = document.getElementById('selectOrigen').value;
+  const flujoSel = document.getElementById('selectFlujo').value;
+  const tipoSel = document.getElementById('selectTipoCarga').value;
+
   try {
-    const { data: eventos, error } = await dbClient.from('yard_bottlenecks').select('*');
+    let query = dbClient.from('yard_bottlenecks').select('*');
+
+    // Filtros por Fecha
+    if (dateFrom) query = query.gte('fecha_evento', `${dateFrom}T00:00:00Z`);
+    if (dateTo) query = query.lte('fecha_evento', `${dateTo}T23:59:59Z`);
+
+    if (origenSel !== 'TODOS') query = query.eq('origen_operacion', origenSel);
+    if (flujoSel !== 'TODOS') query = query.eq('flujo_operativo', flujoSel);
+    if (tipoSel !== 'TODOS') query = query.eq('tipo_carga', tipoSel);
+
+    const { data: eventos, error } = await query;
     if (error) throw error;
 
-    let totalMovs = (eventos || []).length;
+    datasetCompletoCache = eventos || [];
+
+    // Ordenar de mayor a menor tiempo de espera para el TOP 10
+    datasetCompletoCache.sort((a, b) => (b.tiempo_espera_min || 0) - (a.tiempo_espera_min || 0));
+
+    let totalMovs = datasetCompletoCache.length;
     let sumaEspera = 0, sumaDwelling = 0, maxEspera = 0;
     let dentroSLA = 0;
 
     let rhCount = 0, dryCount = 0, mtyCount = 0;
-    let flujos = { EMBARQUE: { e:0, c:0 }, DESCARGA: { e:0, c:0 }, RECEPCION_EXTERNA: { e:0, c:0 }, DESPACHO_EXTERNO: { e:0, c:0 } };
+    let flujosAcc = { EMBARQUE: { e:0, c:0 }, DESCARGA: { e:0, c:0 }, RECEPCION_EXTERNA: { e:0, c:0 }, DESPACHO_EXTERNO: { e:0, c:0 } };
 
-    let htmlMatriz = '';
-
-    (eventos || []).forEach(e => {
+    datasetCompletoCache.forEach(e => {
       const esp = e.tiempo_espera_min || 0;
       const dw = Number(e.dwelling_time_horas || 0);
 
@@ -193,47 +301,21 @@ async function cargarDashboardPBI() {
       if (esp > maxEspera) maxEspera = esp;
       if (esp <= 25) dentroSLA++;
 
-      // Conteo tipo carga
       if (e.tipo_carga === 'FULL_RH') rhCount++;
       else if (e.tipo_carga === 'FULL_DRY') dryCount++;
       else mtyCount++;
 
-      // Agrupación por flujo
-      const fl = e.flujo_operativo || 'OTROS';
-      if (flujos[fl]) {
-        flujos[fl].e += esp;
-        flujos[fl].c++;
+      const fl = e.flujo_operativo;
+      if (flujosAcc[fl]) {
+        flujosAcc[fl].e += esp;
+        flujosAcc[fl].c++;
       }
-
-      // Renderizado Filas Matriz con Data Bars
-      const pctEspBar = Math.min((esp / 45) * 100, 100);
-      const pctDwBar = Math.min((dw / 120) * 100, 100);
-
-      htmlMatriz += `
-        <tr>
-          <td><b>${e.bloque_patio}</b> <small style="color:#605e5c">(${e.origen_operacion === 'MUELLE_NAVE' ? 'Muelle' : 'Garita'})</small></td>
-          <td>${e.flujo_operativo}</td>
-          <td><b>${e.tipo_carga}</b></td>
-          <td>
-            <div class="data-bar-bg">
-              <span class="data-bar-fill orange" style="width:${pctEspBar}%"></span>
-              <span class="data-bar-text">${esp} min</span>
-            </div>
-          </td>
-          <td>
-            <div class="data-bar-bg">
-              <span class="data-bar-fill purple" style="width:${pctDwBar}%"></span>
-              <span class="data-bar-text">${dw} hrs</span>
-            </div>
-          </td>
-          <td><b style="color:${e.nivel_congestion === 'CRITICO' ? '#d83b01' : '#107c41'}">${e.nivel_congestion}</b></td>
-        </tr>
-      `;
     });
 
-    document.getElementById('bodyMatrizPBI').innerHTML = htmlMatriz || `<tr><td colspan="6" style="text-align:center">Sin datos.</td></tr>`;
+    // Renderizar Top 10 en la vista principal
+    renderTablaMatriz(datasetCompletoCache.slice(0, 10), 'bodyMatrizTop10', false);
 
-    // Metricas Callout
+    // Métricas Callout
     const promEspera = totalMovs > 0 ? Math.round(sumaEspera / totalMovs) : 0;
     const promDwelling = totalMovs > 0 ? (sumaDwelling / totalMovs).toFixed(1) : 0;
     const pctSLA = totalMovs > 0 ? Math.round((dentroSLA / totalMovs) * 100) : 0;
@@ -243,17 +325,81 @@ async function cargarDashboardPBI() {
     document.getElementById('lblDwelling').textContent = `${promDwelling}h`;
     document.getElementById('lblMaxEspera').textContent = `${maxEspera}m`;
 
-    // Renderizado de Gráficos Power BI
+    // Renderizado de Gráficos
     renderGaugeSLA(promEspera);
+    renderBarrasVerticalesColores(flujosAcc);
     renderPieCargas(rhCount, dryCount, mtyCount);
-    renderComboChart(flujos);
 
   } catch(err) {
-    console.error("Error cargando Power BI Dashboard:", err.message);
+    console.error("Error al cargar datos en el Dashboard:", err.message);
   }
 }
 
-/* 1. GAUGE CHART SEMICIRCULAR */
+function renderTablaMatriz(datos, elementId, esModal) {
+  const html = datos.map(e => {
+    const esp = e.tiempo_espera_min || 0;
+    const dw = Number(e.dwelling_time_horas || 0);
+
+    const pctEspBar = Math.min((esp / 45) * 100, 100);
+    const pctDwBar = Math.min((dw / 120) * 100, 100);
+
+    const colorEspBar = esp > 25 ? 'var(--pbi-red)' : (esp > 15 ? 'var(--pbi-orange)' : 'var(--pbi-green)');
+
+    if (esModal) {
+      return `
+        <tr>
+          <td><small>${new Date(e.fecha_evento).toLocaleDateString()}</small></td>
+          <td><b>${e.contenedor_id}</b></td>
+          <td>${e.origen_operacion === 'MUELLE_NAVE' ? '🚢 ' + (e.nave_viaje || 'Muelle') : '🚛 ' + (e.visit_id || 'Garita')}</td>
+          <td>${e.flujo_operativo}</td>
+          <td><b>${e.tipo_carga}</b></td>
+          <td>${e.bloque_patio} / ${e.equipo_id}</td>
+          <td>
+            <div class="data-bar-bg">
+              <span class="data-bar-fill" style="width:${pctEspBar}%; background:${colorEspBar}"></span>
+              <span class="data-bar-text">${esp} min</span>
+            </div>
+          </td>
+          <td>
+            <div class="data-bar-bg">
+              <span class="data-bar-fill" style="width:${pctDwBar}%; background:#8b5cf6"></span>
+              <span class="data-bar-text">${dw} hrs</span>
+            </div>
+          </td>
+          <td><small style="font-weight:600;">${e.causa_congestiona || 'N/A'}</small></td>
+          <td><b style="color:${colorEspBar}">${e.nivel_congestion}</b></td>
+        </tr>
+      `;
+    }
+
+    return `
+      <tr>
+        <td><b>${e.contenedor_id}</b></td>
+        <td>${e.bloque_patio} <small style="color:var(--pbi-subtext)">(${e.origen_operacion === 'MUELLE_NAVE' ? 'Muelle' : 'Garita'})</small></td>
+        <td>${e.flujo_operativo}</td>
+        <td><b>${e.tipo_carga}</b></td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctEspBar}%; background:${colorEspBar}"></span>
+            <span class="data-bar-text">${esp} min</span>
+          </div>
+        </td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctDwBar}%; background:#8b5cf6"></span>
+            <span class="data-bar-text">${dw} hrs</span>
+          </div>
+        </td>
+        <td><small style="font-weight:600;">${e.causa_congestiona || 'N/A'}</small></td>
+        <td><b style="color:${colorEspBar}">${e.nivel_congestion}</b></td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById(elementId).innerHTML = html || `<tr><td colspan="10" style="text-align:center">Sin datos registrados para el rango seleccionado.</td></tr>`;
+}
+
+/* 1. GAUGE CHART */
 function renderGaugeSLA(promEspera) {
   const ctx = document.getElementById('gaugeSLA').getContext('2d');
   if (gaugeInst) gaugeInst.destroy();
@@ -264,7 +410,7 @@ function renderGaugeSLA(promEspera) {
       labels: ['Espera Promedio', 'Margen Target'],
       datasets: [{
         data: [promEspera, Math.max(0, 50 - promEspera)],
-        backgroundColor: [promEspera > 25 ? '#d83b01' : '#00b7c3', '#e1dfdd'],
+        backgroundColor: [promEspera > 25 ? 'var(--pbi-red)' : 'var(--pbi-blue)', '#e2e8f0'],
         borderWidth: 0
       }]
     },
@@ -278,7 +424,7 @@ function renderGaugeSLA(promEspera) {
         legend: { display: false },
         datalabels: {
           formatter: (val, ctx) => ctx.dataIndex === 0 ? `${val} min` : '',
-          color: '#000',
+          color: '#0f172a',
           font: { weight: 'bold', size: 16 }
         }
       }
@@ -286,7 +432,64 @@ function renderGaugeSLA(promEspera) {
   });
 }
 
-/* 2. PIE CHART POWER BI DESGLOSE */
+/* 2. BARRAS VERTICALES EN COLOR SIN DESBORDAMIENTO */
+function renderBarrasVerticalesColores(flujos) {
+  const ctx = document.getElementById('chartBarrasFlujo').getContext('2d');
+  if (barInst) barInst.destroy();
+
+  const labels = Object.keys(flujos);
+  const data = labels.map(k => flujos[k].c > 0 ? Math.round(flujos[k].e / flujos[k].c) : 0);
+
+  // Asignar colores según tiempo de espera
+  const colors = data.map(v => v > 25 ? '#ef4444' : (v > 15 ? '#f59e0b' : '#2563eb'));
+
+  const maxVal = Math.max(...data, 10);
+
+  barInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Promedio Espera (Min)',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 4,
+        barThickness: 32
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { top: 25, bottom: 10, left: 10, right: 10 } // Previene desbordamiento superior de etiquetas
+      },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 11 },
+          formatter: (v) => `${v} min`
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: Math.ceil(maxVal * 1.25), // Otorga margen superior dinámico
+          grid: { color: '#f1f5f9' },
+          ticks: { font: { size: 10 } }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10, weight: '600' } }
+        }
+      }
+    }
+  });
+}
+
+/* 3. PIE CHART POWER BI */
 function renderPieCargas(rh, dry, mty) {
   const ctx = document.getElementById('pieCargas').getContext('2d');
   if (pieInst) pieInst.destroy();
@@ -297,7 +500,7 @@ function renderPieCargas(rh, dry, mty) {
       labels: ['Reefer (RH)', 'Dry', 'Vacíos (MTY)'],
       datasets: [{
         data: [rh, dry, mty],
-        backgroundColor: ['#107c41', '#0078d4', '#5c2d91']
+        backgroundColor: ['#10b981', '#2563eb', '#8b5cf6']
       }]
     },
     options: {
@@ -315,57 +518,17 @@ function renderPieCargas(rh, dry, mty) {
   });
 }
 
-/* 3. COMBO CHART (BARRAS + LÍNEA) */
-function renderComboChart(flujos) {
-  const ctx = document.getElementById('comboChart').getContext('2d');
-  if (comboInst) comboInst.destroy();
-
-  const labels = Object.keys(flujos);
-  const dataEspera = labels.map(k => flujos[k].c > 0 ? Math.round(flujos[k].e / flujos[k].c) : 0);
-  const dataVolumen = labels.map(k => flujos[k].c);
-
-  comboInst = new Chart(ctx, {
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          type: 'bar',
-          label: 'Espera Promedio (Min)',
-          data: dataEspera,
-          backgroundColor: '#0078d4',
-          barThickness: 28,
-          yAxisID: 'y'
-        },
-        {
-          type: 'line',
-          label: 'Volumen Contenedores',
-          data: dataVolumen,
-          borderColor: '#107c41',
-          borderWidth: 3,
-          backgroundColor: '#107c41',
-          pointRadius: 5,
-          yAxisID: 'y1'
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        datalabels: {
-          anchor: 'end',
-          align: 'top',
-          font: { weight: 'bold', size: 10 }
-        }
-      },
-      scales: {
-        y: { beginAtZero: true, title: { display: true, text: 'Minutos Espera' } },
-        y1: { beginAtZero: true, position: 'right', grid: { display: false }, title: { display: true, text: 'Unidades' } }
-      }
-    }
-  });
+// Modal Handlers
+function abrirModal() {
+  renderTablaMatriz(datasetCompletoCache, 'bodyMatrizCompleta', true);
+  document.getElementById('modalRegistro').style.display = 'flex';
 }
 
+function cerrarModal() {
+  document.getElementById('modalRegistro').style.display = 'none';
+}
+
+// Inicialización
 cargarDashboardPBI();
 </script>
 
