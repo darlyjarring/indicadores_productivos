@@ -311,14 +311,14 @@ async function cargarDashboardPBI() {
       esperaPorBloque[b].sum += esp;
       esperaPorBloque[b].count++;
 
-      // Normalización de llaves tipo_carga
+      // Normalización flexible para mapear variantes del texto de carga
       const tcRaw = String(e.tipo_carga || '').toUpperCase();
       let key = 'FULL_DRY';
       if (tcRaw.includes('RH') || tcRaw.includes('REEFER')) key = 'FULL_RH';
       else if (tcRaw.includes('VACIO') || tcRaw.includes('MTY')) key = 'VACIO';
 
       dwellingPorCarga[key].sum += dw;
-      dwellingPorCarga[key].count++;
+      dwellingPorCarga[key].c++;
 
       // Congestión
       if (e.nivel_congestion === 'CRITICO') cCritico++;
@@ -467,16 +467,19 @@ function renderChartRTGBloques(esperaPorBloque) {
   });
 }
 
-/* 2. GRÁFICO BARRAS: DWELLING TIME POR TIPO DE CARGA */
+/* 2. GRÁFICO BARRAS: DWELLING TIME POR TIPO DE CARGA (ESCALA Y DINÁMICA) */
 function renderChartDwellingCarga(dwData) {
   const ctx = document.getElementById('chartDwellingCarga').getContext('2d');
   if (chartDwellingInst) chartDwellingInst.destroy();
 
   const labels = ['FULL REEFER (RH)', 'FULL DRY', 'VACÍO (MTY)'];
   const keys = ['FULL_RH', 'FULL_DRY', 'VACIO'];
+  
   const data = keys.map(k => dwData[k].c > 0 ? Number((dwData[k].sum / dwData[k].c).toFixed(1)) : 0);
 
-  const maxVal = Math.max(...data, 10);
+  // Escala máxima calculada dinámicamente según las horas reales
+  const maxReal = Math.max(...data, 10);
+  const yMaxDynamic = Math.ceil(maxReal * 1.25);
 
   chartDwellingInst = new Chart(ctx, {
     type: 'bar',
@@ -493,7 +496,9 @@ function renderChartDwellingCarga(dwData) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: { padding: { top: 25, bottom: 5, left: 5, right: 5 } },
+      layout: { 
+        padding: { top: 30, bottom: 5, left: 5, right: 5 } 
+      },
       plugins: {
         legend: { display: false },
         datalabels: {
@@ -505,8 +510,19 @@ function renderChartDwellingCarga(dwData) {
         }
       },
       scales: {
-        y: { beginAtZero: true, max: Math.ceil(maxVal * 1.25), grid: { color: '#f1f5f9' } },
-        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+        y: { 
+          beginAtZero: true, 
+          max: yMaxDynamic,
+          grid: { color: '#f1f5f9' },
+          ticks: { 
+            font: { size: 10 },
+            callback: (val) => `${val}h`
+          } 
+        },
+        x: { 
+          grid: { display: false }, 
+          ticks: { font: { size: 10, weight: '600' } } 
+        }
       }
     }
   });
