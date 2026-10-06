@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Tarjeta 7: Balanceo de Carga y Tareas en Patio - DP World Posorja</title>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Chart.js + Plugin DataLabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+
+*{box-sizing:border-box}
+:root{
+  --pbi-bg:#f0f2f5;
+  --pbi-card:#ffffff;
+  --pbi-border:#d1d5db;
+  --pbi-text:#1f2937;
+  --pbi-subtext:#4b5563;
+  --pbi-blue:#2563eb;
+  --pbi-orange:#f59e0b;
+  --pbi-red:#ef4444;
+  --pbi-green:#10b981;
+  --pbi-purple:#8b5cf6;
+}
+
+body{margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:var(--pbi-bg);color:var(--pbi-text);font-size:12px}
+
+.pbi-navbar{background:#0f172a;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.pbi-navbar .title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;transition:0.2s}
+.pbi-navbar .actions button:hover{background:#1d4ed8}
+
+.pbi-canvas{padding:16px;max-width:1750px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+/* Slicers / Filtros Bar */
+.pbi-slicer-card{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:12px 16px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.slicer-group{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--pbi-subtext)}
+.slicer-group select{height:34px;padding:0 8px;border:1px solid var(--pbi-border);border-radius:4px;background:#f9fafb;font-size:12px;color:var(--pbi-text);font-weight:600}
+
+/* KPI Section */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px}
+.kpi-card{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--pbi-blue)}
+.kpi-card.purple::before{background:var(--pbi-purple)}
+.kpi-card.warning::before{background:var(--pbi-orange)}
+.kpi-card.danger::before{background:var(--pbi-red)}
+
+.kpi-title{font-size:10px;color:var(--pbi-subtext);font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.kpi-value{font-size:24px;font-weight:800;color:#0f172a;margin:4px 0 2px}
+.kpi-subtext{font-size:11px;color:var(--pbi-subtext);font-weight:600}
+
+/* Layout Analytics */
+.grid-analytics{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.pbi-card-box{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;flex-direction:column;justify-content:space-between}
+.pbi-card-title{font-size:11px;font-weight:700;color:var(--pbi-subtext);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+.chart-container-pbi{position:relative;height:240px;width:100%;overflow:hidden}
+
+/* Matriz Estilo Power BI */
+table.pbi-matrix{width:100%;border-collapse:collapse;font-size:11px}
+table.pbi-matrix th{background:#f1f5f9;color:var(--pbi-subtext);padding:8px;border-bottom:2px solid var(--pbi-border);text-align:left;font-weight:700;text-transform:uppercase;font-size:10px}
+table.pbi-matrix td{padding:6px 8px;border-bottom:1px solid #e2e8f0}
+table.pbi-matrix tr:hover{background:#f8fafc}
+
+.data-bar-bg{background:#e2e8f0;width:100%;height:16px;border-radius:3px;position:relative;overflow:hidden}
+.data-bar-fill{height:100%;display:block;border-radius:3px}
+.data-bar-text{position:absolute;top:0;left:6px;font-size:10px;font-weight:700;color:#0f172a;line-height:16px}
+
+/* Alert Badges */
+.badge-alert{padding:3px 8px;border-radius:12px;font-weight:700;font-size:10px;display:inline-block}
+.badge-critico{background:#fee2e2;color:#991b1b}
+.badge-bajo{background:#d1fae5;color:#065f46}
+
+@media(max-width:1100px){.grid-analytics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="pbi-navbar">
+  <div class="title">🏗️ DP World Posorja — Tarjeta 7: Balanceo de Carga y Tareas en Bloques de Patio</div>
+  <div class="actions">
+    <button onclick="cargarDashboardTrabajo()">🔄 Actualizar Datos</button>
+  </div>
+</div>
+
+<div class="pbi-canvas">
+
+  <!-- SLICERS DE TIPO DE ZONA Y SATURACIÓN -->
+  <div class="pbi-slicer-card">
+    <div class="slicer-group">
+      <label>Tipo de Zona en Patio</label>
+      <select id="selectTipoZona" onchange="cargarDashboardTrabajo()">
+        <option value="TODOS">TODAS LAS ZONAS (Full + Vacíos)</option>
+        <option value="FULL_DRY">FULL DRY (Carga Seca)</option>
+        <option value="FULL_RH">FULL REEFER (RH Refrigerado)</option>
+        <option value="VACIO">VACÍO (MTY)</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label>Nivel de Saturación</label>
+      <select id="selectSaturacion" onchange="cargarDashboardTrabajo()">
+        <option value="TODOS">TODOS LOS NIVELES</option>
+        <option value="CRITICO">CRÍTICO (>35 tareas en cola)</option>
+        <option value="MEDIO">MEDIO (15 - 35 tareas)</option>
+        <option value="BAJO">BAJO (<15 tareas)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TARJETAS KPIS -->
+  <div class="kpi-grid">
+    <div class="kpi-card danger">
+      <div class="kpi-title">Total Tareas Pendientes en Cola</div>
+      <div class="kpi-value" id="kpiTotalTareas">0</div>
+      <div class="kpi-subtext">Movimientos acumulados en patio</div>
+    </div>
+
+    <div class="kpi-card danger">
+      <div class="kpi-title">Bloques Saturados (Críticos)</div>
+      <div class="kpi-value" id="kpiBloquesCriticos">0</div>
+      <div class="kpi-subtext">Requieren apoyo inmediato</div>
+    </div>
+
+    <div class="kpi-card purple">
+      <div class="kpi-title">Ocupación Promedio de Patio</div>
+      <div class="kpi-value" id="kpiOcupacion">0.0 %</div>
+      <div class="kpi-subtext">Densidad total de TEUs</div>
+    </div>
+
+    <div class="kpi-card warning">
+      <div class="kpi-title">Sugerencia de Reubicación</div>
+      <div class="kpi-value" id="kpiSugerencia">—</div>
+      <div class="kpi-subtext" id="kpiSugerenciaDetalle">Reubicar máquina para balancear</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS ANALÍTICOS -->
+  <div class="grid-analytics">
+    
+    <!-- Gráfico 1: Concentración de Tareas por Bloque -->
+    <div class="pbi-card-box">
+      <div class="pbi-card-title">DENSIDAD DE TAREAS PENDIENTES POR BLOQUE (CONCENTRACIÓN DE CARGA)</div>
+      <div class="chart-container-pbi">
+        <canvas id="chartTareas"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Porcentaje de Ocupación vs Grúas Asignadas -->
+    <div class="pbi-card-box">
+      <div class="pbi-card-title">PORCENTAJE DE OCUPACIÓN DE CAPACIDAD (%) BY BLOQUE</div>
+      <div class="chart-container-pbi">
+        <canvas id="chartOcupacion"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MATRIZ DE REUBICACIÓN Y APOYO DE FLOTA -->
+  <div class="pbi-card-box">
+    <div class="pbi-card-title">
+      <span>MATRIZ BALANCEADORA DE PATIO: RECOMENDACIÓN DE REUBICACIÓN DE GRÚAS EN HORAS PICO</span>
+    </div>
+    <table class="pbi-matrix">
+      <thead>
+        <tr>
+          <th>Bloque Patio</th>
+          <th>Tipo Zona</th>
+          <th>Capacidad Total</th>
+          <th>TEUs Ocupados</th>
+          <th style="width:160px">Ocupación (%)</th>
+          <th style="width:160px">Tareas Pendientes (Cola)</th>
+          <th>Grúas Actuales</th>
+          <th>Saturación</th>
+          <th>Acción Recomendada</th>
+        </tr>
+      </thead>
+      <tbody id="bodyMatrizTrabajo">
+        <tr><td colspan="9" style="text-align:center">Cargando densidad de trabajo...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+Chart.register(ChartDataLabels);
+
+let chartTareasInst = null;
+let chartOcupacionInst = null;
+
+async function cargarDashboardTrabajo() {
+  const zonaSel = document.getElementById('selectTipoZona').value;
+  const satSel = document.getElementById('selectSaturacion').value;
+
+  try {
+    let query = dbClient.from('yard_block_workload').select('*');
+
+    if (zonaSel !== 'TODOS') query = query.eq('tipo_zona', zonaSel);
+    if (satSel !== 'TODOS') query = query.eq('nivel_saturacion', satSel);
+
+    const { data: bloques, error } = await query;
+    if (error) throw error;
+
+    let dataset = bloques || [];
+    dataset.sort((a, b) => (b.tareas_pendientes || 0) - (a.tareas_pendientes || 0));
+
+    let sumTareas = 0, sumOcupacion = 0, countCriticos = 0;
+    let bloqueMaxTareas = null, bloqueLibre = null;
+
+    dataset.forEach(b => {
+      const tareas = parseInt(b.tareas_pendientes || 0);
+      const pct = parseFloat(b.pct_ocupacion || 0);
+
+      sumTareas += tareas;
+      sumOcupacion += pct;
+
+      if (b.nivel_saturacion === 'CRITICO') countCriticos++;
+
+      if (!bloqueMaxTareas || tareas > bloqueMaxTareas.tareas_pendientes) bloqueMaxTareas = b;
+      if (!bloqueLibre || tareas < bloqueLibre.tareas_pendientes) bloqueLibre = b;
+    });
+
+    // Actualizar KPIs
+    const promOcupacion = dataset.length > 0 ? (sumOcupacion / dataset.length).toFixed(1) : '0.0';
+
+    document.getElementById('kpiTotalTareas').textContent = sumTareas;
+    document.getElementById('kpiBloquesCriticos').textContent = countCriticos;
+    document.getElementById('kpiOcupacion').textContent = `${promOcupacion} %`;
+
+    if (bloqueMaxTareas && bloqueLibre && bloqueMaxTareas.bloque_patio !== bloqueLibre.bloque_patio) {
+      document.getElementById('kpiSugerencia').textContent = `${bloqueLibre.bloque_patio} ➔ ${bloqueMaxTareas.bloque_patio}`;
+      document.getElementById('kpiSugerenciaDetalle').textContent = `Mover grúa de ${bloqueLibre.bloque_patio} (${bloqueLibre.tareas_pendientes} tareas) a ${bloqueMaxTareas.bloque_patio} (${bloqueMaxTareas.tareas_pendientes} tareas)`;
+    } else {
+      document.getElementById('kpiSugerencia').textContent = 'EQUILIBRADO';
+      document.getElementById('kpiSugerenciaDetalle').textContent = 'Patio operando con balance regular';
+    }
+
+    // Renderizar
+    renderTablaMatriz(dataset);
+    renderChartTareas(dataset);
+    renderChartOcupacion(dataset);
+
+  } catch(err) {
+    console.error("Error al cargar balanceo de patio:", err.message);
+  }
+}
+
+function renderTablaMatriz(datos) {
+  const html = datos.map(b => {
+    const pct = parseFloat(b.pct_ocupacion || 0);
+    const tareas = parseInt(b.tareas_pendientes || 0);
+
+    const pctBarOcup = Math.min(pct, 100);
+    const pctBarTareas = Math.min((tareas / 60) * 100, 100);
+
+    const colorTareas = tareas >= 35 ? 'var(--pbi-red)' : (tareas >= 18 ? 'var(--pbi-orange)' : 'var(--pbi-blue)');
+
+    let accionRecomendada = '<span style="color:var(--pbi-subtext)">Normal</span>';
+    if (b.nivel_saturacion === 'CRITICO') {
+      accionRecomendada = `<b style="color:var(--pbi-red)">⚠️ ENVIAR GRÚA DE APOYO</b>`;
+    } else if (b.nivel_saturacion === 'BAJO') {
+      accionRecomendada = `<b style="color:var(--pbi-green)">🟢 DISPONIBLE PARA LIBERAR</b>`;
+    }
+
+    return `
+      <tr>
+        <td><b>${b.bloque_patio}</b></td>
+        <td><small style="font-weight:700">${b.tipo_zona}</small></td>
+        <td>${b.capacidad_teus} TEUs</td>
+        <td><b>${b.teus_ocupados}</b></td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctBarOcup}%; background:var(--pbi-purple)"></span>
+            <span class="data-bar-text">${pct.toFixed(1)}%</span>
+          </div>
+        </td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctBarTareas}%; background:${colorTareas}"></span>
+            <span class="data-bar-text">${tareas} tareas</span>
+          </div>
+        </td>
+        <td><b>${b.rtg_asignadas} grúa(s)</b></td>
+        <td><span class="badge-alert ${b.nivel_saturacion === 'CRITICO' ? 'badge-critico' : 'badge-bajo'}">${b.nivel_saturacion}</span></td>
+        <td>${accionRecomendada}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('bodyMatrizTrabajo').innerHTML = html || `<tr><td colspan="9" style="text-align:center">Sin datos de bloques.</td></tr>`;
+}
+
+/* 1. GRÁFICO BARRAS: DENSIDAD DE TAREAS PENDIENTES */
+function renderChartTareas(bloques) {
+  const ctx = document.getElementById('chartTareas').getContext('2d');
+  if (chartTareasInst) chartTareasInst.destroy();
+
+  const labels = bloques.map(b => b.bloque_patio);
+  const data = bloques.map(b => parseInt(b.tareas_pendientes || 0));
+  const colors = data.map(v => v >= 35 ? '#ef4444' : (v >= 18 ? '#f59e0b' : '#2563eb'));
+
+  const maxVal = Math.max(...data, 10);
+
+  chartTareasInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Tareas Pendientes (Cola)',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 4,
+        barThickness: 28
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 25, bottom: 5, left: 5, right: 5 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 10 },
+          formatter: (v) => `${v} movs`
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, max: Math.ceil(maxVal * 1.25), grid: { color: '#f1f5f9' } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+      }
+    }
+  });
+}
+
+/* 2. GRÁFICO BARRAS: OCUPACIÓN % */
+function renderChartOcupacion(bloques) {
+  const ctx = document.getElementById('chartOcupacion').getContext('2d');
+  if (chartOcupacionInst) chartOcupacionInst.destroy();
+
+  const labels = bloques.map(b => b.bloque_patio);
+  const data = bloques.map(b => parseFloat(b.pct_ocupacion || 0));
+
+  chartOcupacionInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Ocupación (%)',
+        data: data,
+        backgroundColor: '#8b5cf6',
+        borderRadius: 4,
+        barThickness: 28
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 25, bottom: 5, left: 5, right: 5 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 10 },
+          formatter: (v) => `${v.toFixed(0)}%`
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, max: 110, grid: { color: '#f1f5f9' }, ticks: { callback: (v) => `${v}%` } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+      }
+    }
+  });
+}
+
+cargarDashboardTrabajo();
+</script>
+
+</body>
+</html>
