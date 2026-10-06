@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disponibilidad de Espacio e Ocupación de Patio (6,000 TEUs) - DP World Posorja</title>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Chart.js + Plugin DataLabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<style>
+*{box-sizing:border-box} 
+:root{
+  --bg:#eef2f6;--card:#fff;--nav:#0b172a;--nav2:#13233c;--text:#172033;
+  --muted:#667085;--border:#d9e0e8;--blue:#2563eb;--green:#10b981;
+  --yellow:#f59e0b;--orange:#f97316;--red:#ef4444;--purple:#7c3aed;
+  --shadow:0 2px 8px rgba(15,23,42,.07);
+}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Arial,sans-serif;font-size:13px}
+.nav{background:linear-gradient(110deg,var(--nav),var(--nav2));color:#fff;padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:15px;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.nav-title{font-weight:800;font-size:16px}
+.nav-sub{font-size:11px;color:#cbd5e1;margin-top:2px}
+.actions{display:flex;gap:8px;align-items:center}
+.btn{border:0;border-radius:6px;padding:8px 13px;font-size:11px;font-weight:800;cursor:pointer;color:#fff;background:var(--blue)}
+.btn.secondary{background:#334155}
+.status{font-size:10px;font-weight:800;padding:6px 9px;border-radius:14px;background:rgba(255,255,255,.1)}
+.canvas{max-width:1800px;margin:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+.filters{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 14px;box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.filter{display:flex;flex-direction:column;gap:4px;min-width:175px}
+.filter label{font-size:10px;text-transform:uppercase;font-weight:800;color:var(--muted)}
+select{height:34px;border:1px solid var(--border);border-radius:5px;background:#f8fafc;padding:0 9px;font-size:12px;font-weight:700;color:var(--text)}
+.filter-info{margin-left:auto;font-size:10px;color:var(--muted);align-self:center}
+
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 13px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--blue)}
+.kpi.green:before{background:var(--green)}
+.kpi.purple:before{background:var(--purple)}
+.kpi.orange:before{background:var(--orange)}
+.kpi.red:before{background:var(--red)}
+.kpi-label{font-size:9px;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.kpi-value{font-size:23px;line-height:1.1;font-weight:900;margin-top:5px}
+.kpi-note{font-size:9px;color:var(--muted);font-weight:600;margin-top:4px}
+
+.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:var(--shadow);min-width:0}
+.card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:10px;font-weight:900;color:#475467;text-transform:uppercase}
+.chart{position:relative;height:280px}
+
+.btn-expand{background:transparent;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:3px 7px;font-size:12px;color:var(--muted);transition:all .2s ease;display:flex;align-items:center;gap:4px}
+.btn-expand:hover{background:#f1f5f9;color:var(--blue);border-color:var(--blue)}
+
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:#f1f5f9;color:#475467;text-transform:uppercase;font-size:9px;padding:9px 7px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap}
+td{padding:8px 7px;border-bottom:1px solid #edf0f4}
+tr:hover td{background:#f8fafc}
+.data-bar{height:17px;background:#e9eef5;border-radius:4px;overflow:hidden;position:relative;min-width:110px}
+.data-bar span{height:100%;display:block}
+.data-text{position:absolute;inset:0;display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:900;color:#172033}
+.loading{text-align:center;padding:25px;color:var(--muted);font-weight:800}
+
+/* Modal Ampliar */
+.chart-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;opacity:0;transition:opacity .25s ease}
+.chart-modal-overlay.active{display:flex;opacity:1}
+.chart-modal-content{background:var(--card);border-radius:12px;width:100%;max-width:1200px;height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 25px -5px rgba(0,0,0,.3);overflow:hidden}
+.chart-modal-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc}
+.chart-modal-title{font-size:14px;font-weight:900;color:var(--text);text-transform:uppercase}
+.chart-modal-body{flex:1;padding:20px;position:relative}
+.btn-close-modal{background:var(--red);color:#fff;border:0;padding:6px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:12px}
+
+@media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div>
+    <div class="nav-title">🏗️ DP World Posorja — Tarjeta Ocupación & Disponibilidad de Espacio</div>
+    <div class="nav-sub">Capacidad Total de Diseño en Patio: 6,000 TEUs</div>
+  </div>
+  <div class="actions">
+    <span class="status" id="estadoConexion">● Conectando...</span>
+    <button class="btn secondary" onclick="cargarInventarioPatio()">🔄 Actualizar</button>
+  </div>
+</header>
+
+<main class="canvas">
+
+  <!-- FILTROS -->
+  <section class="filters">
+    <div class="filter">
+      <label>Filtrar por Bloque</label>
+      <select id="selectBloque" onchange="renderTodo()">
+        <option value="TODOS">Todos los Bloques</option>
+        <option value="B1">Bloque B1</option>
+        <option value="RF-01">Bloque Reefer RF-01</option>
+        <option value="MTY-01">Bloque Vacíos MTY-01</option>
+      </select>
+    </div>
+    <div class="filter">
+      <label>Tipo de Carga</label>
+      <select id="selectTipoCarga" onchange="renderTodo()">
+        <option value="TODOS">Todas las cargas</option>
+        <option value="FULL_DRY">Full Dry</option>
+        <option value="FULL_RH">Full Reefer (RH)</option>
+        <option value="VACIO">Vacíos (MTY)</option>
+      </select>
+    </div>
+    <div class="filter-info" id="ultimaActualizacion">Sin actualización</div>
+  </section>
+
+  <!-- KPIS PRINCIPALES (CAPACIDAD GENERAL 6,000 TEUs) -->
+  <section class="kpis">
+    <div class="kpi">
+      <div class="kpi-label">Capacidad Total Patio</div>
+      <div class="kpi-value">6,000 TEUs</div>
+      <div class="kpi-note">Diseño estándar de la terminal</div>
+    </div>
+    <div class="kpi purple">
+      <div class="kpi-label">TEUs Ocupados Actuales</div>
+      <div class="kpi-value" id="kpiTeusOcupados">0 TEUs</div>
+      <div class="kpi-note" id="kpiUnidadesCount">0 contenedores en patio</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">TEUs Disponibles Libres</div>
+      <div class="kpi-value" id="kpiTeusDisponibles">6,000 TEUs</div>
+      <div class="kpi-note">Capacidad libre restante</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-label">% Ocupación General</div>
+      <div class="kpi-value" id="kpiPctOcupacion">0.0 %</div>
+      <div class="kpi-note">Representación sobre 6,000 TEUs</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-label">% Disponibilidad General</div>
+      <div class="kpi-value" id="kpiPctDisponible">100.0 %</div>
+      <div class="kpi-note">Margen operacional libre</div>
+    </div>
+  </section>
+
+  <!-- GRÁFICOS Y ANALÍTICA -->
+  <section class="grid">
+    <div class="card">
+      <div class="card-title">
+        <span>TEUs Ocupados por Bloque vs Peso General (6,000 TEUs)</span>
+        <button class="btn-expand" onclick="expandirGrafica('bloques')">⛶ Ampliar</button>
+      </div>
+      <div class="chart"><canvas id="chartBloques"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">
+        <span>Distribución de Espacio por Tipo de Carga</span>
+        <button class="btn-expand" onclick="expandirGrafica('tipoCarga')">⛶ Ampliar</button>
+      </div>
+      <div class="chart"><canvas id="chartTipoCarga"></canvas></div>
+    </div>
+  </section>
+
+  <!-- MATRIZ OPERACIONAL DE INVENTARIO Y POSICIONES (BLOQUE, BAHÍA, ROW, TIER) -->
+  <section class="card">
+    <div class="card-title">
+      <span>Matriz Detallada de Posiciones en Patio (Bloque / Bahía / Fila-Row / Nivel-Tier)</span>
+      <span style="font-size:9px; color:var(--muted)">Base de cálculo: 1 x 20ft = 1 TEU | 1 x 40ft/45ft = 2 TEUs</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Contenedor ID</th>
+            <th>Bloque</th>
+            <th>Bahía</th>
+            <th>Row (Fila)</th>
+            <th>Tier (Nivel)</th>
+            <th>Tamaño</th>
+            <th>TEUs</th>
+            <th>Tipo Carga</th>
+            <th>Peso vs Patio General (6,000 TEUs)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="bodyMatrizInventario">
+          <tr><td colspan="10" class="loading">Cargando inventario de patio...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- Modal Ampliación de Gráficas -->
+<div class="chart-modal-overlay" id="modalGrafica">
+  <div class="chart-modal-content">
+    <div class="chart-modal-header">
+      <div class="chart-modal-title" id="modalTitulo">Vista Ampliada</div>
+      <button class="btn-close-modal" onclick="cerrarModal()">✕ Cerrar (Esc)</button>
+    </div>
+    <div class="chart-modal-body">
+      <canvas id="chartModalCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+Chart.register(ChartDataLabels);
+
+const CAPACIDAD_PATIO_TEUS = 6000;
+let inventarioRaw = [];
+let chBloques = null, chCarga = null, chModal = null;
+let tipoModalActivo = null;
+
+async function cargarInventarioPatio() {
+  document.getElementById('estadoConexion').textContent = '● Actualizando...';
+  try {
+    const { data, error } = await dbClient
+      .from('yard_inventory')
+      .select('*')
+      .eq('estado', 'PATIO');
+
+    if (error) throw error;
+
+    inventarioRaw = data || [];
+    document.getElementById('estadoConexion').textContent = '● Conectado';
+    document.getElementById('ultimaActualizacion').textContent = 'Última actualización: ' + new Date().toLocaleString('es-EC');
+
+    renderTodo();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('estadoConexion').textContent = '● Error';
+    document.getElementById('bodyMatrizInventario').innerHTML = `<tr><td colspan="10" class="loading" style="color:var(--red)">Error al consultar Supabase: ${err.message}</td></tr>`;
+  }
+}
+
+function renderTodo() {
+  const bSel = document.getElementById('selectBloque').value;
+  const cSel = document.getElementById('selectTipoCarga').value;
+
+  // Filtrar inventario
+  let datos = inventarioRaw.filter(item => {
+    const matchB = bSel === 'TODOS' || item.bloque_patio === bSel;
+    const matchC = cSel === 'TODOS' || item.tipo_carga === cSel;
+    return matchB && matchC;
+  });
+
+  renderKPIs(datos);
+  renderTabla(datos);
+  renderCharts(datos);
+
+  if (tipoModalActivo) {
+    renderChartModal(datos, tipoModalActivo);
+  }
+}
+
+function renderKPIs(datos) {
+  let teusOcupados = 0;
+  let totalContenedores = datos.length;
+
+  datos.forEach(item => {
+    teusOcupados += Number(item.teus_equivalentes || 2);
+  });
+
+  const teusLibres = Math.max(0, CAPACIDAD_PATIO_TEUS - teusOcupados);
+  const pctOcupado = ((teusOcupados / CAPACIDAD_PATIO_TEUS) * 100).toFixed(2);
+  const pctLibre = (100 - pctOcupado).toFixed(2);
+
+  document.getElementById('kpiTeusOcupados').textContent = `${teusOcupados.toLocaleString('es-EC')} TEUs`;
+  document.getElementById('kpiUnidadesCount').textContent = `${totalContenedores} contenedores activos`;
+  document.getElementById('kpiTeusDisponibles').textContent = `${teusLibres.toLocaleString('es-EC')} TEUs`;
+  document.getElementById('kpiPctOcupacion').textContent = `${pctOcupado} %`;
+  document.getElementById('kpiPctDisponible').textContent = `${pctLibre} %`;
+}
+
+function renderTabla(datos) {
+  if (!datos.length) {
+    document.getElementById('bodyMatrizInventario').innerHTML = `<tr><td colspan="10" class="loading">No hay inventario registrado con los filtros seleccionados.</td></tr>`;
+    return;
+  }
+
+  const html = datos.map(item => {
+    const teus = Number(item.teus_equivalentes || 2);
+    // Porcentaje que representa este único contenedor/registro sobre los 6,000 TEUs
+    const pctPatio = ((teus / CAPACIDAD_PATIO_TEUS) * 100).toFixed(3);
+
+    return `
+      <tr>
+        <td><b>${item.contenedor_id}</b></td>
+        <td><b>${item.bloque_patio}</b></td>
+        <td>Bahía ${item.bahia}</td>
+        <td>Row ${item.row_fila}</td>
+        <td>Tier ${item.tier_nivel}</td>
+        <td>${item.tamanio}'</td>
+        <td><b>${teus} TEU(s)</b></td>
+        <td><small style="font-weight:700">${item.tipo_carga}</small></td>
+        <td>
+          <div class="data-bar">
+            <span style="width:${Math.min(pctPatio * 500, 100)}%; background:var(--purple)"></span>
+            <div class="data-text">${pctPatio}% (${teus} TEUs / 6,000)</div>
+          </div>
+        </td>
+        <td><b style="color:var(--green)">${item.estado}</b></td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById('bodyMatrizInventario').innerHTML = html;
+}
+
+function renderCharts(datos) {
+  if (chBloques) chBloques.destroy();
+  if (chCarga) chCarga.destroy();
+
+  // Agrupar TEUs por Bloque
+  let teusPorBloque = {};
+  let teusPorCarga = { FULL_DRY: 0, FULL_RH: 0, VACIO: 0 };
+
+  datos.forEach(item => {
+    const b = item.bloque_patio || 'OTRO';
+    const t = Number(item.teus_equivalentes || 2);
+    const tc = item.tipo_carga || 'FULL_DRY';
+
+    teusPorBloque[b] = (teusPorBloque[b] || 0) + t;
+    if (teusPorCarga[tc] !== undefined) teusPorCarga[tc] += t;
+  });
+
+  const labelsB = Object.keys(teusPorBloque);
+  const dataB = Object.values(teusPorBloque);
+
+  // Gráfico 1: Barras TEUs por Bloque
+  chBloques = new Chart(document.getElementById('chartBloques'), {
+    type: 'bar',
+    data: {
+      labels: labelsB,
+      datasets: [{
+        label: 'TEUs Ocupados',
+        data: dataB,
+        backgroundColor: '#7c3aed',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#172033',
+          font: { weight: 'bold', size: 10 },
+          formatter: (v) => `${v} TEUs (${((v/CAPACIDAD_PATIO_TEUS)*100).toFixed(1)}%)`
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#eef2f6' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  // Gráfico 2: Donut Tipo de Carga
+  chCarga = new Chart(document.getElementById('chartTipoCarga'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Full Dry', 'Full Reefer (RH)', 'Vacío (MTY)'],
+      datasets: [{
+        data: [teusPorCarga.FULL_DRY, teusPorCarga.FULL_RH, teusPorCarga.VACIO],
+        backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 10, weight: 'bold' } } },
+        datalabels: {
+          color: '#ffffff',
+          font: { weight: 'bold', size: 11 },
+          formatter: (v) => v > 0 ? `${v} TEUs` : ''
+        }
+      }
+    }
+  });
+}
+
+/* Lógica Modal / Ampliación */
+function expandirGrafica(tipo) {
+  tipoModalActivo = tipo;
+  const modal = document.getElementById('modalGrafica');
+  modal.classList.add('active');
+
+  const bSel = document.getElementById('selectBloque').value;
+  const cSel = document.getElementById('selectTipoCarga').value;
+  let datos = inventarioRaw.filter(item => {
+    return (bSel === 'TODOS' || item.bloque_patio === bSel) &&
+           (cSel === 'TODOS' || item.tipo_carga === cSel);
+  });
+
+  renderChartModal(datos, tipo);
+}
+
+function renderChartModal(datos, tipo) {
+  if (chModal) chModal.destroy();
+
+  const ctx = document.getElementById('chartModalCanvas').getContext('2d');
+  const titulo = document.getElementById('modalTitulo');
+
+  if (tipo === 'bloques') {
+    titulo.textContent = 'Ocupación de TEUs por Bloque vs Capacidad General (6,000 TEUs)';
+    let teusPorBloque = {};
+    datos.forEach(item => {
+      const b = item.bloque_patio || 'OTRO';
+      teusPorBloque[b] = (teusPorBloque[b] || 0) + Number(item.teus_equivalentes || 2);
+    });
+
+    chModal = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(teusPorBloque),
+        datasets: [{
+          label: 'TEUs Ocupados',
+          data: Object.values(teusPorBloque),
+          backgroundColor: '#7c3aed',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            font: { weight: 'bold', size: 12 },
+            formatter: (v) => `${v} TEUs (${((v/CAPACIDAD_PATIO_TEUS)*100).toFixed(2)}% del Patio Total)`
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: '#eef2f6' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  } else {
+    titulo.textContent = 'Distribución Proporcional de TEUs por Tipo de Carga';
+    let teusPorCarga = { FULL_DRY: 0, FULL_RH: 0, VACIO: 0 };
+    datos.forEach(item => {
+      const tc = item.tipo_carga || 'FULL_DRY';
+      if (teusPorCarga[tc] !== undefined) teusPorCarga[tc] += Number(item.teus_equivalentes || 2);
+    });
+
+    chModal = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Full Dry', 'Full Reefer (RH)', 'Vacío (MTY)'],
+        datasets: [{
+          data: [teusPorCarga.FULL_DRY, teusPorCarga.FULL_RH, teusPorCarga.VACIO],
+          backgroundColor: ['#2563eb', '#10b981', '#f59e0b']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 13, weight: 'bold' } } },
+          datalabels: {
+            color: '#fff',
+            font: { weight: 'bold', size: 14 },
+            formatter: (v) => v > 0 ? `${v} TEUs\n(${((v/CAPACIDAD_PATIO_TEUS)*100).toFixed(2)}%)` : ''
+          }
+        }
+      }
+    });
+  }
+}
+
+function cerrarModal() {
+  document.getElementById('modalGrafica').classList.remove('active');
+  tipoModalActivo = null;
+  if (chModal) { chModal.destroy(); chModal = null; }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+document.getElementById('modalGrafica').addEventListener('click', function(e) { if (e.target === this) cerrarModal(); });
+
+cargarInventarioPatio();
+</script>
+
+</body>
+</html>
