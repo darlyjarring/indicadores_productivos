@@ -18,6 +18,13 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Aria
 .control,.card{background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}.control{overflow:hidden}.control-head{background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 13px;display:flex;align-items:center;justify-content:space-between}.control-title,.card-title{font-size:10px;font-weight:900;color:#475467;text-transform:uppercase}.control-score{font-size:11px;font-weight:900}.control-body{display:grid;grid-template-columns:1.25fr 1fr 1fr}.control-col{padding:13px;border-right:1px solid var(--border)}.control-col:last-child{border-right:0}.alert-row{display:grid;grid-template-columns:50px 1fr auto;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid #edf0f4}.alert-row:last-child{border-bottom:0}.block-name{font-weight:900}.alert-count{font-weight:900}.mini{font-size:9px;color:var(--muted)}.pill{display:inline-block;padding:4px 7px;border-radius:12px;font-size:9px;font-weight:900}.pill.red{background:#fee2e2;color:#991b1b}.pill.orange{background:#ffedd5;color:#9a3412}.pill.green{background:#d1fae5;color:#065f46}.pill.blue{background:#dbeafe;color:#1e40af}.recommend{border:1px solid #fed7aa;background:#fff7ed;border-radius:7px;padding:11px;margin-top:4px}.recommend .route{font-size:20px;font-weight:900;color:#9a3412;margin:5px 0}.recommend small{color:#7c2d12;font-weight:600}.no-alert{color:#047857;font-weight:800;font-size:12px;padding:8px 0}
 .map-card{padding:12px}.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}.block{border:2px solid var(--border);border-radius:7px;padding:9px;background:#f8fafc;min-height:112px}.block.red{border-color:#fca5a5;background:#fff5f5}.block.orange{border-color:#fdba74;background:#fff8f1}.block.green{border-color:#6ee7b7;background:#f0fdf8}.block.blue{border-color:#93c5fd;background:#eff6ff}.block-top{display:flex;justify-content:space-between}.block-code{font-size:15px;font-weight:950}.state-dot{width:9px;height:9px;border-radius:50%;background:#94a3b8}.red .state-dot{background:var(--red)}.orange .state-dot{background:var(--orange)}.green .state-dot{background:var(--green)}.blue .state-dot{background:var(--blue)}.block-num{font-size:22px;font-weight:950;margin-top:7px}.block-caption{font-size:9px;color:var(--muted);font-weight:700}.progress{height:7px;background:#e5e7eb;border-radius:8px;overflow:hidden;margin:7px 0 5px}.progress span{display:block;height:100%}.block-meta{font-size:9px;color:#475467;display:flex;justify-content:space-between;font-weight:800}
 .grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:12px}.card{padding:12px;min-width:0}.card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.chart{position:relative;height:265px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#f1f5f9;color:#475467;text-transform:uppercase;font-size:9px;padding:9px 7px;border-bottom:2px solid var(--border);text-align:left;white-space:nowrap}td{padding:8px 7px;border-bottom:1px solid #edf0f4}tr:hover td{background:#f8fafc}.data-bar{height:17px;background:#e9eef5;border-radius:4px;overflow:hidden;position:relative;min-width:110px}.data-bar span{height:100%;display:block}.data-text{position:absolute;inset:0;display:flex;align-items:center;padding-left:6px;font-size:9px;font-weight:900}.action{font-weight:900;font-size:10px}.action.red{color:#b91c1c}.action.green{color:#047857}.action.blue{color:#1d4ed8}.action.orange{color:#c2410c}.loading{text-align:center;padding:25px;color:var(--muted);font-weight:800}.error{padding:13px;background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:7px;font-weight:700}.footer{text-align:right;color:#7b8794;font-size:9px;padding:2px}
+
+/* Botón de expansión para las gráficas */
+.btn-expand{background:transparent;border:1px solid var(--border);border-radius:4px;cursor:pointer;padding:3px 7px;font-size:12px;color:var(--muted);transition:all .2s ease;display:flex;align-items:center;gap:4px}.btn-expand:hover{background:#f1f5f9;color:var(--blue);border-color:var(--blue)}
+
+/* Modal / Ampliación de Gráficas */
+.chart-modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;opacity:0;transition:opacity .25s ease}.chart-modal-overlay.active{display:flex;opacity:1}.chart-modal-content{background:var(--card);border-radius:12px;width:100%;max-width:1200px;height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 25px -5px rgba(0,0,0,.3);overflow:hidden;animation:modalZoom .25s cubic-bezier(.16,1,.3,1)}.chart-modal-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:#f8fafc}.chart-modal-title{font-size:14px;font-weight:900;color:var(--text);text-transform:uppercase}.chart-modal-body{flex:1;padding:20px;position:relative;width:100%;height:100%}.btn-close-modal{background:var(--red);color:#fff;border:0;padding:6px 14px;border-radius:6px;font-weight:800;cursor:pointer;font-size:12px}.btn-close-modal:hover{opacity:.9}@keyframes modalZoom{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+
 @media(max-width:1250px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr 1fr}.grid .card:first-child{grid-column:1/-1}}@media(max-width:900px){.control-body{grid-template-columns:1fr}.control-col{border-right:0;border-bottom:1px solid var(--border)}.control-col:last-child{border-bottom:0}}@media(max-width:700px){.nav{flex-direction:column;align-items:flex-start}.actions{width:100%}.actions .btn{flex:1}.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.grid .card:first-child{grid-column:auto}.filter{min-width:100%;width:100%}.filter-info{margin-left:0}}
 </style></head><body>
 <header class="nav"><div><div class="nav-title">🏗️ DP World Posorja — Centro de Control Operacional</div><div class="nav-sub">Monitoreo de carga, ocupación y balanceo de recursos en patio</div></div><div class="actions"><span class="status" id="estadoConexion">● Conectando...</span><button class="btn secondary" onclick="cargarDashboard()">🔄 Actualizar</button></div></header>
@@ -26,14 +33,52 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Aria
 <section class="kpis"><div class="kpi red"><div class="kpi-label">Tareas pendientes</div><div class="kpi-value" id="kpiTareas">0</div><div class="kpi-note">Movimientos acumulados en cola</div></div><div class="kpi red"><div class="kpi-label">Bloques críticos</div><div class="kpi-value" id="kpiCriticos">0</div><div class="kpi-note">Requieren atención prioritaria</div></div><div class="kpi purple"><div class="kpi-label">Ocupación promedio</div><div class="kpi-value" id="kpiOcupacion">0%</div><div class="kpi-note">Densidad promedio de TEUs</div></div><div class="kpi green"><div class="kpi-label">Capacidad disponible</div><div class="kpi-value" id="kpiDisponible">0%</div><div class="kpi-note">Margen promedio del patio</div></div><div class="kpi"><div class="kpi-label">RTG asignadas</div><div class="kpi-value" id="kpiRTG">0</div><div class="kpi-note">Según datos disponibles</div></div><div class="kpi yellow"><div class="kpi-label">Índice de balance</div><div class="kpi-value" id="kpiBalance">0/100</div><div class="kpi-note" id="kpiBalanceTexto">Calculando estado</div></div></section>
 <section class="control"><div class="control-head"><div class="control-title">🚨 Centro de Control Operacional</div><div class="control-score" id="controlEstado">Analizando...</div></div><div class="control-body"><div class="control-col"><div class="mini" style="font-weight:900;text-transform:uppercase;margin-bottom:6px">Bloques que requieren atención</div><div id="listaCriticos"><div class="loading">Cargando...</div></div></div><div class="control-col"><div class="mini" style="font-weight:900;text-transform:uppercase;margin-bottom:6px">Recursos con menor carga</div><div id="listaDisponibles"><div class="loading">Cargando...</div></div></div><div class="control-col"><div class="mini" style="font-weight:900;text-transform:uppercase;margin-bottom:6px">Recomendación de balanceo</div><div id="recomendacion"><div class="loading">Calculando...</div></div></div></div></section>
 <section class="card map-card"><div class="card-title"><span>Mapa operacional del patio</span><span class="mini">Rojo = crítico · Naranja = medio · Verde = baja carga</span></div><div id="mapaPatio" class="map"><div class="loading">Cargando bloques...</div></div></section>
-<section class="grid"><div class="card"><div class="card-title"><span>Concentración de tareas pendientes por bloque</span><span id="maxTareasLabel"></span></div><div class="chart"><canvas id="chartTareas"></canvas></div></div><div class="card"><div class="card-title">Ocupación de capacidad por bloque</div><div class="chart"><canvas id="chartOcupacion"></canvas></div></div><div class="card"><div class="card-title">Carga de tareas vs RTG asignadas</div><div class="chart"><canvas id="chartBalance"></canvas></div></div></section>
+<section class="grid">
+  <div class="card">
+    <div class="card-title">
+      <div><span>Concentración de tareas pendientes por bloque</span> <span id="maxTareasLabel" class="mini"></span></div>
+      <button class="btn-expand" onclick="expandirGrafica('tareas')" title="Ampliar gráfica">⛶ Ampliar</button>
+    </div>
+    <div class="chart"><canvas id="chartTareas"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      <span>Ocupación de capacidad por bloque</span>
+      <button class="btn-expand" onclick="expandirGrafica('ocupacion')" title="Ampliar gráfica">⛶ Ampliar</button>
+    </div>
+    <div class="chart"><canvas id="chartOcupacion"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">
+      <span>Carga de tareas vs RTG asignadas</span>
+      <button class="btn-expand" onclick="expandirGrafica('balance')" title="Ampliar gráfica">⛶ Ampliar</button>
+    </div>
+    <div class="chart"><canvas id="chartBalance"></canvas></div>
+  </div>
+</section>
 <section class="card"><div class="card-title"><span>Matriz operacional de balanceo</span><span class="mini">La acción se calcula con los datos disponibles</span></div><div class="table-wrap"><table><thead><tr><th>Bloque</th><th>Zona</th><th>Capacidad</th><th>TEUs</th><th>Ocupación</th><th>Tareas pendientes</th><th>RTG</th><th>Saturación</th><th>Acción recomendada</th></tr></thead><tbody id="bodyMatriz"><tr><td colspan="9" class="loading">Cargando...</td></tr></tbody></table></div></section>
 <div class="footer">Fuente: Supabase · tabla yard_block_workload · Dashboard de apoyo a la decisión operacional</div></main>
+
+<!-- Modal para Ampliación de Gráficas -->
+<div class="chart-modal-overlay" id="modalGrafica">
+  <div class="chart-modal-content">
+    <div class="chart-modal-header">
+      <div class="chart-modal-title" id="modalTitulo">Vista Ampliada</div>
+      <button class="btn-close-modal" onclick="cerrarModal()">✕ Cerrar (Esc)</button>
+    </div>
+    <div class="chart-modal-body">
+      <canvas id="chartModalCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL="https://owykvbhrvhopbqfyarzz.supabase.co";
 const SUPABASE_KEY="sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
 const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);Chart.register(ChartDataLabels);
-let datos=[];let chT=null,chO=null,chB=null;
+let datos=[];let chT=null,chO=null,chB=null,chM=null;
+let tipoGraficaActivaModal = null;
+
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
@@ -41,12 +86,262 @@ function nivel(b){let s=String(b.nivel_saturacion||'').toUpperCase();if(s==='CRI
 function color(s){return s==='CRITICO'?'#ef4444':s==='MEDIO'?'#f97316':'#10b981'}
 function cls(s){return s==='CRITICO'?'red':s==='MEDIO'?'orange':'green'}
 function balance(a){if(a.length<2)return 100;let x=a.map(b=>b.tareas_pendientes),mx=Math.max(...x),mn=Math.min(...x);if(mx===0)return 100;let d=(mx-mn)/mx*100,c=a.filter(b=>nivel(b)==='CRITICO').length;return Math.max(0,Math.min(100,Math.round(100-d-(c/a.length)*25)))}
-async function cargarDashboard(){document.getElementById('estadoConexion').textContent='● Actualizando...';try{let q=dbClient.from('yard_block_workload').select('*'),z=document.getElementById('selectTipoZona').value,s=document.getElementById('selectSaturacion').value;if(z!=='TODOS')q=q.eq('tipo_zona',z);if(s!=='TODOS')q=q.eq('nivel_saturacion',s);let r=await q;if(r.error)throw r.error;datos=(r.data||[]).map(b=>({...b,bloque_patio:String(b.bloque_patio??'N/D'),tipo_zona:String(b.tipo_zona??'N/D'),capacidad_teus:n(b.capacidad_teus),teus_ocupados:n(b.teus_ocupados),pct_ocupacion:n(b.pct_ocupacion),tareas_pendientes:n(b.tareas_pendientes),rtg_asignadas:n(b.rtg_asignadas),nivel_saturacion:String(b.nivel_saturacion??'').toUpperCase()}));document.getElementById('estadoConexion').textContent='● Conectado';document.getElementById('ultimaActualizacion').textContent='Última actualización: '+new Date().toLocaleString('es-EC');renderTodo()}catch(e){console.error(e);document.getElementById('estadoConexion').textContent='● Error';document.getElementById('bodyMatriz').innerHTML='<tr><td colspan="9"><div class="error">No fue posible consultar Supabase: '+esc(e.message||e)+'</div></td></tr>'}}
-function renderTodo(){let d=[...datos],o=document.getElementById('selectOrden').value;if(o==='OCUPACION')d.sort((a,b)=>b.pct_ocupacion-a.pct_ocupacion);else if(o==='BLOQUE')d.sort((a,b)=>a.bloque_patio.localeCompare(b.bloque_patio));else d.sort((a,b)=>b.tareas_pendientes-a.tareas_pendientes);renderKpi(d);renderControl(d);renderMapa(d);renderTable(d);charts(d)}
-function renderKpi(d){let t=d.reduce((s,b)=>s+b.tareas_pendientes,0),c=d.filter(b=>nivel(b)==='CRITICO').length,o=avg(d.map(b=>b.pct_ocupacion)),r=d.reduce((s,b)=>s+b.rtg_asignadas,0),bal=balance(d);document.getElementById('kpiTareas').textContent=t.toLocaleString('es-EC');document.getElementById('kpiCriticos').textContent=c;document.getElementById('kpiOcupacion').textContent=o.toFixed(1)+'%';document.getElementById('kpiDisponible').textContent=Math.max(0,100-o).toFixed(1)+'%';document.getElementById('kpiRTG').textContent=r;document.getElementById('kpiBalance').textContent=bal+'/100';document.getElementById('kpiBalanceTexto').textContent=bal>=85?'Balance saludable':bal>=70?'Requiere monitoreo':bal>=50?'Desequilibrio operativo':'Intervención prioritaria'}
-function renderControl(d){let cr=d.filter(b=>nivel(b)==='CRITICO').sort((a,b)=>b.tareas_pendientes-a.tareas_pendientes),lo=d.filter(b=>nivel(b)==='BAJO').sort((a,b)=>a.tareas_pendientes-b.tareas_pendientes),bal=balance(d),st=document.getElementById('controlEstado');st.textContent=bal>=85?'🟢 OPERACIÓN BALANCEADA':bal>=70?'🟡 MONITOREAR':bal>=50?'🟠 DESEQUILIBRIO':'🔴 INTERVENCIÓN REQUERIDA';st.style.color=bal>=85?'#047857':bal>=70?'#a16207':bal>=50?'#c2410c':'#b91c1c';document.getElementById('listaCriticos').innerHTML=cr.length?cr.slice(0,5).map(b=>`<div class="alert-row"><div class="block-name">${esc(b.bloque_patio)}</div><div><div class="alert-count">${b.tareas_pendientes} tareas</div><div class="mini">${b.pct_ocupacion.toFixed(1)}% · ${b.rtg_asignadas} RTG</div></div><span class="pill red">CRÍTICO</span></div>`).join(''):'<div class="no-alert">✓ No existen bloques críticos.</div>';document.getElementById('listaDisponibles').innerHTML=lo.length?lo.slice(0,5).map(b=>`<div class="alert-row"><div class="block-name">${esc(b.bloque_patio)}</div><div><div class="alert-count">${b.tareas_pendientes} tareas</div><div class="mini">${b.pct_ocupacion.toFixed(1)}% · ${b.rtg_asignadas} RTG</div></div><span class="pill green">DISPONIBLE</span></div>`).join(''):'<div class="mini">No hay bloques de baja carga.</div>';let from=lo.find(b=>b.rtg_asignadas>0)||lo[0],to=cr[0];document.getElementById('recomendacion').innerHTML=from&&to&&from.bloque_patio!==to.bloque_patio?`<div class="recommend"><div class="mini">RECOMENDACIÓN PRINCIPAL</div><div class="route">${esc(from.bloque_patio)} → ${esc(to.bloque_patio)}</div><small>Evaluar traslado de 1 RTG desde ${esc(from.bloque_patio)} (${from.tareas_pendientes} tareas) hacia ${esc(to.bloque_patio)} (${to.tareas_pendientes} tareas).</small></div>`:'<div class="recommend" style="background:#f0fdf4;border-color:#a7f3d0"><div class="mini">ESTADO</div><div class="route" style="color:#047857">✓ SIN TRASLADO</div><small style="color:#065f46">No se identifica una combinación clara de bloque disponible y crítico.</small></div>'}
-function renderMapa(d){document.getElementById('mapaPatio').innerHTML=d.length?d.map(b=>{let s=nivel(b),p=Math.max(0,Math.min(100,b.pct_ocupacion));return`<div class="block ${cls(s)}"><div class="block-top"><div class="block-code">${esc(b.bloque_patio)}</div><div class="state-dot"></div></div><div class="block-num">${b.tareas_pendientes}</div><div class="block-caption">tareas pendientes</div><div class="progress"><span style="width:${p}%;background:${color(s)}"></span></div><div class="block-meta"><span>${p.toFixed(0)}%</span><span>${b.rtg_asignadas} RTG</span></div></div>`}).join(''):'<div class="loading">Sin bloques.</div>'}
-function renderTable(d){let max=Math.max(60,...d.map(b=>b.tareas_pendientes));document.getElementById('bodyMatriz').innerHTML=d.length?d.map(b=>{let s=nivel(b),p=Math.min(100,Math.max(0,b.pct_ocupacion)),tp=Math.min(100,b.tareas_pendientes/max*100),act=s==='CRITICO'?['⚠ ENVIAR / ASIGNAR RTG','red']:s==='BAJO'&&b.rtg_asignadas>0?['↗ DISPONIBLE PARA APOYO','green']:s==='MEDIO'?['◉ MONITOREAR','orange']:['✓ OPERACIÓN NORMAL','blue'];return`<tr><td><b>${esc(b.bloque_patio)}</b></td><td>${esc(b.tipo_zona)}</td><td>${b.capacidad_teus.toLocaleString('es-EC')}</td><td><b>${b.teus_ocupados.toLocaleString('es-EC')}</b></td><td><div class="data-bar"><span style="width:${p}%;background:${color(s)}"></span><div class="data-text">${p.toFixed(1)}%</div></div></td><td><div class="data-bar"><span style="width:${tp}%;background:${color(s)}"></span><div class="data-text">${b.tareas_pendientes} tareas</div></div></td><td><b>${b.rtg_asignadas}</b></td><td><span class="pill ${cls(s)}">${s}</span></td><td class="action ${act[1]}">${act[0]}</td></tr>`}).join(''):'<tr><td colspan="9" class="loading">Sin datos.</td></tr>'}
-function charts(d){if(chT)chT.destroy();if(chO)chO.destroy();if(chB)chB.destroy();let labels=d.map(b=>b.bloque_patio),tasks=d.map(b=>b.tareas_pendientes);document.getElementById('maxTareasLabel').textContent=d.length?'Máximo: '+Math.max(...tasks)+' tareas':'';chT=new Chart(document.getElementById('chartTareas'),{type:'bar',data:{labels,datasets:[{data:tasks,backgroundColor:tasks.map(v=>v>=35?'#ef4444':v>=15?'#f97316':'#2563eb'),borderRadius:4,barThickness:22}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#172033',font:{weight:'bold',size:9}}},scales:{y:{beginAtZero:true,grid:{color:'#eef2f6'}},x:{grid:{display:false}}}}});chO=new Chart(document.getElementById('chartOcupacion'),{type:'bar',data:{labels,datasets:[{data:d.map(b=>b.pct_ocupacion),backgroundColor:d.map(b=>color(nivel(b))),borderRadius:4,barThickness:22}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#172033',font:{weight:'bold',size:9},formatter:v=>v.toFixed(0)+'%'}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}});chB=new Chart(document.getElementById('chartBalance'),{type:'bar',data:{labels,datasets:[{label:'Tareas',data:tasks,backgroundColor:'#2563eb',borderRadius:3},{label:'RTG x 10',data:d.map(b=>b.rtg_asignadas*10),backgroundColor:'#7c3aed',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9,weight:'700'}}},datalabels:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eef2f6'}},x:{grid:{display:false}}}}})}
+
+async function cargarDashboard(){
+  document.getElementById('estadoConexion').textContent='● Actualizando...';
+  try{
+    let q=dbClient.from('yard_block_workload').select('*'),z=document.getElementById('selectTipoZona').value,s=document.getElementById('selectSaturacion').value;
+    if(z!=='TODOS')q=q.eq('tipo_zona',z);
+    if(s!=='TODOS')q=q.eq('nivel_saturacion',s);
+    let r=await q;
+    if(r.error)throw r.error;
+    datos=(r.data||[]).map(b=>({
+      ...b,
+      bloque_patio:String(b.bloque_patio??'N/D'),
+      tipo_zona:String(b.tipo_zona??'N/D'),
+      capacidad_teus:n(b.capacidad_teus),
+      teus_ocupados:n(b.teus_ocupados),
+      pct_ocupacion:n(b.pct_ocupacion),
+      tareas_pendientes:n(b.tareas_pendientes),
+      rtg_asignadas:n(b.rtg_asignadas),
+      nivel_saturacion:String(b.nivel_saturacion??'').toUpperCase()
+    }));
+    document.getElementById('estadoConexion').textContent='● Conectado';
+    document.getElementById('ultimaActualizacion').textContent='Última actualización: '+new Date().toLocaleString('es-EC');
+    renderTodo();
+  }catch(e){
+    console.error(e);
+    document.getElementById('estadoConexion').textContent='● Error';
+    document.getElementById('bodyMatriz').innerHTML='<tr><td colspan="9"><div class="error">No fue posible consultar Supabase: '+esc(e.message||e)+'</div></td></tr>';
+  }
+}
+
+function renderTodo(){
+  let d=[...datos],o=document.getElementById('selectOrden').value;
+  if(o==='OCUPACION')d.sort((a,b)=>b.pct_ocupacion-a.pct_ocupacion);
+  else if(o==='BLOQUE')d.sort((a,b)=>a.bloque_patio.localeCompare(b.bloque_patio));
+  else d.sort((a,b)=>b.tareas_pendientes-a.tareas_pendientes);
+  
+  renderKpi(d);
+  renderControl(d);
+  renderMapa(d);
+  renderTable(d);
+  charts(d);
+  
+  // Si la ventana modal está abierta, re-renderizar la gráfica ampliada para reflejar cambios de datos o filtros
+  if(tipoGraficaActivaModal){
+    renderGraficaModal(d, tipoGraficaActivaModal);
+  }
+}
+
+function renderKpi(d){
+  let t=d.reduce((s,b)=>s+b.tareas_pendientes,0),c=d.filter(b=>nivel(b)==='CRITICO').length,o=avg(d.map(b=>b.pct_ocupacion)),r=d.reduce((s,b)=>s+b.rtg_asignadas,0),bal=balance(d);
+  document.getElementById('kpiTareas').textContent=t.toLocaleString('es-EC');
+  document.getElementById('kpiCriticos').textContent=c;
+  document.getElementById('kpiOcupacion').textContent=o.toFixed(1)+'%';
+  document.getElementById('kpiDisponible').textContent=Math.max(0,100-o).toFixed(1)+'%';
+  document.getElementById('kpiRTG').textContent=r;
+  document.getElementById('kpiBalance').textContent=bal+'/100';
+  document.getElementById('kpiBalanceTexto').textContent=bal>=85?'Balance saludable':bal>=70?'Requiere monitoreo':bal>=50?'Desequilibrio operativo':'Intervención prioritaria';
+}
+
+function renderControl(d){
+  let cr=d.filter(b=>nivel(b)==='CRITICO').sort((a,b)=>b.tareas_pendientes-a.tareas_pendientes),lo=d.filter(b=>nivel(b)==='BAJO').sort((a,b)=>a.tareas_pendientes-b.tareas_pendientes),bal=balance(d),st=document.getElementById('controlEstado');
+  st.textContent=bal>=85?'🟢 OPERACIÓN BALANCEADA':bal>=70?'🟡 MONITOREAR':bal>=50?'🟠 DESEQUILIBRIO':'🔴 INTERVENCIÓN REQUERIDA';
+  st.style.color=bal>=85?'#047857':bal>=70?'#a16207':bal>=50?'#c2410c':'#b91c1c';
+  document.getElementById('listaCriticos').innerHTML=cr.length?cr.slice(0,5).map(b=>`<div class="alert-row"><div class="block-name">${esc(b.bloque_patio)}</div><div><div class="alert-count">${b.tareas_pendientes} tareas</div><div class="mini">${b.pct_ocupacion.toFixed(1)}% · ${b.rtg_asignadas} RTG</div></div><span class="pill red">CRÍTICO</span></div>`).join(''):'<div class="no-alert">✓ No existen bloques críticos.</div>';
+  document.getElementById('listaDisponibles').innerHTML=lo.length?lo.slice(0,5).map(b=>`<div class="alert-row"><div class="block-name">${esc(b.bloque_patio)}</div><div><div class="alert-count">${b.tareas_pendientes} tareas</div><div class="mini">${b.pct_ocupacion.toFixed(1)}% · ${b.rtg_asignadas} RTG</div></div><span class="pill green">DISPONIBLE</span></div>`).join(''):'<div class="mini">No hay bloques de baja carga.</div>';
+  let from=lo.find(b=>b.rtg_asignadas>0)||lo[0],to=cr[0];
+  document.getElementById('recomendacion').innerHTML=from&&to&&from.bloque_patio!==to.bloque_patio?`<div class="recommend"><div class="mini">RECOMENDACIÓN PRINCIPAL</div><div class="route">${esc(from.bloque_patio)} → ${esc(to.bloque_patio)}</div><small>Evaluar traslado de 1 RTG desde ${esc(from.bloque_patio)} (${from.tareas_pendientes} tareas) hacia ${esc(to.bloque_patio)} (${to.tareas_pendientes} tareas).</small></div>`:'<div class="recommend" style="background:#f0fdf4;border-color:#a7f3d0"><div class="mini">ESTADO</div><div class="route" style="color:#047857">✓ SIN TRASLADO</div><small style="color:#065f46">No se identifica una combinación clara de bloque disponible y crítico.</small></div>';
+}
+
+function renderMapa(d){
+  document.getElementById('mapaPatio').innerHTML=d.length?d.map(b=>{
+    let s=nivel(b),p=Math.max(0,Math.min(100,b.pct_ocupacion));
+    return`<div class="block ${cls(s)}"><div class="block-top"><div class="block-code">${esc(b.bloque_patio)}</div><div class="state-dot"></div></div><div class="block-num">${b.tareas_pendientes}</div><div class="block-caption">tareas pendientes</div><div class="progress"><span style="width:${p}%;background:${color(s)}"></span></div><div class="block-meta"><span>${p.toFixed(0)}%</span><span>${b.rtg_asignadas} RTG</span></div></div>`;
+  }).join(''):'<div class="loading">Sin bloques.</div>';
+}
+
+function renderTable(d){
+  let max=Math.max(60,...d.map(b=>b.tareas_pendientes));
+  document.getElementById('bodyMatriz').innerHTML=d.length?d.map(b=>{
+    let s=nivel(b),p=Math.min(100,Math.max(0,b.pct_ocupacion)),tp=Math.min(100,b.tareas_pendientes/max*100),act=s==='CRITICO'?['⚠ ENVIAR / ASIGNAR RTG','red']:s==='BAJO'&&b.rtg_asignadas>0?['↗ DISPONIBLE PARA APOYO','green']:s==='MEDIO'?['◉ MONITOREAR','orange']:['✓ OPERACIÓN NORMAL','blue'];
+    return`<tr><td><b>${esc(b.bloque_patio)}</b></td><td>${esc(b.tipo_zona)}</td><td>${b.capacidad_teus.toLocaleString('es-EC')}</td><td><b>${b.teus_ocupados.toLocaleString('es-EC')}</b></td><td><div class="data-bar"><span style="width:${p}%;background:${color(s)}"></span><div class="data-text">${p.toFixed(1)}%</div></div></td><td><div class="data-bar"><span style="width:${tp}%;background:${color(s)}"></span><div class="data-text">${b.tareas_pendientes} tareas</div></div></td><td><b>${b.rtg_asignadas}</b></td><td><span class="pill ${cls(s)}">${s}</span></td><td class="action ${act[1]}">${act[0]}</td></tr>`;
+  }).join(''):'<tr><td colspan="9" class="loading">Sin datos.</td></tr>';
+}
+
+function charts(d){
+  if(chT)chT.destroy();
+  if(chO)chO.destroy();
+  if(chB)chB.destroy();
+  let labels=d.map(b=>b.bloque_patio),tasks=d.map(b=>b.tareas_pendientes);
+  document.getElementById('maxTareasLabel').textContent=d.length?'Máximo: '+Math.max(...tasks)+' tareas':'';
+  
+  chT=new Chart(document.getElementById('chartTareas'),{
+    type:'bar',
+    data:{labels,datasets:[{data:tasks,backgroundColor:tasks.map(v=>v>=35?'#ef4444':v>=15?'#f97316':'#2563eb'),borderRadius:4,barThickness:22}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#172033',font:{weight:'bold',size:9}}},scales:{y:{beginAtZero:true,grid:{color:'#eef2f6'}},x:{grid:{display:false}}}}
+  });
+  
+  chO=new Chart(document.getElementById('chartOcupacion'),{
+    type:'bar',
+    data:{labels,datasets:[{data:d.map(b=>b.pct_ocupacion),backgroundColor:d.map(b=>color(nivel(b))),borderRadius:4,barThickness:22}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},datalabels:{anchor:'end',align:'top',color:'#172033',font:{weight:'bold',size:9},formatter:v=>v.toFixed(0)+'%'}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}},x:{grid:{display:false}}}}
+  });
+  
+  chB=new Chart(document.getElementById('chartBalance'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Tareas',data:tasks,backgroundColor:'#2563eb',borderRadius:3},{label:'RTG x 10',data:d.map(b=>b.rtg_asignadas*10),backgroundColor:'#7c3aed',borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:9,weight:'700'}}},datalabels:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#eef2f6'}},x:{grid:{display:false}}}}
+  });
+}
+
+/* ==========================================
+   LÓGICA DE AMPLIACIÓN (MODAL / FULLSCREEN)
+   ========================================== */
+
+function expandirGrafica(tipo){
+  tipoGraficaActivaModal = tipo;
+  let modal = document.getElementById('modalGrafica');
+  modal.classList.add('active');
+  
+  let d=[...datos],o=document.getElementById('selectOrden').value;
+  if(o==='OCUPACION')d.sort((a,b)=>b.pct_ocupacion-a.pct_ocupacion);
+  else if(o==='BLOQUE')d.sort((a,b)=>a.bloque_patio.localeCompare(b.bloque_patio));
+  else d.sort((a,b)=>b.tareas_pendientes-a.tareas_pendientes);
+
+  renderGraficaModal(d, tipo);
+}
+
+function renderGraficaModal(d, tipo){
+  if(chM) chM.destroy();
+  
+  let labels=d.map(b=>b.bloque_patio);
+  let tasks=d.map(b=>b.tareas_pendientes);
+  let tituloModal = document.getElementById('modalTitulo');
+  let ctx = document.getElementById('chartModalCanvas').getContext('2d');
+  
+  if(tipo === 'tareas'){
+    tituloModal.textContent = "Concentración de Tareas Pendientes por Bloque (Vista Ampliada)";
+    chM = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          label: 'Tareas pendientes',
+          data: tasks,
+          backgroundColor: tasks.map(v=>v>=35?'#ef4444':v>=15?'#f97316':'#2563eb'),
+          borderRadius: 6,
+          barThickness: d.length > 20 ? 'flex' : 38
+        }]
+      },
+      options:{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins:{
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#172033',
+            font: { weight: 'bold', size: 12 }
+          }
+        },
+        scales:{
+          y: { beginAtZero: true, grid: { color: '#eef2f6' }, ticks: { font: { size: 12, weight: 'bold' } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } }
+        }
+      }
+    });
+  } else if(tipo === 'ocupacion'){
+    tituloModal.textContent = "Ocupación de Capacidad por Bloque (Vista Ampliada)";
+    chM = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[{
+          label: 'Ocupación (%)',
+          data: d.map(b=>b.pct_ocupacion),
+          backgroundColor: d.map(b=>color(nivel(b))),
+          borderRadius: 6,
+          barThickness: d.length > 20 ? 'flex' : 38
+        }]
+      },
+      options:{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins:{
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#172033',
+            font: { weight: 'bold', size: 12 },
+            formatter: v => v.toFixed(1) + '%'
+          }
+        },
+        scales:{
+          y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%', font: { size: 12, weight: 'bold' } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } }
+        }
+      }
+    });
+  } else if(tipo === 'balance'){
+    tituloModal.textContent = "Carga de Tareas vs RTG Asignadas (Vista Ampliada)";
+    chM = new Chart(ctx, {
+      type:'bar',
+      data:{
+        labels,
+        datasets:[
+          { label: 'Tareas pendientes', data: tasks, backgroundColor: '#2563eb', borderRadius: 4, barThickness: d.length > 20 ? 'flex' : 28 },
+          { label: 'RTG x 10 (Escala)', data: d.map(b=>b.rtg_asignadas*10), backgroundColor: '#7c3aed', borderRadius: 4, barThickness: d.length > 20 ? 'flex' : 28 }
+        ]
+      },
+      options:{
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins:{
+          legend: { position: 'top', labels: { font: { size: 12, weight: 'bold' } } },
+          datalabels: {
+            anchor: 'end',
+            align: 'top',
+            color: '#172033',
+            font: { weight: 'bold', size: 10 },
+            formatter: (v, ctx) => ctx.datasetIndex === 1 ? (v/10) + ' RTG' : v
+          }
+        },
+        scales:{
+          y: { beginAtZero: true, grid: { color: '#eef2f6' }, ticks: { font: { size: 12, weight: 'bold' } } },
+          x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } }
+        }
+      }
+    });
+  }
+}
+
+function cerrarModal(){
+  let modal = document.getElementById('modalGrafica');
+  modal.classList.remove('active');
+  tipoGraficaActivaModal = null;
+  if(chM){
+    chM.destroy();
+    chM = null;
+  }
+}
+
+// Cerrar modal al presionar la tecla Esc
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    cerrarModal();
+  }
+});
+
+// Cerrar modal al hacer clic en el fondo oscuro
+document.getElementById('modalGrafica').addEventListener('click', function(e){
+  if(e.target === this){
+    cerrarModal();
+  }
+});
+
 cargarDashboard();
 </script></body></html>
