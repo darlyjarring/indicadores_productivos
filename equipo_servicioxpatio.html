@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Servicio de Atención Patio - Desempeño RTG / Side Loader</title>
+<!-- Supabase SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Chart.js + Plugin DataLabels -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+
+*{box-sizing:border-box}
+:root{
+  --pbi-bg:#f0f2f5;
+  --pbi-card:#ffffff;
+  --pbi-border:#d1d5db;
+  --pbi-text:#1f2937;
+  --pbi-subtext:#4b5563;
+  --pbi-blue:#2563eb;
+  --pbi-teal:#0d9488;
+  --pbi-orange:#f59e0b;
+  --pbi-red:#ef4444;
+  --pbi-green:#10b981;
+  --pbi-purple:#8b5cf6;
+}
+
+body{margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:var(--pbi-bg);color:var(--pbi-text);font-size:12px}
+
+.pbi-navbar{background:#0f172a;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+.pbi-navbar .title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pbi-navbar .actions button{background:var(--pbi-blue);border:none;color:#fff;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;transition:0.2s}
+.pbi-navbar .actions button:hover{background:#1d4ed8}
+
+.pbi-canvas{padding:16px;max-width:1750px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+/* Slicers / Filtros Bar */
+.pbi-slicer-card{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:12px 16px;display:flex;gap:16px;align-items:end;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.slicer-group{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--pbi-subtext)}
+.slicer-group select, .slicer-group input{height:34px;padding:0 8px;border:1px solid var(--pbi-border);border-radius:4px;background:#f9fafb;font-size:12px;color:var(--pbi-text);font-weight:600}
+
+/* KPI Section */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px}
+.kpi-card{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.05);position:relative;overflow:hidden}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--pbi-blue)}
+.kpi-card.green::before{background:var(--pbi-green)}
+.kpi-card.teal::before{background:var(--pbi-teal)}
+.kpi-card.danger::before{background:var(--pbi-red)}
+
+.kpi-title{font-size:10px;color:var(--pbi-subtext);font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.kpi-value{font-size:24px;font-weight:800;color:#0f172a;margin:4px 0 2px}
+.kpi-subtext{font-size:11px;color:var(--pbi-subtext);font-weight:600}
+
+/* Layout Analytics */
+.grid-analytics{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
+.pbi-card-box{background:var(--pbi-card);border:1px solid var(--pbi-border);border-radius:6px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);display:flex;flex-direction:column;justify-content:space-between}
+.pbi-card-title{font-size:11px;font-weight:700;color:var(--pbi-subtext);text-transform:uppercase;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+.chart-container-pbi{position:relative;height:240px;width:100%;overflow:hidden}
+
+/* Matriz Estilo Power BI */
+table.pbi-matrix{width:100%;border-collapse:collapse;font-size:11px}
+table.pbi-matrix th{background:#f1f5f9;color:var(--pbi-subtext);padding:8px;border-bottom:2px solid var(--pbi-border);text-align:left;font-weight:700;text-transform:uppercase;font-size:10px}
+table.pbi-matrix td{padding:6px 8px;border-bottom:1px solid #e2e8f0}
+table.pbi-matrix tr:hover{background:#f8fafc}
+
+.data-bar-bg{background:#e2e8f0;width:100%;height:16px;border-radius:3px;position:relative;overflow:hidden}
+.data-bar-fill{height:100%;display:block;border-radius:3px}
+.data-bar-text{position:absolute;top:0;left:6px;font-size:10px;font-weight:700;color:#0f172a;line-height:16px}
+
+/* Modal Ampliar Tabla */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.6);display:none;justify-content:center;align-items:center;z-index:9999}
+.modal-content{background:#fff;border-radius:8px;width:90%;max-width:1400px;max-height:85vh;padding:20px;display:flex;flex-direction:column;box-shadow:0 10px 25px rgba(0,0,0,0.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--pbi-border)}
+.modal-body{overflow-y:auto;flex-grow:1}
+.btn-close{background:var(--pbi-red);color:#fff;border:none;padding:6px 12px;font-weight:700;border-radius:4px;cursor:pointer}
+
+@media(max-width:1100px){.grid-analytics{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="pbi-navbar">
+  <div class="title">🏗️ DP World Posorja — Tarjeta 6: Desempeño y Productividad de Equipos (RTG / Side Loader)</div>
+  <div class="actions">
+    <button onclick="cargarDashboardEquipos()">🔄 Actualizar Datos</button>
+  </div>
+</div>
+
+<div class="pbi-canvas">
+
+  <!-- FILTROS Y SLICERS -->
+  <div class="pbi-slicer-card">
+    <div class="slicer-group">
+      <label>Desde Fecha</label>
+      <input type="date" id="dateFrom" onchange="cargarDashboardEquipos()">
+    </div>
+    <div class="slicer-group">
+      <label>Hasta Fecha</label>
+      <input type="date" id="dateTo" onchange="cargarDashboardEquipos()">
+    </div>
+    <div class="slicer-group">
+      <label>Tipo de Equipo</label>
+      <select id="selectTipoEquipo" onchange="cargarDashboardEquipos()">
+        <option value="TODOS">TODOS (RTG + Side Loader)</option>
+        <option value="RTG">Grúas RTG</option>
+        <option value="SIDE_LOADER">Side Loader (Vacíos)</option>
+      </select>
+    </div>
+    <div class="slicer-group">
+      <label>Estado del Equipo</label>
+      <select id="selectEstado" onchange="cargarDashboardEquipos()">
+        <option value="TODOS">TODOS LOS ESTADOS</option>
+        <option value="ACTIVO">ACTIVO (En Operación)</option>
+        <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+        <option value="STANDBY">STANDBY</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TARJETAS KPIS DE EQUIPOS -->
+  <div class="kpi-grid">
+    <div class="kpi-card green">
+      <div class="kpi-title">Productividad Promedio Flota</div>
+      <div class="kpi-value" id="kpiMPH">0.0 MPH</div>
+      <div class="kpi-subtext">Movimientos por Hora por Grúa</div>
+    </div>
+
+    <div class="kpi-card teal">
+      <div class="kpi-title">Tiempo Medio Maniobra / Cuna</div>
+      <div class="kpi-value" id="kpiManiobra">0.0 min</div>
+      <div class="kpi-subtext">Ciclo de enganche y estiba</div>
+    </div>
+
+    <div class="kpi-card green">
+      <div class="kpi-title">Top Performer (Grúa)</div>
+      <div class="kpi-value" id="kpiTopEquipo">—</div>
+      <div class="kpi-subtext" id="kpiTopEquipoVal">Mayor MPH registrado</div>
+    </div>
+
+    <div class="kpi-card danger">
+      <div class="kpi-title">Flota Operativa / Indisponible</div>
+      <div class="kpi-value" id="kpiFlotaStatus">0 / 0</div>
+      <div class="kpi-subtext">Equipos Activos vs Mantenimiento</div>
+    </div>
+  </div>
+
+  <!-- GRÁFICOS ANALÍTICOS -->
+  <div class="grid-analytics">
+    
+    <!-- Gráfico 1: Productividad (MPH) por Grúa -->
+    <div class="pbi-card-box">
+      <div class="pbi-card-title">PRODUCTIVIDAD DE ATENCIÓN EN PATIO POR GRÚA (MPH)</div>
+      <div class="chart-container-pbi">
+        <canvas id="chartMPH"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Tiempos de Maniobra y Tiempos Inactivos -->
+    <div class="pbi-card-box">
+      <div class="pbi-card-title">CICLO DE MANIOBRA (MIN) VS TIEMPO INACTIVO (MIN)</div>
+      <div class="chart-container-pbi">
+        <canvas id="chartTiempos"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MATRIZ DE EQUIPOS CON BOTÓN AMPLIAR -->
+  <div class="pbi-card-box">
+    <div class="pbi-card-title">
+      <span>MATRIZ EXECUTIVE: DESEMPEÑO DE SERVICIO DE ATENCIÓN DE GRÚAS EN PATIO</span>
+      <button onclick="abrirModal()" style="background:var(--pbi-blue); color:#fff; border:none; padding:5px 12px; font-weight:700; border-radius:4px; cursor:pointer;">🔍 Ampliar Registro Completo</button>
+    </div>
+    <table class="pbi-matrix">
+      <thead>
+        <tr>
+          <th>Equipo ID</th>
+          <th>Tipo Equipo</th>
+          <th>Bloque Asignado</th>
+          <th>Operador</th>
+          <th style="width:160px">Productividad (MPH)</th>
+          <th style="width:160px">Tiempo Maniobra (Min)</th>
+          <th>Tiempo Inactivo</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="bodyMatrizTop">
+        <tr><td colspan="8" style="text-align:center">Cargando métricas de equipos...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- MODAL PARA REGISTRO COMPLETO -->
+<div class="modal-overlay" id="modalRegistro">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 style="margin:0; color:#0f172a;">📋 MATRIZ COMPLETA DE DESEMPEÑO Y TELEMETRÍA DE EQUIPOS DE PATIO</h3>
+      <button class="btn-close" onclick="cerrarModal()">✕ Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <table class="pbi-matrix">
+        <thead>
+          <tr>
+            <th>Fecha Turno</th>
+            <th>Equipo ID</th>
+            <th>Tipo</th>
+            <th>Bloque</th>
+            <th>Operador</th>
+            <th>Movimientos Totales</th>
+            <th>Horas Operativas</th>
+            <th style="width:140px">MPH Productividad</th>
+            <th style="width:140px">Tiempo Maniobra</th>
+            <th>Inactivo (Min)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="bodyMatrizCompleta">
+          <tr><td colspan="11" style="text-align:center">Cargando registros...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+Chart.register(ChartDataLabels);
+
+let chartMPHInst = null;
+let chartTiemposInst = null;
+let datasetEquiposCache = [];
+
+// Fechas por defecto (Últimos 30 días)
+const hoy = new Date();
+const haceUnMes = new Date();
+haceUnMes.setDate(hoy.getDate() - 30);
+document.getElementById('dateFrom').value = haceUnMes.toISOString().split('T')[0];
+document.getElementById('dateTo').value = hoy.toISOString().split('T')[0];
+
+async function cargarDashboardEquipos() {
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  const tipoSel = document.getElementById('selectTipoEquipo').value;
+  const estadoSel = document.getElementById('selectEstado').value;
+
+  try {
+    let query = dbClient.from('equipment_performance').select('*');
+
+    if (dateFrom) query = query.gte('fecha_turno', `${dateFrom}T00:00:00`);
+    if (dateTo) query = query.lte('fecha_turno', `${dateTo}T23:59:59`);
+    if (tipoSel !== 'TODOS') query = query.eq('tipo_equipo', tipoSel);
+    if (estadoSel !== 'TODOS') query = query.eq('estado_equipo', estadoSel);
+
+    const { data: equipos, error } = await query;
+    if (error) throw error;
+
+    datasetEquiposCache = equipos || [];
+    datasetEquiposCache.sort((a, b) => (parseFloat(b.mph_productividad || 0)) - (parseFloat(a.mph_productividad || 0)));
+
+    let sumMPH = 0, sumManiobra = 0;
+    let countActivos = 0, countIndisponibles = 0;
+
+    let topEquipo = '—', maxMPH = 0;
+
+    datasetEquiposCache.forEach(eq => {
+      const mph = parseFloat(eq.mph_productividad || 0);
+      const man = parseFloat(eq.tiempo_maniobra_prom_min || 0);
+
+      if (eq.estado_equipo === 'ACTIVO') {
+        sumMPH += mph;
+        sumManiobra += man;
+        countActivos++;
+
+        if (mph > maxMPH) {
+          maxMPH = mph;
+          topEquipo = `${eq.equipo_id} (${mph.toFixed(1)} MPH)`;
+        }
+      } else {
+        countIndisponibles++;
+      }
+    });
+
+    // Actualizar KPIs
+    const promMPH = countActivos > 0 ? (sumMPH / countActivos).toFixed(1) : '0.0';
+    const promManiobra = countActivos > 0 ? (sumManiobra / countActivos).toFixed(1) : '0.0';
+
+    document.getElementById('kpiMPH').textContent = `${promMPH} MPH`;
+    document.getElementById('kpiManiobra').textContent = `${promManiobra} min`;
+    document.getElementById('kpiTopEquipo').textContent = topEquipo !== '—' ? topEquipo.split(' ')[0] : '—';
+    document.getElementById('kpiTopEquipoVal').textContent = topEquipo !== '—' ? topEquipo : 'Sin actividad';
+    document.getElementById('kpiFlotaStatus').textContent = `${countActivos} / ${countIndisponibles}`;
+
+    // Renderizar
+    renderTablaMatriz(datasetEquiposCache, 'bodyMatrizTop', false);
+    renderChartMPH(datasetEquiposCache);
+    renderChartTiempos(datasetEquiposCache);
+
+  } catch(err) {
+    console.error("Error al cargar dashboard de equipos:", err.message);
+  }
+}
+
+function renderTablaMatriz(datos, elementId, esModal) {
+  const html = datos.map(eq => {
+    const mph = parseFloat(eq.mph_productividad || 0);
+    const man = parseFloat(eq.tiempo_maniobra_prom_min || 0);
+
+    const pctMPH = Math.min((mph / 35) * 100, 100);
+    const pctMan = Math.min((man / 8) * 100, 100);
+
+    const colorMPH = mph >= 22 ? 'var(--pbi-green)' : (mph >= 16 ? 'var(--pbi-blue)' : 'var(--pbi-orange)');
+
+    let badgeStatus = '<b style="color:var(--pbi-green)">ACTIVO</b>';
+    if (eq.estado_equipo === 'MANTENIMIENTO') badgeStatus = '<b style="color:var(--pbi-red)">MANTENIMIENTO</b>';
+    else if (eq.estado_equipo === 'STANDBY') badgeStatus = '<b style="color:var(--pbi-orange)">STANDBY</b>';
+
+    if (esModal) {
+      return `
+        <tr>
+          <td><small>${new Date(eq.fecha_turno).toLocaleDateString()}</small></td>
+          <td><b>${eq.equipo_id}</b></td>
+          <td>${eq.tipo_equipo}</td>
+          <td><b>${eq.bloque_patio}</b></td>
+          <td>${eq.operador_id || '—'}</td>
+          <td><b>${eq.movimientos_totales} movs</b></td>
+          <td>${eq.horas_operativas} hrs</td>
+          <td>
+            <div class="data-bar-bg">
+              <span class="data-bar-fill" style="width:${pctMPH}%; background:${colorMPH}"></span>
+              <span class="data-bar-text">${mph.toFixed(1)} MPH</span>
+            </div>
+          </td>
+          <td>
+            <div class="data-bar-bg">
+              <span class="data-bar-fill" style="width:${pctMan}%; background:var(--pbi-teal)"></span>
+              <span class="data-bar-text">${man} min</span>
+            </div>
+          </td>
+          <td>${eq.tiempo_inactivo_min} min</td>
+          <td>${badgeStatus}</td>
+        </tr>
+      `;
+    }
+
+    return `
+      <tr>
+        <td><b>${eq.equipo_id}</b></td>
+        <td>${eq.tipo_equipo}</td>
+        <td><b>${eq.bloque_patio}</b></td>
+        <td>${eq.operador_id || '—'}</td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctMPH}%; background:${colorMPH}"></span>
+            <span class="data-bar-text">${mph.toFixed(1)} MPH</span>
+          </div>
+        </td>
+        <td>
+          <div class="data-bar-bg">
+            <span class="data-bar-fill" style="width:${pctMan}%; background:var(--pbi-teal)"></span>
+            <span class="data-bar-text">${man} min</span>
+          </div>
+        </td>
+        <td>${eq.tiempo_inactivo_min} min</td>
+        <td>${badgeStatus}</td>
+      </tr>
+    `;
+  }).join('');
+
+  document.getElementById(elementId).innerHTML = html || `<tr><td colspan="11" style="text-align:center">Sin datos de equipos para los filtros seleccionados.</td></tr>`;
+}
+
+/* 1. GRÁFICO BARRAS: PRODUCTIVIDAD MPH POR GRÚA */
+function renderChartMPH(equipos) {
+  const ctx = document.getElementById('chartMPH').getContext('2d');
+  if (chartMPHInst) chartMPHInst.destroy();
+
+  const activos = equipos.filter(e => e.estado_equipo === 'ACTIVO');
+  const labels = activos.map(e => e.equipo_id);
+  const data = activos.map(e => parseFloat(e.mph_productividad || 0));
+
+  const colors = data.map(v => v >= 22 ? '#10b981' : (v >= 16 ? '#2563eb' : '#f59e0b'));
+  const maxVal = Math.max(...data, 10);
+
+  chartMPHInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Movimientos / Hora (MPH)',
+        data: data,
+        backgroundColor: colors,
+        borderRadius: 4,
+        barThickness: 28
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 25, bottom: 5, left: 5, right: 5 } },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 10 },
+          formatter: (v) => `${v} MPH`
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, max: Math.ceil(maxVal * 1.25), grid: { color: '#f1f5f9' } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+      }
+    }
+  });
+}
+
+/* 2. GRÁFICO DUAL: MANIOBRA VS INACTIVO */
+function renderChartTiempos(equipos) {
+  const ctx = document.getElementById('chartTiempos').getContext('2d');
+  if (chartTiemposInst) chartTiemposInst.destroy();
+
+  const activos = equipos.filter(e => e.estado_equipo === 'ACTIVO');
+  const labels = activos.map(e => e.equipo_id);
+  const dataManiobra = activos.map(e => parseFloat(e.tiempo_maniobra_prom_min || 0));
+  const dataInactivo = activos.map(e => parseFloat(e.tiempo_inactivo_min || 0));
+
+  chartTiemposInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Maniobra Prom. (Min)',
+          data: dataManiobra,
+          backgroundColor: '#0d9488',
+          borderRadius: 4,
+          barThickness: 16
+        },
+        {
+          label: 'Inactivo (Min)',
+          data: dataInactivo,
+          backgroundColor: '#ef4444',
+          borderRadius: 4,
+          barThickness: 16
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 25, bottom: 5, left: 5, right: 5 } },
+      plugins: {
+        legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10, weight: '600' } } },
+        datalabels: {
+          anchor: 'end',
+          align: 'top',
+          color: '#0f172a',
+          font: { weight: 'bold', size: 9 },
+          formatter: (v) => v > 0 ? `${v}m` : ''
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+        x: { grid: { display: false }, ticks: { font: { size: 10, weight: '600' } } }
+      }
+    }
+  });
+}
+
+function abrirModal() {
+  renderTablaMatriz(datasetEquiposCache, 'bodyMatrizCompleta', true);
+  document.getElementById('modalRegistro').style.display = 'flex';
+}
+
+function cerrarModal() {
+  document.getElementById('modalRegistro').style.display = 'none';
+}
+
+cargarDashboardEquipos();
+</script>
+
+</body>
+</html>
