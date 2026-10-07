@@ -11,742 +11,729 @@
 <style>
 *{box-sizing:border-box}
 :root{
-  --azul:#123b5d;
-  --azul2:#1e5a82;
-  --rojo:#a51f35;
-  --verde:#15803d;
-  --amarillo:#d97706;
-  --rojo-alerta:#dc2626;
-  --gris:#64748b;
-  --borde:#d8e0e8;
-  --fondo:#f3f6f9;
-  --blanco:#fff;
-  --texto:#172033;
+ --azul:#123b5d;--azul2:#1e5a82;--rojo:#a51f35;--verde:#15803d;
+ --amarillo:#d97706;--rojo2:#dc2626;--gris:#64748b;
+ --borde:#d7e0e8;--fondo:#f3f6f9;--blanco:#fff;--texto:#172033
 }
 html,body{margin:0;padding:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif}
 body{min-width:1100px}
-
-/* ===== AVISO MOBILE ===== */
-.mobile-block{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:99999;
-  background:#f3f6f9;
-  align-items:center;
-  justify-content:center;
-  padding:30px;
-  text-align:center;
-}
-.mobile-block-box{
-  max-width:430px;background:#fff;border:1px solid var(--borde);
-  border-radius:14px;padding:30px;box-shadow:0 8px 30px rgba(0,0,0,.12)
-}
+.mobile-block{display:none;position:fixed;inset:0;z-index:99999;background:var(--fondo);align-items:center;justify-content:center;padding:30px;text-align:center}
+.mobile-block-box{max-width:430px;background:#fff;border:1px solid var(--borde);border-radius:14px;padding:30px;box-shadow:0 8px 30px rgba(0,0,0,.12)}
 .mobile-block-box h2{margin:0 0 10px;color:var(--azul)}
 .mobile-block-box p{margin:0;color:#64748b;line-height:1.5}
 @media(max-width:900px){
-  body{min-width:0;overflow:hidden}
-  body>*:not(.mobile-block){display:none!important}
-  .mobile-block{display:flex}
+ body{min-width:0;overflow:hidden}
+ body>*:not(.mobile-block){display:none!important}
+ .mobile-block{display:flex}
 }
 
-/* ===== HEADER ===== */
+/* ENCABEZADO */
 header{
-  background:linear-gradient(100deg,var(--rojo),#8c1830);
-  color:#fff;padding:16px 24px;
-  display:flex;justify-content:space-between;align-items:center;
-  box-shadow:0 2px 8px rgba(0,0,0,.12)
+ background:linear-gradient(100deg,var(--rojo),#8c1830);color:#fff;padding:15px 24px;
+ display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,.12)
 }
-.header-left h1{margin:0;font-size:20px;letter-spacing:.2px}
+.header-left h1{margin:0;font-size:20px}
 .header-left p{margin:4px 0 0;font-size:12px;opacity:.9}
-.header-right{text-align:right;font-size:11px;opacity:.95}
-.btn-refresh{
-  height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.35);
-  border-radius:6px;background:rgba(255,255,255,.14);color:#fff;
-  font-weight:bold;cursor:pointer
-}
+.header-right{text-align:right;font-size:11px}
+.btn-refresh{height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.35);border-radius:6px;background:rgba(255,255,255,.14);color:#fff;font-weight:bold;cursor:pointer}
 .btn-refresh:hover{background:rgba(255,255,255,.22)}
 
-/* ===== LAYOUT ===== */
 .panel{width:calc(100% - 32px);max-width:1650px;margin:18px auto 30px}
-.section-label{
-  display:flex;align-items:center;gap:8px;
-  color:var(--azul);font-size:12px;font-weight:bold;
-  text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px
-}
-.section-label:before{
-  content:"";width:4px;height:16px;background:var(--rojo);border-radius:2px
-}
+.section-label{display:flex;align-items:center;gap:8px;color:var(--azul);font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:.5px;margin:0 0 8px}
+.section-label:before{content:"";width:4px;height:16px;background:var(--rojo);border-radius:2px}
 
-/* ===== FILTROS ===== */
+/* FILTROS */
 .filtros-bar{
-  background:#fff;padding:13px 15px;border:1px solid var(--borde);
-  border-radius:9px;box-shadow:0 2px 6px rgba(0,0,0,.04);
-  display:flex;gap:12px;align-items:end;margin-bottom:17px;flex-wrap:nowrap
+ background:#fff;padding:13px 15px;border:1px solid var(--borde);border-radius:9px;
+ box-shadow:0 2px 6px rgba(0,0,0,.04);display:flex;gap:12px;align-items:end;margin-bottom:17px
 }
 .campo{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:bold;color:#475569}
-.campo select{
-  height:35px;min-width:250px;padding:6px 10px;border:1px solid var(--borde);
-  border-radius:6px;background:#fff;color:#1e293b
-}
-.campo.qc select{min-width:180px}
+.campo select{height:35px;min-width:280px;padding:6px 10px;border:1px solid var(--borde);border-radius:6px;background:#fff;color:#1e293b}
+.campo.qc select{min-width:220px}
 button{height:35px;padding:0 15px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}
 button:hover{opacity:.91}
+.loading{opacity:.55;pointer-events:none}
 
-/* ===== KPI ===== */
-.kpi-grid{
-  display:grid;grid-template-columns:repeat(6,1fr);
-  gap:10px;margin-bottom:17px
-}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:17px}
 .kpi-card{
-  min-width:0;background:#fff;padding:13px 14px;border:1px solid var(--borde);
-  border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.04);
-  border-top:4px solid var(--azul)
+ min-width:0;background:#fff;padding:13px 14px;border:1px solid var(--borde);border-radius:8px;
+ box-shadow:0 2px 6px rgba(0,0,0,.04);border-top:4px solid var(--azul)
 }
-.kpi-card.alert{border-top-color:var(--rojo-alerta)}
+.kpi-card.alert{border-top-color:var(--rojo2)}
 .kpi-card.success{border-top-color:var(--verde)}
 .kpi-card.warning{border-top-color:var(--amarillo)}
-.kpi-title{
-  font-size:10px;color:#64748b;font-weight:bold;text-transform:uppercase;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
-}
-.kpi-value{font-size:23px;font-weight:bold;color:#0f172a;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-title{font-size:10px;color:#64748b;font-weight:bold;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-value{font-size:22px;font-weight:bold;color:#0f172a;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-subtext{font-size:10px;color:#64748b;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-/* ===== GERENCIA ===== */
-.gerencia-box{
-  background:#fff;border:1px solid var(--borde);border-left:5px solid var(--azul);
-  border-radius:9px;padding:14px 16px;margin-bottom:17px;
-  box-shadow:0 2px 6px rgba(0,0,0,.04)
+/* RESUMEN GERENCIAL REAL */
+.resumen{
+ background:#fff;border:1px solid var(--borde);border-radius:9px;padding:14px 15px;margin-bottom:17px;
+ box-shadow:0 2px 6px rgba(0,0,0,.04)
 }
-.gerencia-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.gerencia-head h2{font-size:14px;margin:0;color:var(--azul)}
-.gerencia-head span{font-size:10px;color:#64748b}
-.gerencia-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:12px}
-.insight{
-  background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:10px
-}
-.insight-title{font-size:10px;font-weight:bold;text-transform:uppercase;color:#64748b;margin-bottom:5px}
-.insight-value{font-size:13px;font-weight:bold;color:#172033;line-height:1.35}
-.insight-note{font-size:10px;color:#64748b;margin-top:4px;line-height:1.35}
+.resumen-head{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #e2e8f0;padding-bottom:8px;margin-bottom:10px}
+.resumen-head h2{font-size:14px;color:var(--azul);margin:0}
+.resumen-head span{font-size:10px;color:#64748b}
+.resumen-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.resumen-item{border:1px solid #e2e8f0;border-radius:7px;padding:10px;background:#fbfdff;min-width:0}
+.resumen-item.critical{border-left:4px solid var(--rojo2)}
+.resumen-item.good{border-left:4px solid var(--verde)}
+.resumen-item.warning{border-left:4px solid var(--amarillo)}
+.resumen-label{font-size:9px;color:#64748b;font-weight:bold;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resumen-value{font-size:16px;font-weight:bold;color:#172033;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resumen-note{font-size:9px;color:#64748b;margin-top:3px;line-height:1.3}
 
-/* ===== GRÁFICOS ===== */
+/* GRÁFICOS */
 .grid-detalles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
-.card-sec{
-  background:#fff;padding:15px;border:1px solid var(--borde);border-radius:9px;
-  box-shadow:0 2px 6px rgba(0,0,0,.04);min-width:0
-}
-.card-title{
-  font-size:13px;font-weight:bold;color:var(--azul);margin:0 0 10px;
-  padding-bottom:7px;border-bottom:2px solid #e2e8f0;
-  display:flex;justify-content:space-between;align-items:center;gap:10px
-}
+.card-sec{background:#fff;padding:15px;border:1px solid var(--borde);border-radius:9px;box-shadow:0 2px 6px rgba(0,0,0,.04);min-width:0}
+.card-title{font-size:13px;font-weight:bold;color:var(--azul);margin:0 0 10px;padding-bottom:7px;border-bottom:2px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .card-title small{font-size:10px;color:#64748b;font-weight:normal}
 .chart-container{position:relative;height:265px;width:100%}
 
-/* ===== TABLAS ===== */
-.table-wrap{
-  width:100%;overflow-x:auto;border:1px solid #e2e8f0;border-radius:6px
-}
-table{
-  width:100%;min-width:850px;border-collapse:collapse;
-  font-size:11px;text-align:left;table-layout:auto
-}
-th{
-  background:#eef2f6;color:#475569;padding:8px;font-weight:bold;
-  border-bottom:1px solid #cbd5e1;white-space:nowrap
-}
-td{
-  padding:8px;border-bottom:1px solid #e2e8f0;vertical-align:middle;
-  white-space:nowrap
-}
-td:last-child{white-space:normal;min-width:260px}
+/* QC */
+.qc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.qc-card{border:1px solid #e2e8f0;border-radius:7px;padding:10px;background:#fbfdff;min-width:0}
+.qc-name{font-size:11px;font-weight:bold;color:var(--azul)}
+.qc-number{font-size:20px;font-weight:bold;margin-top:4px}
+.qc-detail{font-size:10px;color:#64748b;margin-top:4px;line-height:1.4}
+
+/* TABLA */
+.table-wrap{width:100%;overflow-x:auto;border:1px solid #e2e8f0;border-radius:6px}
+table{width:100%;min-width:900px;border-collapse:collapse;font-size:11px;text-align:left}
+th{background:#eef2f6;color:#475569;padding:8px;font-weight:bold;border-bottom:1px solid #cbd5e1;white-space:nowrap}
+td{padding:8px;border-bottom:1px solid #e2e8f0;vertical-align:middle;white-space:nowrap}
+td:last-child{white-space:normal;min-width:280px}
 tr:hover{background:#f8fafc}
 .badge-qc{background:#e0f2fe;color:#0369a1;padding:3px 7px;border-radius:4px;font-weight:bold;font-size:10px}
 .badge-cause{background:#fef2f2;color:#991b1b;padding:3px 7px;border-radius:4px;font-weight:bold;font-size:10px}
 .badge-good{background:#dcfce7;color:#166534;padding:3px 7px;border-radius:4px;font-weight:bold;font-size:10px}
 .badge-warn{background:#fef3c7;color:#92400e;padding:3px 7px;border-radius:4px;font-weight:bold;font-size:10px}
-
-/* ===== QC PERFORMANCE ===== */
-.qc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
-.qc-card{border:1px solid #e2e8f0;border-radius:7px;padding:10px;background:#fbfdff}
-.qc-name{font-size:11px;font-weight:bold;color:var(--azul)}
-.qc-number{font-size:20px;font-weight:bold;margin-top:4px}
-.qc-detail{font-size:10px;color:#64748b;margin-top:2px}
-
-/* ===== FOOTER ===== */
-.footer-note{
-  text-align:right;font-size:10px;color:#64748b;margin-top:8px
-}
-
-/* ===== LOADING ===== */
-.loading{opacity:.55;pointer-events:none}
+.footer-note{text-align:right;font-size:10px;color:#64748b;margin-top:8px}
 </style>
 </head>
 
 <body>
 
 <div class="mobile-block">
-  <div class="mobile-block-box">
-    <div style="font-size:36px;margin-bottom:8px">🖥️</div>
-    <h2>Dashboard de Operaciones</h2>
-    <p>Esta herramienta está diseñada para visualización gerencial en equipos de escritorio. Utilice una PC o laptop para consultar el dashboard.</p>
-  </div>
+ <div class="mobile-block-box">
+  <div style="font-size:36px;margin-bottom:8px">🖥️</div>
+  <h2>Dashboard de Operaciones</h2>
+  <p>Esta herramienta está diseñada para visualización gerencial en equipos de escritorio. Utilice una PC o laptop.</p>
+ </div>
 </div>
 
 <header>
-  <div class="header-left">
-    <h1>DASHBOARD GERENCIAL — OPERACIONES PORTUARIAS</h1>
-    <p>Tasa de Transferencia, Productividad de Muelle y Tiempos Muertos · Navis N4 · QC / Berth Operations</p>
-  </div>
-  <div class="header-right">
-    <button class="btn-refresh" onclick="cargarMétricasTasaTransferencia()">↻ Actualizar Datos</button>
-    <div id="ultimaActualizacion" style="margin-top:5px">Última actualización: —</div>
-  </div>
+ <div class="header-left">
+  <h1>DASHBOARD GERENCIAL — OPERACIONES PORTUARIAS</h1>
+  <p>Tasa de Transferencia, Productividad de Muelle y Tiempos Muertos · Navis N4 · QC / Berth Operations</p>
+ </div>
+ <div class="header-right">
+  <button class="btn-refresh" onclick="cargarDashboard()">↻ Actualizar Datos</button>
+  <div id="ultimaActualizacion" style="margin-top:5px">Última actualización: —</div>
+ </div>
 </header>
 
 <div class="panel">
 
-  <div class="section-label">Consulta operacional</div>
+ <div class="section-label">Consulta operacional</div>
 
-  <div class="filtros-bar" id="filtrosBar">
-    <div class="campo">
-      <label>Nave / Buque</label>
-      <select id="selectNave">
-        <option value="7">CMA CGM GREENLAND (Viaje CMA2026103)</option>
-      </select>
-    </div>
+ <div class="filtros-bar" id="filtrosBar">
+  <div class="campo">
+   <label>Nave / Buque</label>
+   <select id="selectNave">
+    <option value="7">CMA CGM GREENLAND (Viaje CMA2026103)</option>
+   </select>
+  </div>
+  <div class="campo qc">
+   <label>Selección de Grúa (QC)</label>
+   <select id="selectQC">
+    <option value="TODAS">TODAS LAS GRÚAS — CONSOLIDADO MUELLE</option>
+    <option value="QC-01">QC-01</option>
+    <option value="QC-02">QC-02</option>
+    <option value="QC-03">QC-03</option>
+    <option value="QC-04">QC-04</option>
+   </select>
+  </div>
+  <button onclick="cargarDashboard()">CONSULTAR DASHBOARD</button>
+ </div>
 
-    <div class="campo qc">
-      <label>Selección de Grúa (QC)</label>
-      <select id="selectQC">
-        <option value="TODAS">TODAS LAS GRÚAS — CONSOLIDADO MUELLE</option>
-        <option value="QC-01">QC-01</option>
-        <option value="QC-02">QC-02</option>
-        <option value="QC-03">QC-03</option>
-        <option value="QC-04">QC-04</option>
-      </select>
-    </div>
+ <div class="section-label">Indicadores ejecutivos</div>
 
-    <button onclick="cargarMétricasTasaTransferencia()">CONSULTAR DASHBOARD</button>
+ <div class="kpi-grid">
+
+  <div class="kpi-card alert">
+   <div class="kpi-title">Idle Time Total</div>
+   <div class="kpi-value" id="kpiIdleTime">0 min</div>
+   <div class="kpi-subtext">Tiempo improductivo registrado</div>
   </div>
 
-  <div class="section-label">Indicadores ejecutivos</div>
-
-  <div class="kpi-grid">
-    <div class="kpi-card alert">
-      <div class="kpi-title">Idle Time Total</div>
-      <div class="kpi-value" id="kpiIdleTime">0 min</div>
-      <div class="kpi-subtext" id="kpiIdleSub">Tiempo perdido por demoras</div>
-    </div>
-
-    <div class="kpi-card success">
-      <div class="kpi-title">Pace Promedio</div>
-      <div class="kpi-value" id="kpiPacePromedio">0 Mvs/Hr</div>
-      <div class="kpi-subtext">Productividad observada</div>
-    </div>
-
-    <div class="kpi-card warning">
-      <div class="kpi-title">Principal Causa de Demora</div>
-      <div class="kpi-value" id="kpiCausaPrincipal" style="font-size:14px;margin-top:8px">—</div>
-      <div class="kpi-subtext">Mayor impacto en minutos perdidos</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">Total Movimientos</div>
-      <div class="kpi-value" id="kpiTotalMovs">0 Mvs</div>
-      <div class="kpi-subtext">Contenedores procesados</div>
-    </div>
-
-    <div class="kpi-card">
-      <div class="kpi-title">Grúas con Datos</div>
-      <div class="kpi-value" id="kpiQCs">0</div>
-      <div class="kpi-subtext">QC con actividad registrada</div>
-    </div>
-
-    <div class="kpi-card alert">
-      <div class="kpi-title">Minutos / Movimiento</div>
-      <div class="kpi-value" id="kpiIdlePorMov">0.0</div>
-      <div class="kpi-subtext">Idle Time por movimiento</div>
-    </div>
+  <div class="kpi-card success">
+   <div class="kpi-title">Pace Promedio</div>
+   <div class="kpi-value" id="kpiPacePromedio">0 Mvs/Hr</div>
+   <div class="kpi-subtext">Movimientos por hora</div>
   </div>
 
-  <div class="gerencia-box">
-    <div class="gerencia-head">
-      <h2>Lectura Gerencial — ¿Dónde está la oportunidad de mejora?</h2>
-      <span id="gerenciaPeriodo">Basado en la consulta actual</span>
-    </div>
-
-    <div class="gerencia-grid">
-      <div class="insight">
-        <div class="insight-title">Principal foco de acción</div>
-        <div class="insight-value" id="insightFoco">Analizando operación...</div>
-        <div class="insight-note" id="insightFocoNota">El dashboard identifica automáticamente la mayor fuente de demora.</div>
-      </div>
-
-      <div class="insight">
-        <div class="insight-title">Lectura de productividad</div>
-        <div class="insight-value" id="insightPace">—</div>
-        <div class="insight-note">Permite comparar desempeño entre horas y grúas.</div>
-      </div>
-
-      <div class="insight">
-        <div class="insight-title">Valor para la gestión</div>
-        <div class="insight-value">Medir → identificar → actuar → verificar</div>
-        <div class="insight-note">Convierte eventos operativos de Navis N4 en información para toma de decisiones.</div>
-      </div>
-    </div>
+  <div class="kpi-card warning">
+   <div class="kpi-title">Principal Causa</div>
+   <div class="kpi-value" id="kpiCausaPrincipal" style="font-size:14px">—</div>
+   <div class="kpi-subtext">Mayor cantidad de minutos perdidos</div>
   </div>
 
-  <div class="grid-detalles">
-
-    <div class="card-sec">
-      <div class="card-title">
-        <span>Productividad por Hora y QC</span>
-        <small>Movimientos / hora</small>
-      </div>
-      <div class="chart-container">
-        <canvas id="chartPace"></canvas>
-      </div>
-    </div>
-
-    <div class="card-sec">
-      <div class="card-title">
-        <span>Distribución de Tiempos Muertos</span>
-        <small>Minutos por causa</small>
-      </div>
-      <div class="chart-container">
-        <canvas id="chartDelays"></canvas>
-      </div>
-    </div>
-
+  <div class="kpi-card">
+   <div class="kpi-title">Movimientos Registrados</div>
+   <div class="kpi-value" id="kpiTotalMovs">0</div>
+   <div class="kpi-subtext">Eventos de operación en Navis N4</div>
   </div>
 
-  <div class="card-sec" style="margin-bottom:16px">
-    <div class="card-title">
-      <span>Desempeño por Grúa QC</span>
-      <small>Comparativo operacional</small>
-    </div>
-    <div class="qc-grid" id="qcPerformance">
-      <div class="qc-card"><div class="qc-name">Sin datos</div><div class="qc-number">—</div><div class="qc-detail">Esperando consulta</div></div>
-    </div>
+  <div class="kpi-card">
+   <div class="kpi-title">Eventos de Demora</div>
+   <div class="kpi-value" id="kpiTotalDelays">0</div>
+   <div class="kpi-subtext">Registros con tiempo muerto</div>
+  </div>
+
+  <div class="kpi-card alert">
+   <div class="kpi-title">Idle / Movimiento</div>
+   <div class="kpi-value" id="kpiIdlePorMov">0.0 min</div>
+   <div class="kpi-subtext">Impacto promedio por movimiento</div>
+  </div>
+
+ </div>
+
+ <div class="resumen">
+  <div class="resumen-head">
+   <h2>Resumen de Gestión Operacional</h2>
+   <span>Indicadores calculados directamente de los datos consultados</span>
+  </div>
+
+  <div class="resumen-grid">
+
+   <div class="resumen-item critical">
+    <div class="resumen-label">Mayor demora individual</div>
+    <div class="resumen-value" id="rgMayorDemora">0 min</div>
+    <div class="resumen-note" id="rgMayorDemoraNota">—</div>
+   </div>
+
+   <div class="resumen-item warning">
+    <div class="resumen-label">Impacto principal</div>
+    <div class="resumen-value" id="rgImpacto">0%</div>
+    <div class="resumen-note" id="rgImpactoNota">—</div>
+   </div>
+
+   <div class="resumen-item">
+    <div class="resumen-label">Demora promedio</div>
+    <div class="resumen-value" id="rgPromedioDemora">0 min</div>
+    <div class="resumen-note">Por evento de demora</div>
+   </div>
+
+   <div class="resumen-item">
+    <div class="resumen-label">QC mayor Idle Time</div>
+    <div class="resumen-value" id="rgQCMayorIdle">—</div>
+    <div class="resumen-note" id="rgQCMayorIdleNota">—</div>
+   </div>
+
+   <div class="resumen-item good">
+    <div class="resumen-label">Estado del registro</div>
+    <div class="resumen-value" id="rgEstado">—</div>
+    <div class="resumen-note" id="rgEstadoNota">—</div>
+   </div>
+
+  </div>
+ </div>
+
+ <div class="grid-detalles">
+
+  <div class="card-sec">
+   <div class="card-title">
+    <span>Productividad por Hora y QC</span>
+    <small>Movimientos / hora</small>
+   </div>
+   <div class="chart-container">
+    <canvas id="chartPace"></canvas>
+   </div>
   </div>
 
   <div class="card-sec">
-    <div class="card-title">
-      <span>Registro Detallado de Demoras y Tiempos Muertos</span>
-      <small>Eventos registrados en Navis N4</small>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Grúa QC</th>
-            <th>Contenedor</th>
-            <th>Hora Inicio</th>
-            <th>Causa de Demora</th>
-            <th>Duración</th>
-            <th>Observación / Detalle</th>
-          </tr>
-        </thead>
-        <tbody id="tablaDelays">
-          <tr><td colspan="6" style="text-align:center;color:#64748b">Cargando registros...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="footer-note">
-      Indicadores construidos sobre los eventos consultados desde Navis N4. Los datos deben utilizarse como soporte de gestión y análisis operacional.
-    </div>
+   <div class="card-title">
+    <span>Distribución de Tiempos Muertos</span>
+    <small>Minutos por causa</small>
+   </div>
+   <div class="chart-container">
+    <canvas id="chartDelays"></canvas>
+   </div>
   </div>
+
+ </div>
+
+ <div class="card-sec" style="margin-bottom:16px">
+  <div class="card-title">
+   <span>Desempeño por Grúa QC</span>
+   <small>Comparativo operacional</small>
+  </div>
+  <div class="qc-grid" id="qcPerformance"></div>
+ </div>
+
+ <div class="card-sec">
+  <div class="card-title">
+   <span>Registro Detallado de Demoras y Tiempos Muertos</span>
+   <small>Eventos registrados en Navis N4</small>
+  </div>
+
+  <div class="table-wrap">
+   <table>
+    <thead>
+     <tr>
+      <th>Grúa QC</th>
+      <th>Contenedor</th>
+      <th>Hora Inicio</th>
+      <th>Causa de Demora</th>
+      <th>Duración</th>
+      <th>Observación / Detalle</th>
+     </tr>
+    </thead>
+    <tbody id="tablaDelays">
+     <tr><td colspan="6" style="text-align:center;color:#64748b;padding:14px">Cargando registros...</td></tr>
+    </tbody>
+   </table>
+  </div>
+
+  <div class="footer-note">
+   Fuente: eventos consultados desde Navis N4. Movimientos y eventos de demora se presentan como indicadores independientes.
+  </div>
+ </div>
 
 </div>
 
 <script>
-/* ============================================================
-   CONFIGURACIÓN SUPABASE
-   ============================================================ */
-const SUPABASE_URL = "https://owykvbhrvhopbqfyarzz.supabase.co";
-const SUPABASE_KEY = "sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
-const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* =========================
+   SUPABASE
+   ========================= */
+const SUPABASE_URL="https://owykvbhrvhopbqfyarzz.supabase.co";
+const SUPABASE_KEY="sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
+const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let chartPaceInstance = null;
-let chartDelaysInstance = null;
+let chartPaceInstance=null;
+let chartDelaysInstance=null;
 
-/* Evita insertar texto proveniente de BD como HTML ejecutable */
 function escapeHTML(value){
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
+ return String(value??"")
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
 
-function minutos(valor){
-  const n = Number(valor);
-  return Number.isFinite(n) ? n : 0;
+function num(value){
+ const n=Number(value);
+ return Number.isFinite(n)?n:0;
 }
 
 function horaNumero(timestamp){
-  const d = new Date(timestamp);
-  return Number.isNaN(d.getTime()) ? 0 : d.getHours();
+ const d=new Date(timestamp);
+ return Number.isNaN(d.getTime())?0:d.getHours();
 }
 
 function horaTexto(timestamp){
-  const d = new Date(timestamp);
-  if(Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
+ const d=new Date(timestamp);
+ if(Number.isNaN(d.getTime())) return "—";
+ return d.toLocaleTimeString("es-EC",{hour:"2-digit",minute:"2-digit"});
 }
 
-/* ============================================================
-   CARGA PRINCIPAL
-   ============================================================ */
-async function cargarMétricasTasaTransferencia(){
+/* =========================
+   CARGA DEL DASHBOARD
+   ========================= */
+async function cargarDashboard(){
 
-  const filtros = document.getElementById("filtrosBar");
-  filtros.classList.add("loading");
+ const filtros=document.getElementById("filtrosBar");
+ filtros.classList.add("loading");
 
-  const naveId = document.getElementById("selectNave").value;
-  const qcId = document.getElementById("selectQC").value;
+ const naveId=document.getElementById("selectNave").value;
+ const qcId=document.getElementById("selectQC").value;
 
-  try{
+ try{
 
-    let queryDelays = dbClient.from("navis_qc_delays").select("*");
-    let queryEvents = dbClient.from("navis_qc_events").select("*");
+  let queryDelays=dbClient.from("navis_qc_delays").select("*");
+  let queryEvents=dbClient.from("navis_qc_events").select("*");
 
-    if(naveId){
-      queryDelays = queryDelays.eq("nave_id",naveId);
-      queryEvents = queryEvents.eq("nave_id",naveId);
-    }
-
-    if(qcId !== "TODAS"){
-      queryDelays = queryDelays.eq("qc_id",qcId);
-      queryEvents = queryEvents.eq("qc_id",qcId);
-    }
-
-    const [
-      {data:delays,error:errDelays},
-      {data:events,error:errEvents}
-    ] = await Promise.all([queryDelays,queryEvents]);
-
-    if(errDelays) throw errDelays;
-    if(errEvents) throw errEvents;
-
-    const listaDelays = delays || [];
-    const listaEvents = events || [];
-
-    /* ========================================================
-       A. IDLE TIME
-       ======================================================== */
-    const idleTotalMin = listaDelays.reduce(
-      (acc,d)=>acc+minutos(d.duracion_minutos),0
-    );
-
-    const totalMovs = listaEvents.length;
-    const idlePorMov = totalMovs ? (idleTotalMin/totalMovs).toFixed(2) : "0.00";
-
-    document.getElementById("kpiIdleTime").textContent = `${idleTotalMin.toFixed(0)} min`;
-    document.getElementById("kpiIdleSub").textContent =
-      qcId==="TODAS" ? "Acumulado en muelle" : `Acumulado en ${qcId}`;
-
-    document.getElementById("kpiTotalMovs").textContent = `${totalMovs} Mvs`;
-    document.getElementById("kpiIdlePorMov").textContent = idlePorMov;
-
-    /* ========================================================
-       B. CAUSAS
-       ======================================================== */
-    const causasMap = {};
-
-    listaDelays.forEach(d=>{
-      const causa = d.causa_demora || "Sin causa registrada";
-      causasMap[causa] = (causasMap[causa] || 0) + minutos(d.duracion_minutos);
-    });
-
-    const causasOrdenadas = Object.keys(causasMap)
-      .sort((a,b)=>causasMap[b]-causasMap[a]);
-
-    const causaPrincipal = causasOrdenadas.length
-      ? causasOrdenadas[0]
-      : "Sin demoras";
-
-    document.getElementById("kpiCausaPrincipal").textContent = causaPrincipal;
-
-    /* ========================================================
-       C. PACE
-       ======================================================== */
-    const qcsDisponibles = [...new Set(
-      listaEvents.map(e=>e.qc_id).filter(Boolean)
-    )].sort();
-
-    const horasSet = new Set(
-      listaEvents.map(e=>horaNumero(e.timestamp_movimiento))
-    );
-
-    const horasDisponibles = [...horasSet]
-      .sort((a,b)=>a-b)
-      .map(h=>`${String(h).padStart(2,"0")}:00`);
-
-    const matrixPace = {};
-
-    qcsDisponibles.forEach(q=>{
-      matrixPace[q] = {};
-      horasDisponibles.forEach(h=>matrixPace[q][h]=0);
-    });
-
-    listaEvents.forEach(e=>{
-      const h = horaNumero(e.timestamp_movimiento);
-      const hStr = `${String(h).padStart(2,"0")}:00`;
-
-      if(matrixPace[e.qc_id] && hStr in matrixPace[e.qc_id]){
-        matrixPace[e.qc_id][hStr]++;
-      }
-    });
-
-    const horasEfectivas = horasDisponibles.length || 1;
-    const paceProm = (totalMovs/horasEfectivas);
-
-    document.getElementById("kpiPacePromedio").textContent =
-      `${paceProm.toFixed(1)} Mvs/Hr`;
-
-    document.getElementById("kpiQCs").textContent =
-      qcsDisponibles.length;
-
-    /* ========================================================
-       D. LECTURA GERENCIAL
-       ======================================================== */
-    document.getElementById("insightFoco").textContent =
-      causaPrincipal === "Sin demoras"
-        ? "No se registran demoras."
-        : causaPrincipal;
-
-    document.getElementById("insightFocoNota").textContent =
-      causaPrincipal === "Sin demoras"
-        ? "La prioridad es mantener la continuidad operacional."
-        : `${causasMap[causaPrincipal].toFixed(0)} minutos acumulados por esta causa. Es el primer punto a investigar.`;
-
-    document.getElementById("insightPace").textContent =
-      `${paceProm.toFixed(1)} movimientos/hora`;
-
-    document.getElementById("gerenciaPeriodo").textContent =
-      qcId==="TODAS"
-        ? "Consolidado de muelle"
-        : `Vista focalizada: ${qcId}`;
-
-    /* ========================================================
-       E. TABLA DE DEMORAS
-       ======================================================== */
-    const tablaDelays = document.getElementById("tablaDelays");
-
-    if(listaDelays.length){
-
-      const delaysOrdenados = [...listaDelays].sort(
-        (a,b)=>minutos(b.duracion_minutos)-minutos(a.duracion_minutos)
-      );
-
-      tablaDelays.innerHTML = delaysOrdenados.map(d=>`
-        <tr>
-          <td><span class="badge-qc">${escapeHTML(d.qc_id || "—")}</span></td>
-          <td><strong>${escapeHTML(d.contenedor_id || "N/A")}</strong>
-              <small style="color:#64748b"> (${escapeHTML(d.iso_code || "—")})</small></td>
-          <td>${horaTexto(d.inicio_demora)}</td>
-          <td><span class="badge-cause">${escapeHTML(d.causa_demora || "Sin causa")}</span></td>
-          <td><strong>${minutos(d.duracion_minutos).toFixed(0)} min</strong></td>
-          <td>${escapeHTML(d.observacion || "Sin observaciones")}</td>
-        </tr>
-      `).join("");
-
-    }else{
-
-      tablaDelays.innerHTML =
-        `<tr><td colspan="6" style="text-align:center;color:#15803d;font-weight:bold;padding:14px">
-          Sin tiempos muertos registrados en el periodo.
-        </td></tr>`;
-    }
-
-    /* ========================================================
-       F. GRÁFICOS
-       ======================================================== */
-    renderizarGraficoPace(
-      horasDisponibles,
-      qcsDisponibles,
-      matrixPace
-    );
-
-    renderizarGraficoDelays(causasMap);
-
-    renderizarDesempenoQC(
-      qcsDisponibles,
-      matrixPace,
-      horasDisponibles,
-      listaDelays
-    );
-
-    document.getElementById("ultimaActualizacion").textContent =
-      `Última actualización: ${new Date().toLocaleString("es-EC")}`;
-
-  }catch(err){
-
-    console.error("Error consultando métricas:",err);
-
-    document.getElementById("ultimaActualizacion").textContent =
-      "Error al actualizar datos";
-
-    document.getElementById("tablaDelays").innerHTML =
-      `<tr><td colspan="6" style="text-align:center;color:#dc2626;padding:14px">
-        No fue posible consultar los datos. Revise la conexión con Supabase.
-      </td></tr>`;
-
-  }finally{
-    filtros.classList.remove("loading");
+  if(naveId){
+   queryDelays=queryDelays.eq("nave_id",naveId);
+   queryEvents=queryEvents.eq("nave_id",naveId);
   }
-}
 
-/* ============================================================
-   GRÁFICO PACE
-   ============================================================ */
-function renderizarGraficoPace(horas,qcs,matrixPace){
+  if(qcId!=="TODAS"){
+   queryDelays=queryDelays.eq("qc_id",qcId);
+   queryEvents=queryEvents.eq("qc_id",qcId);
+  }
 
-  const ctx = document.getElementById("chartPace").getContext("2d");
+  const [
+   {data:delays,error:errDelays},
+   {data:events,error:errEvents}
+  ]=await Promise.all([queryDelays,queryEvents]);
 
-  if(chartPaceInstance) chartPaceInstance.destroy();
+  if(errDelays) throw errDelays;
+  if(errEvents) throw errEvents;
 
-  const coloresQC = {
-    "QC-01":"#2563eb",
-    "QC-02":"#ea580c",
-    "QC-03":"#16a34a",
-    "QC-04":"#9333ea"
-  };
+  const listaDelays=delays||[];
+  const listaEvents=events||[];
 
-  const datasets = qcs.map(q=>({
-    label:q,
-    data:horas.map(h=>matrixPace[q][h] || 0),
-    backgroundColor:coloresQC[q] || "#64748b",
-    borderColor:coloresQC[q] || "#64748b",
-    borderWidth:1
-  }));
+  /* =========================
+     1. MOVIMIENTOS
+     IMPORTANTE:
+     Se cuentan desde navis_qc_events.
+     No se confunden con las demoras.
+     ========================= */
+  const totalMovs=listaEvents.length;
 
-  chartPaceInstance = new Chart(ctx,{
-    type:"bar",
-    data:{labels:horas,datasets},
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
-      plugins:{
-        legend:{position:"top"},
-        tooltip:{
-          callbacks:{
-            label:ctx=>`${ctx.dataset.label}: ${ctx.raw} movimientos`
-          }
-        }
-      },
-      scales:{
-        y:{
-          beginAtZero:true,
-          title:{display:true,text:"Movimientos"}
-        },
-        x:{
-          title:{display:true,text:"Hora del turno"}
-        }
-      }
-    }
+  /* =========================
+     2. DEMORAS
+     ========================= */
+  const totalDelays=listaDelays.length;
+
+  const idleTotal=listaDelays.reduce(
+   (acc,d)=>acc+num(d.duracion_minutos),0
+  );
+
+  const idlePorMov=totalMovs>0?idleTotal/totalMovs:0;
+  const demoraPromedio=totalDelays>0?idleTotal/totalDelays:0;
+
+  /* =========================
+     3. CAUSAS
+     ========================= */
+  const causasMap={};
+
+  listaDelays.forEach(d=>{
+   const causa=d.causa_demora||"Sin causa registrada";
+   causasMap[causa]=(causasMap[causa]||0)+num(d.duracion_minutos);
   });
+
+  const causasOrdenadas=Object.keys(causasMap)
+   .sort((a,b)=>causasMap[b]-causasMap[a]);
+
+  const causaPrincipal=causasOrdenadas[0]||"Sin demoras";
+  const minutosCausaPrincipal=causasMap[causaPrincipal]||0;
+  const porcentajePrincipal=idleTotal>0
+   ?(minutosCausaPrincipal/idleTotal)*100
+   :0;
+
+  /* =========================
+     4. PACE
+     ========================= */
+  const qcs=[...new Set(
+   listaEvents.map(e=>e.qc_id).filter(Boolean)
+  )].sort();
+
+  const horasSet=new Set(
+   listaEvents.map(e=>horaNumero(e.timestamp_movimiento))
+  );
+
+  const horas=[...horasSet]
+   .sort((a,b)=>a-b)
+   .map(h=>String(h).padStart(2,"0")+":00");
+
+  const matrix={};
+
+  qcs.forEach(q=>{
+   matrix[q]={};
+   horas.forEach(h=>matrix[q][h]=0);
+  });
+
+  listaEvents.forEach(e=>{
+   const h=String(horaNumero(e.timestamp_movimiento)).padStart(2,"0")+":00";
+   if(matrix[e.qc_id] && h in matrix[e.qc_id]){
+    matrix[e.qc_id][h]++;
+   }
+  });
+
+  const paceProm=horas.length>0?totalMovs/horas.length:0;
+
+  /* =========================
+     5. QC CON MAYOR IDLE
+     ========================= */
+  const idlePorQC={};
+
+  listaDelays.forEach(d=>{
+   const qc=d.qc_id||"SIN QC";
+   idlePorQC[qc]=(idlePorQC[qc]||0)+num(d.duracion_minutos);
+  });
+
+  const qcsIdle=Object.keys(idlePorQC)
+   .sort((a,b)=>idlePorQC[b]-idlePorQC[a]);
+
+  const qcMayorIdle=qcsIdle[0]||"—";
+  const minutosMayorIdle=idlePorQC[qcMayorIdle]||0;
+
+  /* =========================
+     6. MAYOR DEMORA INDIVIDUAL
+     ========================= */
+  const delayMayor=[...listaDelays]
+   .sort((a,b)=>num(b.duracion_minutos)-num(a.duracion_minutos))[0];
+
+  const mayorDemora=delayMayor?num(delayMayor.duracion_minutos):0;
+  const mayorDemoraCausa=delayMayor?.causa_demora||"—";
+
+  /* =========================
+     7. KPI
+     ========================= */
+  document.getElementById("kpiIdleTime").textContent=
+   `${idleTotal.toFixed(0)} min`;
+
+  document.getElementById("kpiPacePromedio").textContent=
+   `${paceProm.toFixed(1)} Mvs/Hr`;
+
+  document.getElementById("kpiCausaPrincipal").textContent=
+   causaPrincipal;
+
+  document.getElementById("kpiTotalMovs").textContent=
+   totalMovs;
+
+  document.getElementById("kpiTotalDelays").textContent=
+   totalDelays;
+
+  document.getElementById("kpiIdlePorMov").textContent=
+   `${idlePorMov.toFixed(2)} min`;
+
+  /* =========================
+     8. RESUMEN GERENCIAL
+     ========================= */
+  document.getElementById("rgMayorDemora").textContent=
+   `${mayorDemora.toFixed(0)} min`;
+
+  document.getElementById("rgMayorDemoraNota").textContent=
+   mayorDemora>0?mayorDemoraCausa:"Sin demoras registradas";
+
+  document.getElementById("rgImpacto").textContent=
+   `${porcentajePrincipal.toFixed(1)}%`;
+
+  document.getElementById("rgImpactoNota").textContent=
+   idleTotal>0
+    ?`${causaPrincipal}: ${minutosCausaPrincipal.toFixed(0)} min`
+    :"No existe tiempo improductivo registrado";
+
+  document.getElementById("rgPromedioDemora").textContent=
+   `${demoraPromedio.toFixed(1)} min`;
+
+  document.getElementById("rgQCMayorIdle").textContent=
+   qcMayorIdle;
+
+  document.getElementById("rgQCMayorIdleNota").textContent=
+   qcMayorIdle!=="—"
+    ?`${minutosMayorIdle.toFixed(0)} min de Idle Time`
+    :"Sin demoras por QC";
+
+  const estadoEl=document.getElementById("rgEstado");
+  const estadoNota=document.getElementById("rgEstadoNota");
+
+  if(totalDelays===0){
+   estadoEl.textContent="SIN DEMORAS";
+   estadoNota.textContent="No hay eventos de tiempo muerto registrados.";
+  }else if(porcentajePrincipal>=50){
+   estadoEl.textContent="FOCO IDENTIFICADO";
+   estadoNota.textContent="Una causa concentra ≥50% del Idle Time.";
+  }else{
+   estadoEl.textContent="DEMORAS DISTRIBUIDAS";
+   estadoNota.textContent="No existe una causa dominante.";
+  }
+
+  /* =========================
+     9. TABLA
+     ========================= */
+  const tabla=document.getElementById("tablaDelays");
+
+  if(listaDelays.length){
+
+   const ordenadas=[...listaDelays].sort(
+    (a,b)=>num(b.duracion_minutos)-num(a.duracion_minutos)
+   );
+
+   tabla.innerHTML=ordenadas.map(d=>`
+    <tr>
+     <td><span class="badge-qc">${escapeHTML(d.qc_id||"—")}</span></td>
+     <td><strong>${escapeHTML(d.contenedor_id||"N/A")}</strong>
+      <small style="color:#64748b"> (${escapeHTML(d.iso_code||"—")})</small>
+     </td>
+     <td>${horaTexto(d.inicio_demora)}</td>
+     <td><span class="badge-cause">${escapeHTML(d.causa_demora||"Sin causa")}</span></td>
+     <td><strong>${num(d.duracion_minutos).toFixed(0)} min</strong></td>
+     <td>${escapeHTML(d.observacion||"Sin observaciones")}</td>
+    </tr>
+   `).join("");
+
+  }else{
+   tabla.innerHTML=`
+    <tr>
+     <td colspan="6" style="text-align:center;color:#15803d;font-weight:bold;padding:14px">
+      Sin tiempos muertos registrados.
+     </td>
+    </tr>`;
+  }
+
+  /* =========================
+     10. GRÁFICOS
+     ========================= */
+  renderizarGraficoPace(horas,qcs,matrix);
+  renderizarGraficoDelays(causasMap);
+  renderizarQC(qcs,matrix,horas,listaDelays);
+
+  document.getElementById("ultimaActualizacion").textContent=
+   `Última actualización: ${new Date().toLocaleString("es-EC")}`;
+
+ }catch(err){
+
+  console.error("Error consultando métricas:",err);
+
+  document.getElementById("ultimaActualizacion").textContent=
+   "Error al actualizar datos";
+
+  document.getElementById("tablaDelays").innerHTML=`
+   <tr>
+    <td colspan="6" style="text-align:center;color:#dc2626;padding:14px">
+     No fue posible consultar los datos.
+    </td>
+   </tr>`;
+
+ }finally{
+  filtros.classList.remove("loading");
+ }
 }
 
-/* ============================================================
+/* =========================
+   GRÁFICO PACE
+   ========================= */
+function renderizarGraficoPace(horas,qcs,matrix){
+
+ const ctx=document.getElementById("chartPace").getContext("2d");
+
+ if(chartPaceInstance) chartPaceInstance.destroy();
+
+ const colores={
+  "QC-01":"#2563eb","QC-02":"#ea580c",
+  "QC-03":"#16a34a","QC-04":"#9333ea"
+ };
+
+ chartPaceInstance=new Chart(ctx,{
+  type:"bar",
+  data:{
+   labels:horas,
+   datasets:qcs.map(q=>({
+    label:q,
+    data:horas.map(h=>matrix[q][h]||0),
+    backgroundColor:colores[q]||"#64748b",
+    borderColor:colores[q]||"#64748b",
+    borderWidth:1
+   }))
+  },
+  options:{
+   responsive:true,maintainAspectRatio:false,
+   interaction:{mode:"index",intersect:false},
+   plugins:{
+    legend:{position:"top"},
+    tooltip:{
+     callbacks:{
+      label:c=>`${c.dataset.label}: ${c.raw} movimientos`
+     }
+    }
+   },
+   scales:{
+    y:{beginAtZero:true,title:{display:true,text:"Movimientos"}},
+    x:{title:{display:true,text:"Hora del turno"}}
+   }
+  }
+ });
+}
+
+/* =========================
    GRÁFICO DEMORAS
-   ============================================================ */
+   ========================= */
 function renderizarGraficoDelays(causasMap){
 
-  const ctx = document.getElementById("chartDelays").getContext("2d");
+ const ctx=document.getElementById("chartDelays").getContext("2d");
 
-  if(chartDelaysInstance) chartDelaysInstance.destroy();
+ if(chartDelaysInstance) chartDelaysInstance.destroy();
 
-  const labels = Object.keys(causasMap);
-  const data = Object.values(causasMap);
+ const labels=Object.keys(causasMap);
+ const data=Object.values(causasMap);
 
-  chartDelaysInstance = new Chart(ctx,{
-    type:"doughnut",
-    data:{
-      labels:labels,
-      datasets:[{
-        data:data,
-        backgroundColor:[
-          "#dc2626","#f59e0b","#2563eb",
-          "#10b981","#9333ea","#64748b",
-          "#0891b2","#be123c"
-        ]
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{position:"right"},
-        tooltip:{
-          callbacks:{
-            label:ctx=>`${ctx.label}: ${Number(ctx.raw).toFixed(0)} min`
-          }
-        }
-      }
+ chartDelaysInstance=new Chart(ctx,{
+  type:"doughnut",
+  data:{
+   labels:labels,
+   datasets:[{
+    data:data,
+    backgroundColor:[
+     "#dc2626","#f59e0b","#2563eb","#10b981",
+     "#9333ea","#64748b","#0891b2","#be123c"
+    ]
+   }]
+  },
+  options:{
+   responsive:true,maintainAspectRatio:false,
+   plugins:{
+    legend:{position:"right"},
+    tooltip:{
+     callbacks:{
+      label:c=>`${c.label}: ${Number(c.raw).toFixed(0)} min`
+     }
     }
-  });
-}
-
-/* ============================================================
-   DESEMPEÑO POR QC
-   ============================================================ */
-function renderizarDesempenoQC(qcs,matrixPace,horas,delays){
-
-  const contenedor = document.getElementById("qcPerformance");
-
-  if(!qcs.length){
-    contenedor.innerHTML =
-      `<div class="qc-card">
-        <div class="qc-name">Sin datos</div>
-        <div class="qc-number">—</div>
-        <div class="qc-detail">No existen movimientos para la selección.</div>
-      </div>`;
-    return;
+   }
   }
-
-  const totalDelayQC = {};
-
-  delays.forEach(d=>{
-    const qc=d.qc_id || "—";
-    totalDelayQC[qc]=(totalDelayQC[qc]||0)+minutos(d.duracion_minutos);
-  });
-
-  const resumen = qcs.map(q=>{
-    const total = horas.reduce(
-      (acc,h)=>acc+(matrixPace[q]?.[h]||0),0
-    );
-
-    const pace = horas.length ? total/horas.length : 0;
-    const idle = totalDelayQC[q] || 0;
-
-    return {q,total,pace,idle};
-  }).sort((a,b)=>b.pace-a.pace);
-
-  contenedor.innerHTML = resumen.map((r,i)=>`
-    <div class="qc-card">
-      <div class="qc-name">${escapeHTML(r.q)}</div>
-      <div class="qc-number">${r.pace.toFixed(1)} <span style="font-size:11px;font-weight:normal">Mvs/Hr</span></div>
-      <div class="qc-detail">
-        ${r.total} movimientos · ${r.idle.toFixed(0)} min de demora
-        ${i===0 ? ' · <span class="badge-good">Mayor pace</span>' : ''}
-      </div>
-    </div>
-  `).join("");
+ });
 }
 
-/* ============================================================
-   INICIO
-   ============================================================ */
-cargarMétricasTasaTransferencia();
-</script>
+/* =========================
+   DESEMPEÑO QC
+   ========================= */
+function renderizarQC(qcs,matrix,horas,delays){
 
+ const contenedor=document.getElementById("qcPerformance");
+
+ if(!qcs.length){
+  contenedor.innerHTML=`
+   <div class="qc-card">
+    <div class="qc-name">Sin datos</div>
+    <div class="qc-number">—</div>
+    <div class="qc-detail">No existen movimientos para la selección.</div>
+   </div>`;
+  return;
+ }
+
+ const stats={};
+
+ qcs.forEach(q=>{
+  stats[q]={movs:0,idle:0};
+  horas.forEach(h=>{
+   stats[q].movs+=matrix[q][h]||0;
+  });
+ });
+
+ delays.forEach(d=>{
+  const qc=d.qc_id||"SIN QC";
+  if(!stats[qc]) stats[qc]={movs:0,idle:0};
+  stats[qc].idle+=num(d.duracion_minutos);
+ });
+
+ const lista=qcs.map(q=>{
+  const movs=stats[q].movs;
+  const idle=stats[q].idle;
+  const pace=horas.length?movs/horas.length:0;
+  return {q,movs,idle,pace};
+ }).sort((a,b)=>b.pace-a.pace);
+
+ const mayorPace=lista[0]?.pace||0;
+
+ contenedor.innerHTML=lista.map(r=>`
+  <div class="qc-card">
+   <div class="qc-name">${escapeHTML(r.q)}</div>
+   <div class="qc-number">${r.pace.toFixed(1)} <span style="font-size:11px;font-weight:normal">Mvs/Hr</span></div>
+   <div class="qc-detail">
+    Movimientos: <strong>${r.movs}</strong> · Demoras:
+    <strong>${delays.filter(d=>(d.qc_id||"")===r.q).length}</strong>
+    · Idle: <strong>${r.idle.toFixed(0)} min</strong>
+    ${r.pace===mayorPace?' · <span class="badge-good">Mayor Pace</span>':''}
+   </div>
+  </div>
+ `).join("");
+}
+
+/* INICIO */
+cargarDashboard();
+</script>
 </body>
 </html>
