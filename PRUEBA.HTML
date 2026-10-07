@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOS Operational Vessel Performance Dashboard</title>
+  <!-- Frameworks CSS y JS (Tailwind, Chart.js, SheetJS) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -18,7 +19,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- Header -->
+  <!-- Encabezado Principal -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3">
@@ -27,7 +28,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold text-white leading-tight">Vessel Performance Dashboard (TOS)</h1>
-          <p class="text-xs text-slate-400">Procesador de Reportes DP World / TOS</p>
+          <p class="text-xs text-slate-400">Procesador de Reportes de Embarque / Patio</p>
         </div>
       </div>
       <div>
@@ -39,10 +40,10 @@
     </div>
   </header>
 
-  <!-- Main Container -->
+  <!-- Contenedor Principal de Tableros -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
-    <!-- Vessel Overview Banner -->
+    <!-- Tarjeta del Buque y Viaje -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap justify-between items-center gap-4">
       <div>
         <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Detalle del Buque</span>
@@ -57,7 +58,7 @@
       </div>
     </div>
 
-    <!-- Executive KPI Grid -->
+    <!-- Indicadores KPIs Superiores -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
         <span class="text-xs font-semibold text-slate-400">Total Movimientos</span>
@@ -90,7 +91,7 @@
       </div>
     </div>
 
-    <!-- Charts Row 1 -->
+    <!-- Gráficos Fila 1 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-industry text-blue-400 mr-2"></i> Movimientos por Grúa de Muelle (QC)</h3>
@@ -107,7 +108,7 @@
       </div>
     </div>
 
-    <!-- Charts Row 2 -->
+    <!-- Gráficos Fila 2 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-truck-fast text-indigo-400 mr-2"></i> Tráfico por Camión (Carry CHE)</h3>
@@ -131,7 +132,7 @@
       </div>
     </div>
 
-    <!-- Table -->
+    <!-- Tabla Detallada -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i> Registro de Movimientos Procesados</h3>
@@ -163,6 +164,9 @@
 
   </main>
 
+  <!-- ========================================================== -->
+  <!-- LÓGICA JAVASCRIPT CON REFERENCIAS DE MODIFICACIÓN -->
+  <!-- ========================================================== -->
   <script>
     let chartQCInstance, chartBlocksInstance, chartTrucksInstance, chartLinesInstance, chartFetchInstance;
 
@@ -170,7 +174,11 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      // 1. Extraer nombre del buque del archivo (antes del primer guion)
+      // -------------------------------------------------------------
+      // REFERENCIA 1: OBTENER NOMBRE DEL BUQUE DESDE EL ARCHIVO
+      // Extrae el texto antes del primer guion (-).
+      // Ej: "COSCO SHIPPING SEINE - MOVE..." -> "COSCO SHIPPING SEINE"
+      // -------------------------------------------------------------
       const fileNameRaw = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
       const vesselNameParsed = fileNameRaw.split('-')[0].trim();
 
@@ -178,44 +186,32 @@
       reader.onload = function(evt) {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        const sheetName = workbook.SheetNames[0];
+        const sheetName = workbook.SheetNames[0]; // Toma la primera hoja de Excel
         const sheet = workbook.Sheets[sheetName];
 
-        // Convertir la hoja a matriz (filas x columnas) para detectar dónde están los encabezados reales
-        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        // -------------------------------------------------------------
+        // REFERENCIA 2: FILA DONDE EMPIEZAN LOS ENCABEZADOS EN EXCEL
+        // En Excel, la fila 5 equivale al índice 4 (0=Fila1, 1=Fila2, 2=Fila3, 3=Fila4, 4=Fila5).
+        // Si tu tabla en el futuro cambia de posición, modifica 'range: 4' por la fila correspondiente.
+        // -------------------------------------------------------------
+        const HEADER_ROW_INDEX = 4; // Fila 5 de Excel
 
-        if (matrix.length === 0) {
-          alert('La hoja de Excel está vacía.');
-          return;
-        }
+        const rawRows = XLSX.utils.sheet_to_json(sheet, { range: HEADER_ROW_INDEX, defval: "" });
 
-        // 2. BUSCAR LA FILA REAL DE ENCABEZADOS (Busca la fila que contenga "Time Completed" o "Move Kind")
-        let headerRowIndex = -1;
-        for (let i = 0; i < Math.min(matrix.length, 15); i++) {
-          const rowStr = matrix[i].join(" ").toLowerCase();
-          if (rowStr.includes("time completed") || rowStr.includes("move kind") || rowStr.includes("unit nbr")) {
-            headerRowIndex = i;
-            break;
-          }
-        }
-
-        if (headerRowIndex === -1) {
-          headerRowIndex = 0; // Si no lo encuentra, usa la primera fila por defecto
-        }
-
-        // Convertir a objetos usando la fila de encabezados correcta (range: headerRowIndex)
-        const rawRows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex, defval: "" });
-
-        if (rawRows.length > 0) {
+        if (rawRows && rawRows.length > 0) {
           processTOSData(rawRows, vesselNameParsed);
         } else {
-          alert('No se encontraron registros de datos en el archivo.');
+          alert('No se encontraron datos a partir de la fila 5.');
         }
       };
       reader.readAsArrayBuffer(file);
     });
 
-    // Función flexible para obtener valores sin importar diferencias de espacios o mayúsculas
+    // -------------------------------------------------------------
+    // REFERENCIA 3: FUNCIÓN FLEXIBLE BÚSQUEDA DE COLUMNAS
+    // Ignora mayúsculas, minúsculas, espacios extra o guiones bajos.
+    // Ej: "Crane CHE Name", "CRANE_CHE_NAME" o "CraneCHEName" funcionarán.
+    // -------------------------------------------------------------
     function getVal(row, columnName) {
       const target = columnName.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (let key in row) {
@@ -225,7 +221,10 @@
       return "";
     }
 
-    // Parsea las fechas de Excel/TOS (ej: "26-Sep-25 1341" o Date)
+    // -------------------------------------------------------------
+    // REFERENCIA 4: PARSER DE FECHA Y HORA OPERATIVA
+    // Convierte "26-Sep-25 1341" o formatos Date de Excel a objeto JS.
+    // -------------------------------------------------------------
     function parseTOSTime(val) {
       if (!val) return null;
       if (val instanceof Date && !isNaN(val)) return val;
@@ -248,6 +247,9 @@
       return isNaN(standardDate) ? null : standardDate;
     }
 
+    // -------------------------------------------------------------
+    // REFERENCIA 5: PROCESAMIENTO PRINCIPAL DE INDICADORES
+    // -------------------------------------------------------------
     function processTOSData(rows, vesselNameFromFileName) {
       const totalMoves = rows.length;
       let loadCount = 0, restowCount = 0, reeferCount = 0;
@@ -262,16 +264,17 @@
 
       let minTime = null, maxTime = null;
 
-      // Obtener Carrier Visit solo una vez (primera fila válida)
+      // Extrae la columna "Carrier Visit" de la primera fila que contenga un dato
       for (let r of rows) {
         const visitVal = getVal(r, "Carrier Visit");
         if (visitVal) {
           carrierVisitSingle = visitVal.toString().trim();
-          break;
+          break; // Detenerse tras encontrar la primera coincidencia
         }
       }
 
       const parsedRows = rows.map(r => {
+        // NOMBRES EXACTOS DE TUS COLUMNAS EN LA FILA 5
         const timeStr = getVal(r, "Time Completed");
         const moveKind = getVal(r, "Move Kind").toString();
         const iso = getVal(r, "Unit Type ISO").toString();
@@ -282,20 +285,36 @@
         const fetch = getVal(r, "Fetch CHE Name").toString() || "N/A";
         const unitNbr = getVal(r, "Unit Nbr").toString();
 
-        if (moveKind.toLowerCase().includes("restow")) restowCount++;
-        else loadCount++;
+        // -------------------------------------------------------------
+        // REFERENCIA 6: CLASIFICACIÓN DE MOVIMIENTO (CARGA VS REESTIBA)
+        // -------------------------------------------------------------
+        if (moveKind.toLowerCase().includes("restow")) {
+          restowCount++;
+        } else {
+          loadCount++;
+        }
 
-        // Detectar Reefer (contiene la letra 'R' en el código ISO de 4 caracteres, ej 45R1, 45R5)
-        if (iso.includes("R")) reeferCount++;
+        // -------------------------------------------------------------
+        // REFERENCIA 7: CLASIFICACIÓN DE CONTENEDOR REEFER
+        // Detecta la letra 'R' en el código ISO (ej. 45R1, 45R5)
+        // -------------------------------------------------------------
+        if (iso.toUpperCase().includes("R")) {
+          reeferCount++;
+        }
 
-        // Agrupar por QC
-        if (qc && qc !== "N/A" && qc !== "-") qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+        // Conteo por Grúa de Muelle
+        if (qc && qc !== "N/A" && qc !== "-") {
+          qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+        }
 
-        // Extraer Bloque de Patio desde "From Position" (ej: Y-PSJ-1G12B.2 -> Bloque 1G, Y-PSJ-S10230.1 -> Bloque S1, Y-PSJ-1H32E.1 -> Bloque 1H)
+        // -------------------------------------------------------------
+        // REFERENCIA 8: EXTRACCIÓN DEL BLOQUE DE PATIO DESDE FROM POSITION
+        // De 'Y-PSJ-1G12B.2' o 'Y-PSJ-S10230.1', extrae 'Bloque 1G' o 'Bloque S1'.
+        // -------------------------------------------------------------
         let block = "Otro / Muelle";
         if (fromPos.includes("-")) {
           const parts = fromPos.split("-");
-          const lastPart = parts[parts.length - 1]; // Toma la parte de posición (ej: 1G12B.2)
+          const lastPart = parts[parts.length - 1]; // Toma la parte final de posición
           const matchBlock = lastPart.match(/^([0-9][A-Z]|[A-Z][0-9]|[A-Z]{2})/i);
           if (matchBlock) {
             block = "Bloque " + matchBlock[1].toUpperCase();
@@ -305,19 +324,23 @@
         }
         blockCounts[block] = (blockCounts[block] || 0) + 1;
 
-        // Agrupar Camiones (Carry CHE)
-        if (truck && truck !== "-" && truck !== "N/A") truckCounts[truck] = (truckCounts[truck] || 0) + 1;
+        // Conteo por Camión
+        if (truck && truck !== "-" && truck !== "N/A") {
+          truckCounts[truck] = (truckCounts[truck] || 0) + 1;
+        }
 
-        // Agrupar Líneas Navieras
+        // Conteo por Línea Naviera
         if (line && line !== "N/A" && line !== "-") {
           lineCounts[line] = (lineCounts[line] || 0) + 1;
           linesSet.add(line);
         }
 
-        // Agrupar Equipos de Patio (Fetch CHE - RTG / RS)
-        if (fetch && fetch !== "-" && fetch !== "N/A") fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
+        // Conteo por Equipo de Patio (Fetch CHE: RTG / Reach Stacker)
+        if (fetch && fetch !== "-" && fetch !== "N/A") {
+          fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
+        }
 
-        // Tiempo
+        // Rango de horas operativas
         const parsedDate = parseTOSTime(timeStr);
         if (parsedDate) {
           if (!minTime || parsedDate < minTime) minTime = parsedDate;
@@ -327,7 +350,9 @@
         return { timeStr, moveKind, unitNbr, iso, line, qc, truck, fetch, fromPos };
       });
 
-      // Cálculo de Productividad GCR (Movimientos / Horas Reales)
+      // -------------------------------------------------------------
+      // REFERENCIA 9: CÁLCULO DE PRODUCTIVIDAD GCR (MOV/HORA REAL)
+      // -------------------------------------------------------------
       let gcr = "0.0";
       if (minTime && maxTime && maxTime > minTime) {
         const diffHours = (maxTime - minTime) / (1000 * 60 * 60);
@@ -336,7 +361,7 @@
         gcr = totalMoves.toString();
       }
 
-      // Render de Encabezado y KPIs
+      // RENDERIZADO EN PANTALLA
       const finalTitle = carrierVisitSingle ? `${vesselNameFromFileName} - ${carrierVisitSingle}` : vesselNameFromFileName;
       document.getElementById('vesselName').innerText = finalTitle;
       document.getElementById('vesselTiming').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Período Operativo: ${minTime ? minTime.toLocaleString() : 'N/A'} a ${maxTime ? maxTime.toLocaleString() : 'N/A'}`;
@@ -359,17 +384,16 @@
       document.getElementById('kpiTruckCount').innerText = Object.keys(truckCounts).length;
       document.getElementById('kpiYardCount').innerText = Object.keys(fetchCounts).length;
 
-      // Badges de Líneas
+      // Badges de Líneas Navieras
       const linesContainer = document.getElementById('linesBadge');
       linesContainer.innerHTML = '';
       linesSet.forEach(l => {
         linesContainer.innerHTML += `<span class="bg-blue-900/60 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">${l}</span>`;
       });
 
-      // Render Tabla
+      // Dibujar Tabla y Gráficos
       renderTable(parsedRows);
 
-      // Render Gráficos
       renderBarChart('chartQC', chartQCInstance, Object.keys(qcCounts), Object.values(qcCounts), 'Movimientos por QC', '#3b82f6', (inst) => chartQCInstance = inst);
       renderBarChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), 'Contenedores por Bloque', '#10b981', (inst) => chartBlocksInstance = inst, true);
       renderBarChart('chartTrucks', chartTrucksInstance, Object.keys(truckCounts), Object.values(truckCounts), 'Viajes por Camión', '#6366f1', (inst) => chartTrucksInstance = inst);
