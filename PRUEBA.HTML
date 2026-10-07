@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TOS Operational Vessel Performance Dashboard - Fixed</title>
+  <title>TOS Operational Vessel Performance Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -27,7 +27,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold text-white leading-tight">Vessel Performance Dashboard (TOS)</h1>
-          <p class="text-xs text-slate-400">Procesador Inteligente de Reportes Operativos</p>
+          <p class="text-xs text-slate-400">Procesador de Reportes Operativos de Embarque</p>
         </div>
       </div>
       <div>
@@ -42,10 +42,11 @@
   <!-- Main Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
-    <!-- Vessel Overview -->
+    <!-- Vessel Overview Banner -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap justify-between items-center gap-4">
       <div>
         <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Detalle del Buque</span>
+        <!-- Nombre del Buque + Referencia Carrier Visit -->
         <h2 id="vesselName" class="text-2xl font-bold text-white mt-0.5">Esperando archivo...</h2>
         <p id="vesselTiming" class="text-xs text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i> Período Operativo: N/A</p>
       </div>
@@ -170,18 +171,19 @@
       const file = e.target.files[0];
       if (!file) return;
 
+      // 1. EXTRAER NOMBRE DEL BUQUE ANTES DEL PRIMER GUION (-)
+      const fileNameRaw = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      const vesselNameParsed = fileNameRaw.split('-')[0].trim();
+
       const reader = new FileReader();
       reader.onload = function(evt) {
         const data = new Uint8Array(evt.target.result);
-        // cellDates: true permite que SheetJS convierta las fechas de Excel correctamente
         const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-        
-        // Toma la primera hoja sin importar cómo se llame
         const sheetName = workbook.SheetNames[0];
         const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
 
         if (rawRows.length > 0) {
-          processTOSData(rawRows);
+          processTOSData(rawRows, vesselNameParsed);
         } else {
           alert('La hoja de Excel está vacía.');
         }
@@ -189,7 +191,6 @@
       reader.readAsArrayBuffer(file);
     });
 
-    // Función de limpieza de claves para ignorar mayúsculas y espacios en nombres de columna
     function getVal(row, columnName) {
       const target = columnName.toLowerCase().replace(/[^a-z0-9]/g, '');
       for (let key in row) {
@@ -199,13 +200,11 @@
       return "";
     }
 
-    // Parsea las fechas sin importar si vienen como texto "26-Sep-25 1341" o como objeto Date de Excel
     function parseTOSTime(val) {
       if (!val) return null;
       if (val instanceof Date && !isNaN(val)) return val;
 
       const str = val.toString().trim();
-      // Ejemplo: 26-Sep-25 1341
       const match = str.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})\s+(\d{2})(\d{2})$/);
       if (match) {
         const day = parseInt(match[1]);
@@ -223,7 +222,7 @@
       return isNaN(standardDate) ? null : standardDate;
     }
 
-    function processTOSData(rows) {
+    function processTOSData(rows, vesselNameFromFileName) {
       const totalMoves = rows.length;
       let loadCount = 0, restowCount = 0, reeferCount = 0;
 
@@ -233,9 +232,18 @@
       const lineCounts = {};
       const fetchCounts = {};
       const linesSet = new Set();
-      const carrierVisits = new Set();
+      let carrierVisitSingle = "";
 
       let minTime = null, maxTime = null;
+
+      // 2. EXTRAER CARRIER VISIT SOLO UNA VEZ (PRIMERA FILA CON DATO)
+      for (let r of rows) {
+        const visitVal = getVal(r, "Carrier Visit");
+        if (visitVal) {
+          carrierVisitSingle = visitVal.toString().trim();
+          break;
+        }
+      }
 
       const parsedRows = rows.map(r => {
         const timeStr = getVal(r, "Time Completed");
@@ -246,24 +254,20 @@
         const fromPos = getVal(r, "From Position").toString();
         const line = getVal(r, "Line Op").toString() || "N/A";
         const fetch = getVal(r, "Fetch CHE Name").toString() || "N/A";
-        const visit = getVal(r, "Carrier Visit").toString();
         const unitNbr = getVal(r, "Unit Nbr").toString();
 
-        // Conteo Reestibas / Cargas
         if (moveKind.toLowerCase().includes("restow")) restowCount++;
         else loadCount++;
 
-        // Conteo Reefer
         if (iso.includes("R")) reeferCount++;
 
-        // Agrupación QC
         if (qc && qc !== "N/A") qcCounts[qc] = (qcCounts[qc] || 0) + 1;
 
-        // Extraer Bloque de Patio desde From Position (ej: Y-PSJ-S10230.1 -> Bloque S1, Y-PSJ-1G12B.2 -> Bloque 1G)
+        // Bloque de patio
         let block = "Otro / Muelle";
         if (fromPos.includes("-")) {
           const parts = fromPos.split("-");
-          const lastPart = parts[parts.length - 1]; // ej: S10230.1 o 1G12B.2
+          const lastPart = parts[parts.length - 1];
           const matchBlock = lastPart.match(/^([0-9][A-Z]|[A-Z][0-9]|[A-Z]{2})/i);
           if (matchBlock) {
             block = "Bloque " + matchBlock[1].toUpperCase();
@@ -273,21 +277,15 @@
         }
         blockCounts[block] = (blockCounts[block] || 0) + 1;
 
-        // Camiones
         if (truck && truck !== "-" && truck !== "N/A") truckCounts[truck] = (truckCounts[truck] || 0) + 1;
 
-        // Líneas
         if (line && line !== "N/A") {
           lineCounts[line] = (lineCounts[line] || 0) + 1;
           linesSet.add(line);
         }
 
-        // Fetch CHE (RTG / RS)
         if (fetch && fetch !== "-" && fetch !== "N/A") fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
 
-        if (visit) carrierVisits.add(visit);
-
-        // Parseo de fechas
         const parsedDate = parseTOSTime(timeStr);
         if (parsedDate) {
           if (!minTime || parsedDate < minTime) minTime = parsedDate;
@@ -297,7 +295,7 @@
         return { timeStr, moveKind, unitNbr, iso, line, qc, truck, fetch, fromPos };
       });
 
-      // Cálculo exacto de GCR en MPH
+      // Cálculo GCR
       let gcr = "0.0";
       if (minTime && maxTime && maxTime > minTime) {
         const diffHours = (maxTime - minTime) / (1000 * 60 * 60);
@@ -306,9 +304,10 @@
         gcr = totalMoves.toString();
       }
 
-      // Render Encabezados y KPIs
-      document.getElementById('vesselName').innerText = carrierVisits.size > 0 ? `VIAJE: ${Array.from(carrierVisits).join(', ')}` : "REPORTE CARGADO";
-      document.getElementById('vesselTiming').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Período: ${minTime ? minTime.toLocaleString() : 'N/A'} a ${maxTime ? maxTime.toLocaleString() : 'N/A'}`;
+      // RENDER TITULO DEL BUQUE Y VIAJE
+      const finalTitle = carrierVisitSingle ? `${vesselNameFromFileName} - ${carrierVisitSingle}` : vesselNameFromFileName;
+      document.getElementById('vesselName').innerText = finalTitle;
+      document.getElementById('vesselTiming').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Período Operativo: ${minTime ? minTime.toLocaleString() : 'N/A'} a ${maxTime ? maxTime.toLocaleString() : 'N/A'}`;
 
       document.getElementById('kpiTotalMoves').innerText = totalMoves.toLocaleString();
       document.getElementById('kpiMovesLoad').innerText = loadCount.toLocaleString();
@@ -328,17 +327,14 @@
       document.getElementById('kpiTruckCount').innerText = Object.keys(truckCounts).length;
       document.getElementById('kpiYardCount').innerText = Object.keys(fetchCounts).length;
 
-      // Badges de Líneas Navieras
       const linesContainer = document.getElementById('linesBadge');
       linesContainer.innerHTML = '';
       linesSet.forEach(l => {
         linesContainer.innerHTML += `<span class="bg-blue-900/60 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">${l}</span>`;
       });
 
-      // Render Tabla
       renderTable(parsedRows);
 
-      // Render Gráficos
       renderBarChart('chartQC', chartQCInstance, Object.keys(qcCounts), Object.values(qcCounts), 'Movimientos por QC', '#3b82f6', (inst) => chartQCInstance = inst);
       renderBarChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), 'Contenedores por Bloque', '#10b981', (inst) => chartBlocksInstance = inst, true);
       renderBarChart('chartTrucks', chartTrucksInstance, Object.keys(truckCounts), Object.values(truckCounts), 'Viajes por Camión', '#6366f1', (inst) => chartTrucksInstance = inst);
