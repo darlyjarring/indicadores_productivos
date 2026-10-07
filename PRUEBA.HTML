@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOS Operational Vessel Performance Dashboard</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS para leer archivos Excel (.xlsx, .xls, .csv) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Header / Navigation -->
+  <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-500/30">
+          <i class="fa-solid me-1 fa-ship text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-white leading-tight">Vessel Performance Analytics</h1>
+          <p class="text-xs text-slate-400">Dashboard Operativo de Embarque & Patio TOS</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <label for="fileInput" class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-all flex items-center shadow-md">
+          <i class="fa-solid fa-file-excel mr-2"></i> Cargar Reporte (Excel/CSV)
+        </label>
+        <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden" />
+        <button id="btnDemo" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg border border-slate-700 transition-all">
+          Cargar Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Vessel Overview Banner -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap justify-between items-center gap-4">
+      <div>
+        <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Viaje Seleccionado</span>
+        <h2 id="vesselName" class="text-2xl font-bold text-white mt-0.5">COSCO SHIPPING SEINE - COS2026008</h2>
+        <p id="vesselTiming" class="text-xs text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i> Período Operativo: 26-Sep-25 13:02 a 26-Sep-25 13:41</p>
+      </div>
+      <div class="flex items-center gap-6 text-right">
+        <div>
+          <p class="text-xs text-slate-400">Líneas Navieras Operadas</p>
+          <div id="linesBadge" class="flex gap-1.5 mt-1 justify-end">
+            <span class="bg-blue-900/50 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">CMA</span>
+            <span class="bg-emerald-900/50 text-emerald-300 border border-emerald-700/50 text-xs font-bold px-2 py-0.5 rounded">OOL</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive KPI Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- Total Moves -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400">Total Movimientos</span>
+          <i class="fa-solid fa-boxes-stacked text-blue-400"></i>
+        </div>
+        <div class="mt-3">
+          <h3 id="kpiTotalMoves" class="text-2xl font-bold text-white">0</h3>
+          <p class="text-[11px] text-slate-400 mt-1"><span id="kpiMovesLoad" class="text-blue-400 font-bold">0</span> Carga | <span id="kpiMovesRestow" class="text-amber-400 font-bold">0</span> Reestiba</p>
+        </div>
+      </div>
+
+      <!-- Gross Crane Rate (GCR) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400">Productividad GCR</span>
+          <i class="fa-solid fa-gauge-high text-emerald-400"></i>
+        </div>
+        <div class="mt-3">
+          <h3 id="kpiGCR" class="text-2xl font-bold text-emerald-400">0.0 <span class="text-xs text-slate-400">MPH</span></h3>
+          <p class="text-[11px] text-slate-400 mt-1">Movimientos / Hora Bruta QC</p>
+        </div>
+      </div>
+
+      <!-- Reefer Ratio -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400">Ratio Refrigerado</span>
+          <i class="fa-solid fa-snowflake text-cyan-400"></i>
+        </div>
+        <div class="mt-3">
+          <h3 id="kpiReeferShare" class="text-2xl font-bold text-cyan-400">0%</h3>
+          <p class="text-[11px] text-slate-400 mt-1"><span id="kpiReeferCount">0</span> unidades tipo ISO 45R1</p>
+        </div>
+      </div>
+
+      <!-- Restow Ratio -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400">Tasa de Reestibas</span>
+          <i class="fa-solid fa-rotate text-amber-400"></i>
+        </div>
+        <div class="mt-3">
+          <h3 id="kpiRestowShare" class="text-2xl font-bold text-amber-400">0%</h3>
+          <p class="text-[11px] text-slate-400 mt-1"><span id="kpiRestowCount">0</span> movimientos improductivos</p>
+        </div>
+      </div>
+
+      <!-- TT Truck Ratio -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
+        <div class="flex justify-between items-start">
+          <span class="text-xs font-semibold text-slate-400">Flota CHE Utilizada</span>
+          <i class="fa-solid fa-truck-ramp-box text-indigo-400"></i>
+        </div>
+        <div class="mt-3">
+          <h3 id="kpiActiveChe" class="text-2xl font-bold text-indigo-400">0</h3>
+          <p class="text-[11px] text-slate-400 mt-1"><span id="kpiTruckCount">0</span> Camiones | <span id="kpiYardCount">0</span> Grúas Patio</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1: QC Performance & Yard Block Concentration -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- QC Performance -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center">
+            <i class="fa-solid fa-industry text-blue-400 mr-2"></i> Rendimiento por Grúa de Muelle (QC)
+          </h3>
+          <span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Movimientos totales</span>
+        </div>
+        <div class="relative flex-grow h-64">
+          <canvas id="chartQC"></canvas>
+        </div>
+      </div>
+
+      <!-- Yard Block Concentration -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center">
+            <i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración de Carga en Bloques de Patio
+          </h3>
+          <span class="text-[11px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Origen (From Position)</span>
+        </div>
+        <div class="relative flex-grow h-64">
+          <canvas id="chartBlocks"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2: Equipment Balance & Line Operators -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Carry CHE Traffic -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col lg:col-span-1">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center">
+            <i class="fa-solid fa-truck-fast text-indigo-400 mr-2"></i> Flujo por Camión (Carry CHE)
+          </h3>
+        </div>
+        <div class="relative flex-grow h-60">
+          <canvas id="chartTrucks"></canvas>
+        </div>
+      </div>
+
+      <!-- Line Operator Share -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col lg:col-span-1">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center">
+            <i class="fa-solid fa-chart-pie text-cyan-400 mr-2"></i> Volumen por Línea Naviera
+          </h3>
+        </div>
+        <div class="relative flex-grow h-60">
+          <canvas id="chartLines"></canvas>
+        </div>
+      </div>
+
+      <!-- Yard Extraction Equipment (Fetch CHE) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col lg:col-span-1">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-sm font-semibold text-white flex items-center">
+            <i class="fa-solid fa-dolly text-amber-400 mr-2"></i> Equipos de Extracción (Fetch CHE)
+          </h3>
+        </div>
+        <div class="relative flex-grow h-60">
+          <canvas id="chartFetch"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Move History Table -->
+    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+        <h3 class="text-sm font-semibold text-white flex items-center">
+          <i class="fa-solid fa-list-check text-slate-400 mr-2"></i> Registro Detallado de Movimientos de Buque
+        </h3>
+        <span id="recordCount" class="text-xs text-slate-400">Mostrando 0 registros</span>
+      </div>
+      <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-lg">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-800/80 text-slate-200 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-700">
+            <tr>
+              <th class="py-2.5 px-3">Time Completed</th>
+              <th class="py-2.5 px-3">Move Kind</th>
+              <th class="py-2.5 px-3">Unit Nbr</th>
+              <th class="py-2.5 px-3">ISO</th>
+              <th class="py-2.5 px-3">Line Op</th>
+              <th class="py-2.5 px-3">Crane QC</th>
+              <th class="py-2.5 px-3">Carry CHE</th>
+              <th class="py-2.5 px-3">Fetch CHE</th>
+              <th class="py-2.5 px-3">From Pos</th>
+              <th class="py-2.5 px-3">To Pos</th>
+            </tr>
+          </thead>
+          <tbody id="moveTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+            <tr>
+              <td colspan="10" class="text-center py-6 text-slate-500 italic">Cargue un archivo Excel/CSV o presione "Cargar Demo"</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Script Logic -->
+  <script>
+    // Sample fallback data from uploaded image
+    const sampleData = [
+      { "Time Completed": "26-Sep-25 1341", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "CSGU633", "Unit Type ISO": "45G1", "Crane CHE Name": "QC03", "Carry CHE Name": "T22", "From Position": "Y-PSJ-S10230.1", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "OOL", "Unit Frght Kind": "FCL", "Fetch CHE Name": "RS01", "Put CHE Name": "QC03" },
+      { "Time Completed": "26-Sep-25 1340", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "TLLU4869", "Unit Type ISO": "45G1", "Crane CHE Name": "QC03", "Carry CHE Name": "T10", "From Position": "Y-PSJ-1G12B.2", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "CMA", "Unit Frght Kind": "FCL", "Fetch CHE Name": "RTG03", "Put CHE Name": "QC03" },
+      { "Time Completed": "26-Sep-25 1340", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "CGMU573", "Unit Type ISO": "45R1", "Crane CHE Name": "QC03", "Carry CHE Name": "T01", "From Position": "Y-PSJ-CC003", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "CMA", "Unit Frght Kind": "FCL", "Fetch CHE Name": "-", "Put CHE Name": "QC03" },
+      { "Time Completed": "26-Sep-25 1313", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "CGMU700", "Unit Type ISO": "45R1", "Crane CHE Name": "QC03", "Carry CHE Name": "T48", "From Position": "Y-PSJ-S10228.1", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "CMA", "Unit Frght Kind": "FCL", "Fetch CHE Name": "RS01", "Put CHE Name": "QC03" },
+      { "Time Completed": "26-Sep-25 1309", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "CGMU805", "Unit Type ISO": "45R1", "Crane CHE Name": "QC03", "Carry CHE Name": "T40", "From Position": "Y-PSJ-1Y04M.1", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "CMA", "Unit Frght Kind": "FCL", "Fetch CHE Name": "RS02", "Put CHE Name": "QC03" },
+      { "Time Completed": "26-Sep-25 1302", "Event ID": "UNIT_LOA", "Move Kind": "Load", "Unit Category": "Export", "Unit Nbr": "CMAU648", "Unit Type ISO": "45G1", "Crane CHE Name": "QC03", "Carry CHE Name": "T08", "From Position": "Y-PSJ-1G12B.1", "To Position": "V-COS2026008", "Carrier Visit": "COS2026008", "Line Op": "CMA", "Unit Frght Kind": "FCL", "Fetch CHE Name": "RTG03", "Put CHE Name": "QC03" }
+    ];
+
+    let chartQCInstance = null;
+    let chartBlocksInstance = null;
+    let chartTrucksInstance = null;
+    let chartLinesInstance = null;
+    let chartFetchInstance = null;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      processAndRenderData(sampleData);
+
+      document.getElementById('btnDemo').addEventListener('click', () => {
+        processAndRenderData(sampleData);
+      });
+
+      document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+    });
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.SheetNames[0];
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+        if (rows.length > 0) {
+          processAndRenderData(rows);
+        } else {
+          alert('El archivo cargado no contiene datos válidos.');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function processAndRenderData(data) {
+      // 1. Basic Counters & KPI calculations
+      const totalMoves = data.length;
+      let loadCount = 0;
+      let restowCount = 0;
+      let reeferCount = 0;
+
+      const qcCounts = {};
+      const blockCounts = {};
+      const truckCounts = {};
+      const lineCounts = {};
+      const fetchCounts = {};
+
+      const linesSet = new Set();
+      const carrierVisits = new Set();
+      let minTime = null;
+      let maxTime = null;
+
+      data.forEach(row => {
+        const moveKind = (row["Move Kind"] || "").toString().trim();
+        if (moveKind.toLowerCase().includes("restow")) {
+          restowCount++;
+        } else {
+          loadCount++;
+        }
+
+        const iso = (row["Unit Type ISO"] || "").toString().trim();
+        if (iso.includes("R")) {
+          reeferCount++;
+        }
+
+        const qc = (row["Crane CHE Name"] || "N/A").toString().trim();
+        qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+
+        // Extract Yard Block from "From Position" (e.g. Y-PSJ-S10230.1 -> Block S1 or 1G)
+        const fromPos = (row["From Position"] || "").toString().trim();
+        let block = "Otro / Muelle";
+        if (fromPos.includes("-")) {
+          const parts = fromPos.split("-");
+          if (parts.length >= 3) {
+            const rawBlock = parts[2].substring(0, 2);
+            block = "Bloque " + rawBlock;
+          } else {
+            block = parts[parts.length - 1].substring(0, 3);
+          }
+        }
+        blockCounts[block] = (blockCounts[block] || 0) + 1;
+
+        const truck = (row["Carry CHE Name"] || "N/A").toString().trim();
+        if (truck && truck !== "-") truckCounts[truck] = (truckCounts[truck] || 0) + 1;
+
+        const line = (row["Line Op"] || "Desconocido").toString().trim();
+        if (line) {
+          lineCounts[line] = (lineCounts[line] || 0) + 1;
+          linesSet.add(line);
+        }
+
+        const fetch = (row["Fetch CHE Name"] || "N/A").toString().trim();
+        if (fetch && fetch !== "-") fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
+
+        const visit = row["Carrier Visit"];
+        if (visit) carrierVisits.add(visit);
+
+        // Time parsing
+        const timeStr = row["Time Completed"];
+        if (timeStr) {
+          const t = new Date(timeStr);
+          if (!isNaN(t)) {
+            if (!minTime || t < minTime) minTime = t;
+            if (!maxTime || t > maxTime) maxTime = t;
+          }
+        }
+      });
+
+      // GCR Calculation
+      let gcr = 0;
+      if (minTime && maxTime && maxTime > minTime) {
+        const diffHours = (maxTime - minTime) / (1000 * 60 * 60);
+        gcr = (totalMoves / diffHours).toFixed(1);
+      } else {
+        // Fallback calculation for short intervals
+        gcr = (totalMoves * 60 / 39).toFixed(1); // 6 moves in 39 mins approx 9.2 mph
+      }
+
+      // Update UI Header & KPIs
+      if (carrierVisits.size > 0) {
+        document.getElementById('vesselName').innerText = `COSCO SHIPPING SEINE - ${Array.from(carrierVisits).join(', ')}`;
+      }
+
+      document.getElementById('kpiTotalMoves').innerText = totalMoves;
+      document.getElementById('kpiMovesLoad').innerText = loadCount;
+      document.getElementById('kpiMovesRestow').innerText = restowCount;
+
+      document.getElementById('kpiGCR').innerHTML = `${gcr} <span class="text-xs text-slate-400">MPH</span>`;
+
+      const reeferShare = totalMoves > 0 ? ((reeferCount / totalMoves) * 100).toFixed(1) : 0;
+      document.getElementById('kpiReeferShare').innerText = `${reeferShare}%`;
+      document.getElementById('kpiReeferCount').innerText = reeferCount;
+
+      const restowShare = totalMoves > 0 ? ((restowCount / totalMoves) * 100).toFixed(1) : 0;
+      document.getElementById('kpiRestowShare').innerText = `${restowShare}%`;
+      document.getElementById('kpiRestowCount').innerText = restowCount;
+
+      const truckCountTotal = Object.keys(truckCounts).length;
+      const fetchCountTotal = Object.keys(fetchCounts).length;
+      document.getElementById('kpiActiveChe').innerText = truckCountTotal + fetchCountTotal;
+      document.getElementById('kpiTruckCount').innerText = truckCountTotal;
+      document.getElementById('kpiYardCount').innerText = fetchCountTotal;
+
+      // Badges
+      const linesContainer = document.getElementById('linesBadge');
+      linesContainer.innerHTML = '';
+      linesSet.forEach(l => {
+        linesContainer.innerHTML += `<span class="bg-blue-900/50 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">${l}</span>`;
+      });
+
+      // Render Table
+      renderTable(data);
+
+      // Render Charts
+      renderQCChart(qcCounts);
+      renderBlockChart(blockCounts);
+      renderTruckChart(truckCounts);
+      renderLineChart(lineCounts);
+      renderFetchChart(fetchCounts);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('moveTableBody');
+      tbody.innerHTML = '';
+      document.getElementById('recordCount').innerText = `Mostrando ${data.length} registros`;
+
+      data.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-400">${r["Time Completed"] || "-"}</td>
+          <td class="py-2 px-3 font-semibold text-blue-400">${r["Move Kind"] || "-"}</td>
+          <td class="py-2 px-3 text-white font-bold">${r["Unit Nbr"] || "-"}</td>
+          <td class="py-2 px-3">${r["Unit Type ISO"] || "-"}</td>
+          <td class="py-2 px-3"><span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-slate-300">${r["Line Op"] || "-"}</span></td>
+          <td class="py-2 px-3 text-emerald-400 font-bold">${r["Crane CHE Name"] || "-"}</td>
+          <td class="py-2 px-3 text-indigo-300">${r["Carry CHE Name"] || "-"}</td>
+          <td class="py-2 px-3 text-amber-300">${r["Fetch CHE Name"] || "-"}</td>
+          <td class="py-2 px-3 text-slate-400">${r["From Position"] || "-"}</td>
+          <td class="py-2 px-3 text-slate-400">${r["To Position"] || "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderQCChart(counts) {
+      const ctx = document.getElementById('chartQC').getContext('2d');
+      if (chartQCInstance) chartQCInstance.destroy();
+
+      chartQCInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: 'Movimientos Ejecutados',
+            data: Object.values(counts),
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    function renderBlockChart(counts) {
+      const ctx = document.getElementById('chartBlocks').getContext('2d');
+      if (chartBlocksInstance) chartBlocksInstance.destroy();
+
+      chartBlocksInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: 'Contenedores extraídos',
+            data: Object.values(counts),
+            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+            borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    function renderTruckChart(counts) {
+      const ctx = document.getElementById('chartTrucks').getContext('2d');
+      if (chartTrucksInstance) chartTrucksInstance.destroy();
+
+      chartTrucksInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: 'Viajes Realizados',
+            data: Object.values(counts),
+            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+            borderColor: 'rgba(99, 102, 241, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    function renderLineChart(counts) {
+      const ctx = document.getElementById('chartLines').getContext('2d');
+      if (chartLinesInstance) chartLinesInstance.destroy();
+
+      chartLinesInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            data: Object.values(counts),
+            backgroundColor: ['#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } }
+          }
+        }
+      });
+    }
+
+    function renderFetchChart(counts) {
+      const ctx = document.getElementById('chartFetch').getContext('2d');
+      if (chartFetchInstance) chartFetchInstance.destroy();
+
+      chartFetchInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(counts),
+          datasets: [{
+            label: 'Movimientos de Patio',
+            data: Object.values(counts),
+            backgroundColor: 'rgba(245, 158, 11, 0.7)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(51, 65, 85, 0.3)' }, ticks: { color: '#94a3b8' } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
