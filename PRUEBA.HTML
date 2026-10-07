@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOS Operational Vessel Performance Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js Core -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Plugin DataLabels para números fijos en gráficos -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-  <!-- SheetJS para leer Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -22,7 +18,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
-  <!-- Header -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3">
@@ -31,7 +26,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold text-white leading-tight">Vessel Performance Dashboard (TOS)</h1>
-          <p class="text-xs text-slate-400">Control de Embarque, Descarga, Bloques y Bahías</p>
+          <p class="text-xs text-slate-400">Control Operativo de Buque y Patio</p>
         </div>
       </div>
       <div>
@@ -43,10 +38,8 @@
     </div>
   </header>
 
-  <!-- Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
-    <!-- Vessel Overview Banner -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap justify-between items-center gap-4">
       <div>
         <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Detalle del Buque</span>
@@ -61,7 +54,6 @@
       </div>
     </div>
 
-    <!-- Executive KPI Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
         <span class="text-xs font-semibold text-slate-400">Total Movimientos</span>
@@ -94,11 +86,10 @@
       </div>
     </div>
 
-    <!-- MATRIZ DESGLOSE POR LÍNEA NAVIERA -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-2">
         <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
-          <i class="fa-solid fa-anchor text-blue-400 mr-2"></i> Resumen de Operación por Línea Naviera (Embarque vs Descarga)
+          <i class="fa-solid fa-anchor text-blue-400 mr-2"></i> Resumen de Operación por Línea Naviera
         </h3>
         <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-lg max-h-64">
           <table class="w-full text-left text-xs text-slate-300">
@@ -108,14 +99,14 @@
                 <th class="py-2.5 px-3 text-blue-400 text-center">Embarque (LOAD)</th>
                 <th class="py-2.5 px-3 text-purple-400 text-center">Descarga (DISCHARGE)</th>
                 <th class="py-2.5 px-3 text-amber-400 text-center">Reestibas (RESTOW)</th>
-                <th class="py-2.5 px-3 text-cyan-400 text-center">Reefer (45R1)</th>
+                <th class="py-2.5 px-3 text-cyan-400 text-center">Reefer</th>
                 <th class="py-2.5 px-3 text-right">Total Movs</th>
                 <th class="py-2.5 px-3 text-right">% Cuota</th>
               </tr>
             </thead>
             <tbody id="lineSummaryTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
               <tr>
-                <td colspan="7" class="text-center py-6 text-slate-500">Cargue un archivo para ver el resumen por naviera.</td>
+                <td colspan="7" class="text-center py-6 text-slate-500">Cargue un archivo para ver la información.</td>
               </tr>
             </tbody>
           </table>
@@ -124,7 +115,7 @@
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-1">
         <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
-          <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Embarque vs Descarga por Naviera
+          <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Embarque vs Descarga
         </h3>
         <div class="relative h-56">
           <canvas id="chartLineCompare"></canvas>
@@ -132,7 +123,6 @@
       </div>
     </div>
 
-    <!-- Charts Row 1 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-industry text-blue-400 mr-2"></i> Movimientos por Grúa (QC)</h3>
@@ -142,14 +132,13 @@
       </div>
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración por Bloque de Patio (Todos los Bloques)</h3>
-        <div class="relative h-[420px] custom-scrollbar overflow-y-auto">
+        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración por Bloque de Patio</h3>
+        <div class="relative h-[400px] custom-scrollbar overflow-y-auto">
           <canvas id="chartBlocks"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Charts Row 2 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-ship text-indigo-400 mr-2"></i> Distribución por Bahías del Buque</h3>
@@ -159,7 +148,7 @@
       </div>
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-boxes-packing text-cyan-400 mr-2"></i> Categoría de Unidad (Unit Category)</h3>
+        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-boxes-packing text-cyan-400 mr-2"></i> Categoría de Unidad</h3>
         <div class="relative h-60">
           <canvas id="chartCategories"></canvas>
         </div>
@@ -173,7 +162,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i> Registro de Movimientos Procesados</h3>
@@ -206,11 +194,9 @@
   </main>
 
   <script>
-    Chart.register(ChartDataLabels);
-
     let chartQCInstance, chartBlocksInstance, chartBaysInstance, chartCategoriesInstance, chartLineCompareInstance, chartFetchInstance;
 
-    document.getElementById('fileInput').addEventListener('change', (e) => {
+    document.getElementById('fileInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
 
@@ -221,20 +207,20 @@
       reader.onload = function(evt) {
         try {
           const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: false });
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           const sheetName = workbook.SheetNames[0];
           const sheet = workbook.Sheets[sheetName];
 
           const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
           if (!matrix || matrix.length === 0) {
-            alert('El archivo no contiene filas accesibles.');
+            alert('El archivo Excel está vacío.');
             return;
           }
 
           let headerRowIndex = -1;
-          for (let i = 0; i < Math.min(matrix.length, 25); i++) {
-            const rowStr = matrix[i].map(c => c.toString().toLowerCase()).join(" ");
+          for (let i = 0; i < Math.min(matrix.length, 30); i++) {
+            const rowStr = matrix[i].map(c => c ? c.toString().toLowerCase() : "").join(" ");
             if (rowStr.includes("time completed") || rowStr.includes("move kind") || rowStr.includes("unit nbr")) {
               headerRowIndex = i;
               break;
@@ -242,22 +228,420 @@
           }
 
           if (headerRowIndex === -1) {
-            alert("No se encontró la fila de encabezados en las primeras 25 líneas.");
+            alert("No se encontró el encabezado de la tabla (Time Completed / Move Kind).");
             return;
           }
 
-          const headerNames = matrix[headerRowIndex].map(h => h.toString().trim());
+          const headerNames = matrix[headerRowIndex].map(h => h ? h.toString().trim() : "");
           const dataRows = matrix.slice(headerRowIndex + 1);
 
-          const parsedObjects = dataRows.filter(r => r.some(c => c !== "")).map(r => {
-            const obj = {};
-            headerNames.forEach((name, idx) => {
-              if (name) {
-                obj[name] = r[idx] !== undefined ? r[idx] : "";
+          const parsedObjects = [];
+          for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            if (row.some(c => c !== "")) {
+              const obj = {};
+              for (let j = 0; j < headerNames.length; j++) {
+                const colName = headerNames[j];
+                if (colName) {
+                  obj[colName] = row[j] !== undefined ? row[j] : "";
+                }
               }
-            });
-            return obj;
-          });
+              parsedObjects.push(obj);
+            }
+          }
 
           if (parsedObjects.length > 0) {
-            processTOSData(parsed
+            processTOSData(parsedObjects, vesselNameParsed);
+          } else {
+            alert('No hay registros debajo de la fila de encabezados.');
+          }
+
+        } catch (err) {
+          console.error(err);
+          alert("Error al leer el archivo: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function getVal(row, columnName) {
+      const target = columnName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      for (let key in row) {
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (cleanKey === target) return row[key];
+      }
+      return "";
+    }
+
+    function parseYardBlock(posStr) {
+      if (!posStr || typeof posStr !== 'string') return "Otro";
+      const str = posStr.trim();
+      
+      if (str.startsWith("Y-")) {
+        const parts = str.split("-");
+        if (parts.length >= 3) {
+          const loc = parts[2].toUpperCase();
+          if (loc.startsWith("REP")) return "REP";
+          
+          const match = loc.match(/^([0-9][A-Z]|[A-Z][0-9]|[A-Z]{2})/);
+          if (match) return match[1];
+          return loc.substring(0, 2);
+        }
+      }
+      return "Patio Otro";
+    }
+
+    function parseVesselBay(posStr) {
+      if (!posStr || typeof posStr !== 'string') return "N/A";
+      const str = posStr.trim();
+      
+      if (str.startsWith("V-")) {
+        const parts = str.split("-");
+        if (parts.length >= 3) {
+          const baySlot = parts[2];
+          if (baySlot.length >= 2) return "Bahía " + baySlot.substring(0, 2);
+        }
+      }
+      return "N/A";
+    }
+
+    function parseTOSTime(val) {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val)) return val;
+
+      const str = val.toString().trim();
+      const match = str.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2})\s+(\d{2})(\d{2})$/);
+      if (match) {
+        const day = parseInt(match[1]);
+        const monthStr = match[2].toLowerCase();
+        const year = 2000 + parseInt(match[3]);
+        const hour = parseInt(match[4]);
+        const min = parseInt(match[5]);
+
+        const months = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+        const month = months[monthStr] !== undefined ? months[monthStr] : 0;
+        return new Date(year, month, day, hour, min);
+      }
+
+      const standardDate = new Date(str);
+      return isNaN(standardDate) ? null : standardDate;
+    }
+
+    function processTOSData(rows, vesselNameFromFileName) {
+      let minTime = null;
+      let maxTime = null;
+
+      const totalMoves = rows.length;
+      let loadCount = 0;
+      let dischargeCount = 0;
+      let restowCount = 0;
+      let reeferCount = 0;
+
+      const qcCounts = {};
+      const blockCounts = {};
+      const bayCounts = {};
+      const categoryCounts = {};
+      const truckCounts = {};
+      const fetchCounts = {};
+      const lineMatrix = {};
+      const linesSet = new Set();
+      let carrierVisitSingle = "";
+
+      for (let i = 0; i < rows.length; i++) {
+        const visitVal = getVal(rows[i], "Carrier Visit");
+        if (visitVal) {
+          carrierVisitSingle = visitVal.toString().trim();
+          break;
+        }
+      }
+
+      const parsedRows = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const timeStr = getVal(r, "Time Completed");
+        const moveKind = getVal(r, "Move Kind").toString();
+        const category = getVal(r, "Unit Category").toString();
+        const iso = getVal(r, "Unit Type ISO").toString();
+        const qc = getVal(r, "Crane CHE Name").toString() || "N/A";
+        const truck = getVal(r, "Carry CHE Name").toString() || "N/A";
+        const fromPos = getVal(r, "From Position").toString();
+        const toPos = getVal(r, "To Position").toString();
+        const line = getVal(r, "Line Op").toString() || "Desconocido";
+        const fetch = getVal(r, "Fetch CHE Name").toString() || "N/A";
+        const unitNbr = getVal(r, "Unit Nbr").toString();
+
+        if (!lineMatrix[line]) {
+          lineMatrix[line] = { load: 0, discharge: 0, restow: 0, reefer: 0, total: 0 };
+        }
+
+        const mkLower = moveKind.toLowerCase();
+        let isDischarge = false;
+
+        if (mkLower.includes("restow")) {
+          restowCount++;
+          lineMatrix[line].restow++;
+        } else if (mkLower.includes("discharge")) {
+          dischargeCount++;
+          isDischarge = true;
+          lineMatrix[line].discharge++;
+        } else {
+          loadCount++;
+          lineMatrix[line].load++;
+        }
+
+        lineMatrix[line].total++;
+
+        if (category && category !== "-") {
+          categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+        }
+
+        if (iso.toUpperCase().includes("R")) {
+          reeferCount++;
+          lineMatrix[line].reefer++;
+        }
+
+        if (qc && qc !== "N/A" && qc !== "-") {
+          qcCounts[qc] = (qcCounts[qc] || 0) + 1;
+        }
+
+        let yardBlock = "N/A";
+        let vesselBay = "N/A";
+
+        if (isDischarge) {
+          vesselBay = parseVesselBay(fromPos);
+          yardBlock = parseYardBlock(toPos);
+        } else {
+          yardBlock = parseYardBlock(fromPos);
+          vesselBay = parseVesselBay(toPos);
+        }
+
+        if (yardBlock !== "N/A") blockCounts[yardBlock] = (blockCounts[yardBlock] || 0) + 1;
+        if (vesselBay !== "N/A") bayCounts[vesselBay] = (bayCounts[vesselBay] || 0) + 1;
+
+        if (truck && truck !== "-" && truck !== "N/A") truckCounts[truck] = (truckCounts[truck] || 0) + 1;
+        if (line && line !== "Desconocido") linesSet.add(line);
+        if (fetch && fetch !== "-" && fetch !== "N/A") fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
+
+        const parsedDate = parseTOSTime(timeStr);
+        if (parsedDate) {
+          if (!minTime || parsedDate < minTime) minTime = parsedDate;
+          if (!maxTime || parsedDate > maxTime) maxTime = parsedDate;
+        }
+
+        parsedRows.push({ timeStr, moveKind, category, unitNbr, iso, line, qc, yardBlock, vesselBay });
+      }
+
+      let gcr = "0.0";
+      if (minTime && maxTime && maxTime > minTime) {
+        const diffHours = (maxTime - minTime) / (1000 * 60 * 60);
+        gcr = (totalMoves / diffHours).toFixed(1);
+      } else {
+        gcr = totalMoves.toString();
+      }
+
+      const finalTitle = carrierVisitSingle ? `${vesselNameFromFileName} - ${carrierVisitSingle}` : vesselNameFromFileName;
+      document.getElementById('vesselName').innerText = finalTitle;
+      document.getElementById('vesselTiming').innerHTML = `<i class="fa-regular fa-clock mr-1"></i> Período Operativo: ${minTime ? minTime.toLocaleString() : 'N/A'} a ${maxTime ? maxTime.toLocaleString() : 'N/A'}`;
+
+      document.getElementById('kpiTotalMoves').innerText = totalMoves.toLocaleString();
+      document.getElementById('kpiMovesLoad').innerText = loadCount.toLocaleString();
+      document.getElementById('kpiMovesDischarge').innerText = dischargeCount.toLocaleString();
+
+      document.getElementById('kpiGCR').innerHTML = `${gcr} <span class="text-xs text-slate-400">MPH</span>`;
+
+      const reeferPct = totalMoves > 0 ? ((reeferCount / totalMoves) * 100).toFixed(1) : "0.0";
+      document.getElementById('kpiReeferShare').innerText = `${reeferPct}%`;
+      document.getElementById('kpiReeferCount').innerText = reeferCount;
+
+      const restowPct = totalMoves > 0 ? ((restowCount / totalMoves) * 100).toFixed(1) : "0.0";
+      document.getElementById('kpiRestowShare').innerText = `${restowPct}%`;
+      document.getElementById('kpiRestowCount').innerText = restowCount;
+
+      document.getElementById('kpiActiveChe').innerText = Object.keys(truckCounts).length + Object.keys(fetchCounts).length;
+      document.getElementById('kpiTruckCount').innerText = Object.keys(truckCounts).length;
+      document.getElementById('kpiYardCount').innerText = Object.keys(fetchCounts).length;
+
+      const linesContainer = document.getElementById('linesBadge');
+      linesContainer.innerHTML = '';
+      linesSet.forEach(function(l) {
+        linesContainer.innerHTML += `<span class="bg-blue-900/60 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">${l}</span>`;
+      });
+
+      renderLineSummaryTable(lineMatrix, totalMoves);
+      renderLineCompareChart(lineMatrix);
+
+      renderTable(parsedRows);
+      renderBarChart('chartQC', chartQCInstance, Object.keys(qcCounts), Object.values(qcCounts), 'Movimientos por QC', '#3b82f6', function(inst) { chartQCInstance = inst; });
+      renderBlockChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), function(inst) { chartBlocksInstance = inst; });
+      renderBarChart('chartBays', chartBaysInstance, Object.keys(bayCounts), Object.values(bayCounts), 'Contenedores por Bahía', '#6366f1', function(inst) { chartBaysInstance = inst; });
+      renderDoughnutChart('chartCategories', chartCategoriesInstance, Object.keys(categoryCounts), Object.values(categoryCounts), function(inst) { chartCategoriesInstance = inst; });
+      renderBarChart('chartFetch', chartFetchInstance, Object.keys(fetchCounts), Object.values(fetchCounts), 'Extracciones Patio', '#f59e0b', function(inst) { chartFetchInstance = inst; });
+    }
+
+    function renderLineSummaryTable(matrix, totalVesselMoves) {
+      const tbody = document.getElementById('lineSummaryTableBody');
+      tbody.innerHTML = '';
+
+      Object.keys(matrix).forEach(function(line) {
+        const item = matrix[line];
+        const sharePct = totalVesselMoves > 0 ? ((item.total / totalVesselMoves) * 100).toFixed(1) : "0.0";
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white"><span class="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${line}</span></td>
+          <td class="py-2.5 px-3 text-center text-blue-400 font-bold">${item.load.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-purple-400 font-bold">${item.discharge.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-amber-400">${item.restow.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-cyan-400 font-semibold">${item.reefer.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-100">${item.total.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">${sharePct}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderLineCompareChart(matrix) {
+      const ctx = document.getElementById('chartLineCompare').getContext('2d');
+      if (chartLineCompareInstance) chartLineCompareInstance.destroy();
+
+      const labels = Object.keys(matrix);
+      const loadData = labels.map(function(l) { return matrix[l].load; });
+      const dischargeData = labels.map(function(l) { return matrix[l].discharge; });
+
+      chartLineCompareInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Embarque (LOAD)', data: loadData, backgroundColor: '#3b82f6' },
+            { label: 'Descarga (DISCHARGE)', data: dischargeData, backgroundColor: '#a855f7' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } } },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
+            y: { stacked: true, grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    function renderBlockChart(canvasId, instance, labels, data, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const newInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Contenedores',
+            data: data,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
+            y: {
+              grid: { display: false },
+              ticks: { color: '#cbd5e1', font: { weight: 'bold', size: 11 }, autoSkip: false }
+            }
+          }
+        }
+      });
+      setInst(newInst);
+    }
+
+    function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const newInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+            borderWidth: 2,
+            borderColor: '#0f172a'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
+        }
+      });
+      setInst(newInst);
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('moveTableBody');
+      tbody.innerHTML = '';
+      document.getElementById('recordCount').innerText = `${rows.length} registros`;
+
+      for (let i = 0; i < Math.min(rows.length, 100); i++) {
+        const r = rows[i];
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/40 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2 px-3 text-slate-400">${r.timeStr}</td>
+          <td class="py-2 px-3 font-semibold text-blue-400">${r.moveKind}</td>
+          <td class="py-2 px-3 text-purple-300">${r.category}</td>
+          <td class="py-2 px-3 text-white font-bold">${r.unitNbr}</td>
+          <td class="py-2 px-3">${r.iso}</td>
+          <td class="py-2 px-3"><span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-slate-300">${r.line}</span></td>
+          <td class="py-2 px-3 text-emerald-400 font-bold">${r.qc}</td>
+          <td class="py-2 px-3 text-emerald-300 font-semibold">${r.yardBlock}</td>
+          <td class="py-2 px-3 text-indigo-300 font-semibold">${r.vesselBay}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function renderBarChart(canvasId, instance, labels, data, label, color, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const newInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: label,
+            data: data,
+            backgroundColor: color + 'cc',
+            borderColor: color,
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+      setInst(newInst);
+    }
+  </script>
+</body>
+</html>
