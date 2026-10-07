@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOS Operational Vessel Performance Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js Core -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Plugin DataLabels para mostrar datos fijos sobre los gráficos -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -27,7 +31,7 @@
         </div>
         <div>
           <h1 class="text-lg font-bold text-white leading-tight">Vessel Performance Dashboard (TOS)</h1>
-          <p class="text-xs text-slate-400">Control de Embarque, Descarga, Bloques y Bahías</p>
+          <p class="text-xs text-slate-400">Control de Bloques, Navieras y Bahías</p>
         </div>
       </div>
       <div>
@@ -90,18 +94,57 @@
       </div>
     </div>
 
+    <!-- MATRIZ DESGLOSE POR LÍNEA NAVIERA -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-2">
+        <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
+          <i class="fa-solid fa-anchor text-blue-400 mr-2"></i> Resumen de Operación por Línea Naviera (Embarque vs Descarga)
+        </h3>
+        <div class="overflow-x-auto custom-scrollbar border border-slate-800 rounded-lg max-h-64">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800/90 text-slate-200 uppercase font-semibold text-[10px] sticky top-0">
+              <tr>
+                <th class="py-2.5 px-3">Línea Naviera</th>
+                <th class="py-2.5 px-3 text-blue-400 text-center">Embarque (LOAD)</th>
+                <th class="py-2.5 px-3 text-purple-400 text-center">Descarga (DISCHARGE)</th>
+                <th class="py-2.5 px-3 text-amber-400 text-center">Reestibas (RESTOW)</th>
+                <th class="py-2.5 px-3 text-cyan-400 text-center">Reefer (45R1)</th>
+                <th class="py-2.5 px-3 text-right">Total Movs</th>
+                <th class="py-2.5 px-3 text-right">% Cuota</th>
+              </tr>
+            </thead>
+            <tbody id="lineSummaryTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+              <tr>
+                <td colspan="7" class="text-center py-6 text-slate-500">Cargue un archivo para ver el resumen por naviera.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-1">
+        <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
+          <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Embarque vs Descarga por Naviera
+        </h3>
+        <div class="relative h-56">
+          <canvas id="chartLineCompare"></canvas>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts Row 1 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-industry text-blue-400 mr-2"></i> Movimientos por Grúa (QC)</h3>
-        <div class="relative h-64">
+        <div class="relative h-72">
           <canvas id="chartQC"></canvas>
         </div>
       </div>
 
+      <!-- GRAFICO CORREGIDO: MUESTRA TODOS LOS BLOQUES DE PATIO SIN OMITIR NINGUNO -->
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración por Bloque de Patio (S1, 1X, REP)</h3>
-        <div class="relative h-64">
+        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración por Bloque de Patio (Todos los Bloques)</h3>
+        <div class="relative h-[420px] custom-scrollbar overflow-y-auto">
           <canvas id="chartBlocks"></canvas>
         </div>
       </div>
@@ -116,6 +159,7 @@
         </div>
       </div>
 
+      <!-- GRAFICO CORREGIDO: PASTEL CON ETIQUETAS FIJAS PERMANENTES -->
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-boxes-packing text-cyan-400 mr-2"></i> Categoría de Unidad (Unit Category)</h3>
         <div class="relative h-60">
@@ -124,9 +168,9 @@
       </div>
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-chart-pie text-amber-400 mr-2"></i> Distribución por Línea Naviera</h3>
+        <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-dolly text-amber-400 mr-2"></i> Extracción en Patio (Fetch CHE)</h3>
         <div class="relative h-60">
-          <canvas id="chartLines"></canvas>
+          <canvas id="chartFetch"></canvas>
         </div>
       </div>
     </div>
@@ -164,7 +208,10 @@
   </main>
 
   <script>
-    let chartQCInstance, chartBlocksInstance, chartBaysInstance, chartCategoriesInstance, chartLinesInstance;
+    // Registrar el Plugin de DataLabels de Chart.js
+    Chart.register(ChartDataLabels);
+
+    let chartQCInstance, chartBlocksInstance, chartBaysInstance, chartCategoriesInstance, chartLineCompareInstance, chartFetchInstance;
 
     document.getElementById('fileInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -180,11 +227,7 @@
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
 
-        // -------------------------------------------------------------
-        // MODIFICACIÓN AQUI: FILA DE ENCABEZADOS EN EXCEL
-        // En tu Excel la fila 5 es el índice 4
-        // -------------------------------------------------------------
-        const HEADER_ROW_INDEX = 4;
+        const HEADER_ROW_INDEX = 4; // Fila 5 en Excel
         const rawRows = XLSX.utils.sheet_to_json(sheet, { range: HEADER_ROW_INDEX, defval: "" });
 
         if (rawRows && rawRows.length > 0) {
@@ -205,9 +248,7 @@
       return "";
     }
 
-    // -------------------------------------------------------------
-    // REFERENCIA 1: EXTRACCIÓN DE BLOQUE DE PATIO (S1, 1X, REP, ETC.)
-    // -------------------------------------------------------------
+    // EXTRACCIÓN MEJORADA DE BLOQUES DE PATIO
     function parseYardBlock(posStr) {
       if (!posStr || typeof posStr !== 'string') return "Otro";
       const str = posStr.trim();
@@ -215,23 +256,18 @@
       if (str.startsWith("Y-")) {
         const parts = str.split("-");
         if (parts.length >= 3) {
-          const loc = parts[2].toUpperCase(); // Ej: S10230.1, 1X34J.1, REP02G.1
-          if (loc.startsWith("REP")) {
-            return "REP"; // Área de Depot / Reparación
-          }
+          const loc = parts[2].toUpperCase();
+          if (loc.startsWith("REP")) return "REP";
+          
+          // Captura bloques como S1, 1X, 1G, CC, 1H, 1F, 1E, 1B, 1D, 1Y, etc.
           const match = loc.match(/^([0-9][A-Z]|[A-Z][0-9]|[A-Z]{2})/);
-          if (match) {
-            return match[1]; // Retorna S1, 1X, 1G, CC, 1Y, 1H, 1D
-          }
+          if (match) return match[1];
           return loc.substring(0, 2);
         }
       }
       return "Patio Otro";
     }
 
-    // -------------------------------------------------------------
-    // REFERENCIA 2: EXTRACCIÓN DE BAHÍA DEL BUQUE (18 DE V-COS2026008-180690)
-    // -------------------------------------------------------------
     function parseVesselBay(posStr) {
       if (!posStr || typeof posStr !== 'string') return "N/A";
       const str = posStr.trim();
@@ -239,10 +275,8 @@
       if (str.startsWith("V-")) {
         const parts = str.split("-");
         if (parts.length >= 3) {
-          const baySlot = parts[2]; // Ej: 180690
-          if (baySlot.length >= 2) {
-            return "Bahía " + baySlot.substring(0, 2); // Retorna "Bahía 18"
-          }
+          const baySlot = parts[2];
+          if (baySlot.length >= 2) return "Bahía " + baySlot.substring(0, 2);
         }
       }
       return "N/A";
@@ -279,12 +313,10 @@
       const bayCounts = {};
       const categoryCounts = {};
       const truckCounts = {};
-      const lineCounts = {};
       const fetchCounts = {};
+      const lineMatrix = {};
       const linesSet = new Set();
       let carrierVisitSingle = "";
-
-      let minTime = null, maxTime = null;
 
       for (let r of rows) {
         const visitVal = getVal(r, "Carrier Visit");
@@ -297,45 +329,53 @@
       const parsedRows = rows.map(r => {
         const timeStr = getVal(r, "Time Completed");
         const moveKind = getVal(r, "Move Kind").toString();
-        const category = getVal(r, "Unit Category").toString(); // Import, Export, Transship, Through
+        const category = getVal(r, "Unit Category").toString();
         const iso = getVal(r, "Unit Type ISO").toString();
         const qc = getVal(r, "Crane CHE Name").toString() || "N/A";
         const truck = getVal(r, "Carry CHE Name").toString() || "N/A";
         const fromPos = getVal(r, "From Position").toString();
         const toPos = getVal(r, "To Position").toString();
-        const line = getVal(r, "Line Op").toString() || "N/A";
+        const line = getVal(r, "Line Op").toString() || "Desconocido";
         const fetch = getVal(r, "Fetch CHE Name").toString() || "N/A";
         const unitNbr = getVal(r, "Unit Nbr").toString();
 
-        // -------------------------------------------------------------
-        // REFERENCIA 3: TIPO DE MOVIMIENTO Y CATEGORÍA
-        // -------------------------------------------------------------
+        if (!lineMatrix[line]) {
+          lineMatrix[line] = { load: 0, discharge: 0, restow: 0, reefer: 0, total: 0 };
+        }
+
         const mkLower = moveKind.toLowerCase();
+        let isLoad = false, isDischarge = false, isRestow = false;
+
         if (mkLower.includes("restow")) {
           restowCount++;
+          isRestow = true;
+          lineMatrix[line].restow++;
         } else if (mkLower.includes("discharge")) {
           dischargeCount++;
+          isDischarge = true;
+          lineMatrix[line].discharge++;
         } else {
           loadCount++;
+          isLoad = true;
+          lineMatrix[line].load++;
         }
+
+        lineMatrix[line].total++;
 
         if (category && category !== "-") {
           categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         }
 
-        if (iso.toUpperCase().includes("R")) reeferCount++;
+        const isReefer = iso.toUpperCase().includes("R");
+        if (isReefer) {
+          reeferCount++;
+          lineMatrix[line].reefer++;
+        }
 
         if (qc && qc !== "N/A" && qc !== "-") qcCounts[qc] = (qcCounts[qc] || 0) + 1;
 
-        // -------------------------------------------------------------
-        // REFERENCIA 4: RUTA DE BLOQUE EN PATIO Y BAHÍA EN BUQUE
-        // Carga (LOAD): From=Patio, To=Buque
-        // Descarga (DISCHARGE): From=Buque, To=Patio
-        // -------------------------------------------------------------
-        let yardBlock = "N/A";
-        let vesselBay = "N/A";
-
-        if (mkLower.includes("discharge")) {
+        let yardBlock = "N/A", vesselBay = "N/A";
+        if (isDischarge) {
           vesselBay = parseVesselBay(fromPos);
           yardBlock = parseYardBlock(toPos);
         } else {
@@ -347,10 +387,7 @@
         if (vesselBay !== "N/A") bayCounts[vesselBay] = (bayCounts[vesselBay] || 0) + 1;
 
         if (truck && truck !== "-" && truck !== "N/A") truckCounts[truck] = (truckCounts[truck] || 0) + 1;
-        if (line && line !== "N/A" && line !== "-") {
-          lineCounts[line] = (lineCounts[line] || 0) + 1;
-          linesSet.add(line);
-        }
+        if (line && line !== "Desconocido") linesSet.add(line);
         if (fetch && fetch !== "-" && fetch !== "N/A") fetchCounts[fetch] = (fetchCounts[fetch] || 0) + 1;
 
         const parsedDate = parseTOSTime(timeStr);
@@ -394,20 +431,169 @@
       document.getElementById('kpiTruckCount').innerText = Object.keys(truckCounts).length;
       document.getElementById('kpiYardCount').innerText = Object.keys(fetchCounts).length;
 
-      // Badges
+      // Badges Navieras
       const linesContainer = document.getElementById('linesBadge');
       linesContainer.innerHTML = '';
       linesSet.forEach(l => {
         linesContainer.innerHTML += `<span class="bg-blue-900/60 text-blue-300 border border-blue-700/50 text-xs font-bold px-2 py-0.5 rounded">${l}</span>`;
       });
 
-      renderTable(parsedRows);
+      renderLineSummaryTable(lineMatrix, totalMoves);
+      renderLineCompareChart(lineMatrix);
 
+      renderTable(parsedRows);
       renderBarChart('chartQC', chartQCInstance, Object.keys(qcCounts), Object.values(qcCounts), 'Movimientos por QC', '#3b82f6', (inst) => chartQCInstance = inst);
-      renderBarChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), 'Contenedores por Bloque', '#10b981', (inst) => chartBlocksInstance = inst, true);
+      
+      // RENDERIZADO CORREGIDO PARA BLOQUES DE PATIO (EJE Y MOSTRANDO TODOS LOS NOMBRES)
+      renderBlockChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), (inst) => chartBlocksInstance = inst);
+      
       renderBarChart('chartBays', chartBaysInstance, Object.keys(bayCounts), Object.values(bayCounts), 'Contenedores por Bahía', '#6366f1', (inst) => chartBaysInstance = inst);
-      renderDoughnutChart('chartCategories', chartCategoriesInstance, Object.keys(categoryCounts), Object.values(categoryCounts), (inst) => chartCategoriesInstance = inst);
-      renderDoughnutChart('chartLines', chartLinesInstance, Object.keys(lineCounts), Object.values(lineCounts), (inst) => chartLinesInstance = inst);
+      
+      // RENDERIZADO CORREGIDO PARA PASTEL CON ETIQUETAS FIJAS
+      renderDoughnutChartWithLabels('chartCategories', chartCategoriesInstance, Object.keys(categoryCounts), Object.values(categoryCounts), (inst) => chartCategoriesInstance = inst);
+      
+      renderBarChart('chartFetch', chartFetchInstance, Object.keys(fetchCounts), Object.values(fetchCounts), 'Extracciones Patio', '#f59e0b', (inst) => chartFetchInstance = inst);
+    }
+
+    function renderLineSummaryTable(matrix, totalVesselMoves) {
+      const tbody = document.getElementById('lineSummaryTableBody');
+      tbody.innerHTML = '';
+
+      Object.keys(matrix).forEach(line => {
+        const item = matrix[line];
+        const sharePct = totalVesselMoves > 0 ? ((item.total / totalVesselMoves) * 100).toFixed(1) : "0.0";
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-800/50 transition-colors";
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-bold text-white"><span class="bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${line}</span></td>
+          <td class="py-2.5 px-3 text-center text-blue-400 font-bold">${item.load.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-purple-400 font-bold">${item.discharge.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-amber-400">${item.restow.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-center text-cyan-400 font-semibold">${item.reefer.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right font-bold text-slate-100">${item.total.toLocaleString()}</td>
+          <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">${sharePct}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderLineCompareChart(matrix) {
+      const ctx = document.getElementById('chartLineCompare').getContext('2d');
+      if (chartLineCompareInstance) chartLineCompareInstance.destroy();
+
+      const labels = Object.keys(matrix);
+      const loadData = labels.map(l => matrix[l].load);
+      const dischargeData = labels.map(l => matrix[l].discharge);
+
+      chartLineCompareInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Embarque (LOAD)', data: loadData, backgroundColor: '#3b82f6' },
+            { label: 'Descarga (DISCHARGE)', data: dischargeData, backgroundColor: '#a855f7' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
+            y: { stacked: true, grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    // FUNCIÓN ESPECÍFICA CORREGIDA PARA BLOQUES DE PATIO: autoSkip = false
+    function renderBlockChart(canvasId, instance, labels, data, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const newInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Contenedores',
+            data: data,
+            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+            borderColor: '#10b981',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: '#34d399',
+              font: { weight: 'bold', size: 10 }
+            }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
+            y: {
+              grid: { display: false },
+              ticks: {
+                color: '#cbd5e1',
+                font: { weight: 'bold', size: 11 },
+                autoSkip: false // ESTA PROPIEDAD HACE QUE NO SE OMITA NINGÚN BLOQUE
+              }
+            }
+          }
+        }
+      });
+      setInst(newInst);
+    }
+
+    // FUNCIÓN ESPECÍFICA CORREGIDA PARA EL GRÁFICO DE PASTEL CON ETIQUETAS FIJAS PERMANENTES
+    function renderDoughnutChartWithLabels(canvasId, instance, labels, data, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const totalSum = data.reduce((a, b) => a + b, 0);
+
+      const newInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
+            borderWidth: 2,
+            borderColor: '#0f172a'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } },
+            // CONFIGURACIÓN DE ETIQUETAS PERMANENTES VISIBLES SIN HOVER
+            datalabels: {
+              color: '#ffffff',
+              font: { weight: 'bold', size: 12 },
+              formatter: (value, ctx) => {
+                const percentage = totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) + '%' : '';
+                return `${value}\n(${percentage})`; // Muestra cantidad y porcentaje fijo en pantalla
+              },
+              textAlign: 'center'
+            }
+          }
+        }
+      });
+      setInst(newInst);
     }
 
     function renderTable(rows) {
@@ -454,34 +640,14 @@
           indexAxis: isHorizontal ? 'y' : 'x',
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            datalabels: { display: false }
+          },
           scales: {
             x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
             y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
           }
-        }
-      });
-      setInst(newInst);
-    }
-
-    function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (instance) instance.destroy();
-
-      const newInst = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
         }
       });
       setInst(newInst);
