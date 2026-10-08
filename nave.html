@@ -72,18 +72,14 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;color:#3
 <body>
 
 <script>
-    // --- VERIFICACIÓN DE ACCESO Y CONTROL TOTAL DE HISTORIAL ---
+    // --- VERIFICACIÓN DE ACCESO Y GESTIÓN DE HISTORIAL ---
     const usuarioActual = localStorage.getItem('usuarioLogueado');
     if (!usuarioActual) {
         window.location.replace('index.html');
     }
 
-    // Bloqueo de los botones Atrás y Adelante del navegador
-    history.pushState(null, null, location.href);
-    history.pushState(null, null, location.href);
-    window.onpopstate = function () {
-        history.go(1);
-    };
+    // Truco: Reemplaza el historial actual para que el botón "Atrás" mande a home.html en vez del login
+    history.replaceState(null, '', 'home.html');
 </script>
 
 <div class="main-header">
@@ -186,7 +182,6 @@ function cerrarSesion() {
 }
 
 function irAlHome() {
-    // Redirige a la mesa de servicio home.html
     window.location.href = 'home.html';
 }
 
