@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TOS Operational Vessel Performance Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js Core -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Plugin Oficial para mostrar datos permanentes en gráficos sin hacer hover -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+  <!-- SheetJS para lectura de Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -115,7 +119,7 @@
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-1">
         <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
-          <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Embarque vs Descarga
+          <i class="fa-solid fa-chart-bar text-emerald-400 mr-2"></i> Embarque vs Descarga por Naviera
         </h3>
         <div class="relative h-56">
           <canvas id="chartLineCompare"></canvas>
@@ -133,7 +137,7 @@
 
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-layer-group text-emerald-400 mr-2"></i> Concentración por Bloque de Patio</h3>
-        <div class="relative h-[400px] custom-scrollbar overflow-y-auto">
+        <div class="relative h-[420px] custom-scrollbar overflow-y-auto">
           <canvas id="chartBlocks"></canvas>
         </div>
       </div>
@@ -194,6 +198,11 @@
   </main>
 
   <script>
+    // Registrar el Plugin de DataLabels de Chart.js
+    if (typeof ChartDataLabels !== 'undefined') {
+      Chart.register(ChartDataLabels);
+    }
+
     let chartQCInstance, chartBlocksInstance, chartBaysInstance, chartCategoriesInstance, chartLineCompareInstance, chartFetchInstance;
 
     document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -475,7 +484,7 @@
       renderBarChart('chartQC', chartQCInstance, Object.keys(qcCounts), Object.values(qcCounts), 'Movimientos por QC', '#3b82f6', function(inst) { chartQCInstance = inst; });
       renderBlockChart('chartBlocks', chartBlocksInstance, Object.keys(blockCounts), Object.values(blockCounts), function(inst) { chartBlocksInstance = inst; });
       renderBarChart('chartBays', chartBaysInstance, Object.keys(bayCounts), Object.values(bayCounts), 'Contenedores por Bahía', '#6366f1', function(inst) { chartBaysInstance = inst; });
-      renderDoughnutChart('chartCategories', chartCategoriesInstance, Object.keys(categoryCounts), Object.values(categoryCounts), function(inst) { chartCategoriesInstance = inst; });
+      renderDoughnutChartWithLabels('chartCategories', chartCategoriesInstance, Object.keys(categoryCounts), Object.values(categoryCounts), function(inst) { chartCategoriesInstance = inst; });
       renderBarChart('chartFetch', chartFetchInstance, Object.keys(fetchCounts), Object.values(fetchCounts), 'Extracciones Patio', '#f59e0b', function(inst) { chartFetchInstance = inst; });
     }
 
@@ -502,6 +511,7 @@
       });
     }
 
+    // 1. GRAFICO NAVIERAS CON ETIQUETAS VISIBLES
     function renderLineCompareChart(matrix) {
       const ctx = document.getElementById('chartLineCompare').getContext('2d');
       if (chartLineCompareInstance) chartLineCompareInstance.destroy();
@@ -522,7 +532,14 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } } },
+          plugins: {
+            legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } },
+            datalabels: {
+              color: '#ffffff',
+              font: { weight: 'bold', size: 10 },
+              formatter: function(val) { return val > 0 ? val : ''; }
+            }
+          },
           scales: {
             x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
             y: { stacked: true, grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
@@ -531,6 +548,7 @@
       });
     }
 
+    // 2. GRAFICO BLOQUES PATIO (TODAS LAS ETIQUETAS VISIBLES Y NUMEROS EN BARRAS)
     function renderBlockChart(canvasId, instance, labels, data, setInst) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (instance) instance.destroy();
@@ -552,7 +570,16 @@
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              color: '#34d399',
+              font: { weight: 'bold', size: 11 },
+              formatter: function(val) { return val; }
+            }
+          },
           scales: {
             x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
             y: {
@@ -565,9 +592,12 @@
       setInst(newInst);
     }
 
-    function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
+    // 3. GRAFICO DE DONA/PASTEL CON CANTIDADES Y PORCENTAJES FIJOS VISIBLES
+    function renderDoughnutChartWithLabels(canvasId, instance, labels, data, setInst) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (instance) instance.destroy();
+
+      const totalSum = data.reduce(function(a, b) { return a + b; }, 0);
 
       const newInst = new Chart(ctx, {
         type: 'doughnut',
@@ -583,7 +613,58 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } } }
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } },
+            datalabels: {
+              color: '#ffffff',
+              font: { weight: 'bold', size: 11 },
+              formatter: function(value) {
+                const percentage = totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) + '%' : '';
+                return `${value}\n(${percentage})`;
+              },
+              textAlign: 'center'
+            }
+          }
+        }
+      });
+      setInst(newInst);
+    }
+
+    // 4. BARRAS GENERALES CON NÚMEROS PERMANENTES
+    function renderBarChart(canvasId, instance, labels, data, label, color, setInst) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (instance) instance.destroy();
+
+      const newInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: label,
+            data: data,
+            backgroundColor: color + 'cc',
+            borderColor: color,
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#e2e8f0',
+              font: { weight: 'bold', size: 10 },
+              formatter: function(val) { return val > 0 ? val : ''; }
+            }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+          }
         }
       });
       setInst(newInst);
@@ -611,36 +692,6 @@
         `;
         tbody.appendChild(tr);
       }
-    }
-
-    function renderBarChart(canvasId, instance, labels, data, label, color, setInst) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (instance) instance.destroy();
-
-      const newInst = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: label,
-            data: data,
-            backgroundColor: color + 'cc',
-            borderColor: color,
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
-            y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
-          }
-        }
-      });
-      setInst(newInst);
     }
   </script>
 </body>
