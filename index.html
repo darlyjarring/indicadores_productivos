@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Indicadores Productivos DP World Posorja</title>
+    <!-- SDK de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -111,6 +113,11 @@
     </div>
 
     <script>
+        // Inicializa Supabase con tus credenciales reales
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+        const SUPABASE_ANON_KEY = 'tu-anon-key';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -124,31 +131,36 @@
             btnSubmit.disabled = true;
 
             try {
-                // Petición al backend que consulta la base de datos PostgreSQL
-                const respuesta = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: user, password: pass })
-                });
+                // Consultamos directamente tu tabla 'logeo' unida con 'roles' en Supabase
+                const { data, error } = await supabaseClient
+                    .from('logeo')
+                    .select(`
+                        id,
+                        nombre_completo,
+                        username,
+                        password,
+                        roles (
+                            nombre_rol
+                        )
+                    `)
+                    .eq('username', user)
+                    .eq('password', pass)
+                    .single();
 
-                const resultado = await respuesta.json();
-
-                if (resultado.success) {
-                    // Guardamos la sesión y el rol devuelto por la base de datos de manera segura
-                    localStorage.setItem('usuarioLogueado', resultado.nombre_completo);
-                    localStorage.setItem('rolUsuario', resultado.nombre_rol);
-                    
-                    // Redirigimos al home bloqueando historial para evitar el botón "Atrás"
-                    window.location.replace('home.html');
-                } else {
-                    errorMsg.textContent = resultado.mensaje;
-                    errorMsg.style.display = 'block';
-                    btnSubmit.textContent = 'Ingresar';
-                    btnSubmit.disabled = false;
+                if (error || !data) {
+                    throw new Error('Credenciales inválidas');
                 }
-            } catch (error) {
-                console.error("Error de red:", error);
-                errorMsg.textContent = "Error de conexión con el servidor.";
+
+                // Guardamos los datos de la sesión de manera segura en el navegador
+                localStorage.setItem('usuarioLogueado', data.nombre_completo);
+                localStorage.setItem('rolUsuario', data.roles?.nombre_rol || 'Usuario');
+                
+                // Redirigimos bloqueando el historial para evitar saltos o botón "Atrás"
+                window.location.replace('home.html');
+
+            } catch (err) {
+                console.error("Error de autenticación:", err);
+                errorMsg.textContent = "Usuario o contraseña incorrectos.";
                 errorMsg.style.display = 'block';
                 btnSubmit.textContent = 'Ingresar';
                 btnSubmit.disabled = false;
