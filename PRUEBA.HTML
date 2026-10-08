@@ -566,18 +566,20 @@
           responsive: true,
           maintainAspectRatio: false,
           layout: {
-            padding: { top: 20 }
+            padding: { top: 30 } // Espacio superior para el total de la barra
           },
           plugins: {
             legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } },
             datalabels: {
               color: '#ffffff',
               font: { weight: 'bold', size: 10 },
-              // Centra el texto dentro de cada segmento apilado y oculta ceros o valores imperceptibles
+              // Lógica inteligente: Solo muestra el número interno si el segmento es mayor a 30 unidades
               anchor: 'center',
               align: 'center',
-              formatter: function(val) {
-                return val > 5 ? val : '';
+              formatter: function(val, context) {
+                // Si el segmento es muy pequeño (< 30), lo oculta para evitar montarse
+                if (val < 30) return '';
+                return val;
               }
             }
           },
@@ -587,7 +589,7 @@
               stacked: true, 
               grid: { color: 'rgba(51, 65, 85, 0.2)' }, 
               ticks: { color: '#94a3b8' },
-              grace: '20%' // Margen superior para evitar cortes en barras altas
+              grace: '25%' // Margen superior amplio para los totales
             }
           }
         }
