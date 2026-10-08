@@ -6,11 +6,13 @@
 <title>Tráfico de Naves - Posorja</title>
 <!-- Carga de la librería oficial de Supabase JS desde CDN -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 *{box-sizing:border-box}
 :root{--azul:#123b5d;--borde:#dbe2ea;--fondo:#eef1f5}
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1f2937}
-header{background:#a51f35;color:#fff;padding:16px 20px}
+header{background:#a51f35;color:#fff;padding:16px 20px;display:flex;flex-direction:column;md-flex-row;justify-content:space-between;align-items:center;gap:12px}
+@media(min-width:768px){header{flex-direction:row;align-items:center}}
 header h1{margin:0 0 4px;font-size:25px} header p{margin:0;opacity:.92}
 .panel{max-width:1700px;margin:16px auto;padding:0 12px;overflow:hidden;}
 .controles{background:#fff;padding:13px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;flex-wrap:wrap;align-items:end;gap:9px}
@@ -73,8 +75,28 @@ button.home-btn:hover{background:#0369a1;}
 </head>
 <body>
 <header>
-<h1>PLANIFICACIÓN DE NAVES - POSORJA</h1>
-<p>Línea de tiempo de arribos, operaciones y zarpes</p>
+    <div>
+        <h1>PLANIFICACIÓN DE NAVES - POSORJA</h1>
+        <p>Línea de tiempo de arribos, operaciones y zarpes</p>
+    </div>
+
+    <!-- Sección Usuario, Cerrar Sesión y HOME en la parte superior derecha -->
+    <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: #7f1d1d; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div style="text-align: left;">
+                <div style="font-size: 12px; font-weight: bold; color: #fff; line-height: 1.1;" id="user-name">José Jarrín</div>
+                <div style="font-size: 10px; color: #fca5a5; line-height: 1.1;" id="user-role">Operador</div>
+            </div>
+        </div>
+
+        <div style="height: 24px; width: 1px; background: rgba(255, 255, 255, 0.3); margin: 0 2px;"></div>
+
+        <button class="home-btn" onclick="irAFechaActual()" style="height: 32px; padding: 0 10px; font-size: 12px; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-house"></i> HOME</button>
+        <button class="secundario" onclick="cerrarSesion()" style="height: 32px; padding: 0 10px; font-size: 12px; background: #7f1d1d; display: flex; align-items: center; gap: 5px;" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+    </div>
 </header>
 <div class="panel">
 <div class="controles">
@@ -479,6 +501,13 @@ async function abrirModal(n) {
 }
 
 function cerrarModal(e){ if(!e || e.target === document.getElementById('modalFondo')) document.getElementById('modalFondo').style.display = 'none'; }
+
+function cerrarSesion() {
+    if (confirm('¿Está seguro de que desea cerrar sesión?')) {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    }
+}
 
 (function inicializarInteracciones(){
   const slider = document.getElementById('scroll');
