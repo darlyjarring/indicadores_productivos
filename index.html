@@ -113,9 +113,9 @@
     </div>
 
     <script>
-        // Inicializa Supabase con tus credenciales reales
+        // Tus credenciales reales de Supabase
         const SUPABASE_URL = 'https://owykvbhrvhopbqfyarzz.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T';
+        const SUPABASE_ANON_KEY = 'TU_ANON_KEY_AQUI'; // Reemplaza por tu llave anon real de Supabase
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -131,31 +131,45 @@
             btnSubmit.disabled = true;
 
             try {
-                // Consultamos directamente tu tabla 'logeo' unida con 'roles' en Supabase
-                const { data, error } = await supabaseClient
+                // 1. Validar credenciales consultando la tabla 'logeo' usando 'password_hash'
+                const { data: userData, error: userError } = await supabaseClient
                     .from('logeo')
-                    .select(`
-                        id,
-                        nombre_completo,
-                        username,
-                        password,
-                        roles (
-                            nombre_rol
-                        )
-                    `)
+                    .select('*')
                     .eq('username', user)
-                    .eq('password', pass)
+                    .eq('password_hash', pass)
+                    .eq('activo', true)
                     .single();
 
-                if (error || !data) {
+                if (userError || !userData) {
                     throw new Error('Credenciales inválidas');
                 }
 
-                // Guardamos los datos de la sesión de manera segura en el navegador
-                localStorage.setItem('usuarioLogueado', data.nombre_completo);
-                localStorage.setItem('rolUsuario', data.roles?.nombre_rol || 'Usuario');
+                // 2. Buscar el rol del usuario en la tabla intermedia 'rol_permisos'
+                let nombreRolAsignado = 'Usuario';
+                const { data: permisoData, error: permisoError } = await supabaseClient
+                    .from('rol_permisos')
+                    .select('rol_id')
+                    .eq('usuario', userData.id)
+                    .single();
+
+                if (!permisoError && permisoData) {
+                    // 3. Obtener el nombre del rol desde la tabla 'roles'
+                    const { data: rolData } = await supabaseClient
+                        .from('roles')
+                        .select('nombre_rol')
+                        .eq('id', permisoData.rol_id)
+                        .single();
+
+                    if (rolData) {
+                        nombreRolAsignado = rolData.nombre_rol;
+                    }
+                }
+
+                // Guardar sesión de forma segura
+                localStorage.setItem('usuarioLogueado', userData.nombre_completo);
+                localStorage.setItem('rolUsuario', nombreRolAsignado);
                 
-                // Redirigimos bloqueando el historial para evitar saltos o botón "Atrás"
+                // Redirigir al home bloqueando el historial
                 window.location.replace('home.html');
 
             } catch (err) {
