@@ -72,13 +72,14 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;color:#3
 <body>
 
 <script>
-    // --- VERIFICACIÓN DE ACCESO Y CONTROL DE HISTORIAL ---
+    // --- VERIFICACIÓN DE ACCESO Y CONTROL TOTAL DE HISTORIAL ---
     const usuarioActual = localStorage.getItem('usuarioLogueado');
     if (!usuarioActual) {
         window.location.replace('index.html');
     }
 
-    // Evita que el botón "Atrás" devuelva al usuario al login
+    // Bloqueo de los botones Atrás y Adelante del navegador
+    history.pushState(null, null, location.href);
     history.pushState(null, null, location.href);
     window.onpopstate = function () {
         history.go(1);
@@ -185,7 +186,7 @@ function cerrarSesion() {
 }
 
 function irAlHome() {
-    // Redirige a la página principal de la mesa de servicio
+    // Redirige a la mesa de servicio home.html
     window.location.href = 'home.html';
 }
 
