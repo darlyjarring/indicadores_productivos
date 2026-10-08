@@ -648,17 +648,17 @@
           maintainAspectRatio: false,
           layout: {
             padding: {
-              top: 35,
+              top: 55,    // Espacio superior amplio para que la etiqueta "30 (2.3%)" se vea completa
               bottom: 10,
-              left: 20,
-              right: 20
+              left: 25,
+              right: 25
             }
           },
           plugins: {
             legend: { 
               position: 'bottom', 
               labels: { 
-                color: '#f8fafc', // COLOR BLANCO BRILLANTE PARA LEYENDA
+                color: '#f8fafc',
                 boxWidth: 12, 
                 font: { size: 11, weight: '600' },
                 generateLabels: function(chart) {
@@ -686,9 +686,15 @@
             datalabels: {
               color: '#ffffff',
               font: { weight: 'bold', size: 9 },
-              formatter: function(value) {
+              formatter: function(value, context) {
                 if (value === 0) return '';
                 const percentage = totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) + '%' : '';
+                const pctVal = totalSum > 0 ? (value / totalSum) * 100 : 0;
+                
+                // Si va afuera, lo pone en 1 sola línea para no ocupar altura vertical excesiva
+                if (pctVal < 2.5) {
+                  return `${value} (${percentage})`;
+                }
                 return `${value}\n(${percentage})`;
               },
               textAlign: 'center',
@@ -705,7 +711,7 @@
               offset: function(context) {
                 const val = context.dataset.data[context.dataIndex];
                 const pct = totalSum > 0 ? (val / totalSum) * 100 : 0;
-                return pct < 2.5 ? 14 : 0;
+                return pct < 2.5 ? 12 : 0;
               }
             }
           }
