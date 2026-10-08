@@ -105,35 +105,53 @@
                 <input type="password" id="password" required placeholder="********">
             </div>
 
-            <button type="submit" class="btn-login">Ingresar</button>
+            <button type="submit" class="btn-login" id="btnSubmit">Ingresar</button>
             <div id="errorMsg" class="error-msg">Usuario o contraseña incorrectos.</div>
         </form>
     </div>
 
     <script>
-        // Base de datos simulada de usuarios (puedes agregar más aquí)
-        const usuariosValidos = {
-            "jleonardo": { password: "123", nombre: "José Leonardo Jarrín" },
-            "operador1": { password: "123", nombre: "Carlos Pérez" },
-            "supervisor": { password: "123", nombre: "María Gómez" }
-        };
-
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
             const errorMsg = document.getElementById('errorMsg');
+            const btnSubmit = document.getElementById('btnSubmit');
 
-            if (usuariosValidos[user] && usuariosValidos[user].password === pass) {
-                // Guardamos el nombre completo y el usuario en el almacenamiento local del navegador
-                localStorage.setItem('usuarioLogueado', usuariosValidos[user].nombre);
-                localStorage.setItem('usernameId', user);
-                
-                // Redirigimos al home
-                window.location.href = 'home.html';
-            } else {
+            errorMsg.style.display = 'none';
+            btnSubmit.textContent = 'Verificando...';
+            btnSubmit.disabled = true;
+
+            try {
+                // Petición al backend que consulta la base de datos PostgreSQL
+                const respuesta = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                const resultado = await respuesta.json();
+
+                if (resultado.success) {
+                    // Guardamos la sesión y el rol devuelto por la base de datos de manera segura
+                    localStorage.setItem('usuarioLogueado', resultado.nombre_completo);
+                    localStorage.setItem('rolUsuario', resultado.nombre_rol);
+                    
+                    // Redirigimos al home bloqueando historial para evitar el botón "Atrás"
+                    window.location.replace('home.html');
+                } else {
+                    errorMsg.textContent = resultado.mensaje;
+                    errorMsg.style.display = 'block';
+                    btnSubmit.textContent = 'Ingresar';
+                    btnSubmit.disabled = false;
+                }
+            } catch (error) {
+                console.error("Error de red:", error);
+                errorMsg.textContent = "Error de conexión con el servidor.";
                 errorMsg.style.display = 'block';
+                btnSubmit.textContent = 'Ingresar';
+                btnSubmit.disabled = false;
             }
         });
     </script>
