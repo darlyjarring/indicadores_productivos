@@ -624,7 +624,7 @@
       setInst(newInst);
     }
 
-    function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
+   function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (instance) instance.destroy();
 
@@ -645,16 +645,26 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: 20 },
+          layout: {
+            padding: {
+              top: 35,    // Espacio superior suficiente para que las etiquetas externas no se corten
+              bottom: 10,
+              left: 20,
+              right: 20
+            }
+          },
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 11 } } },
+            legend: { 
+              position: 'bottom', 
+              labels: { color: '#94a3b8', boxWidth: 10, font: { size: 11 } } 
+            },
             datalabels: {
               color: '#ffffff',
-              font: { weight: 'bold', size: 10 },
+              font: { weight: 'bold', size: 9 },
               formatter: function(value) {
                 if (value === 0) return '';
                 const percentage = totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) + '%' : '';
-                return `${value}\n(${percentage})`;
+                return `${value} (${percentage})`;
               },
               textAlign: 'center',
               anchor: function(context) {
@@ -670,7 +680,7 @@
               offset: function(context) {
                 const val = context.dataset.data[context.dataIndex];
                 const pct = totalSum > 0 ? (val / totalSum) * 100 : 0;
-                return pct < 8 ? 16 : 0;
+                return pct < 8 ? 12 : 0;
               }
             }
           }
