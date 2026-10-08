@@ -80,7 +80,7 @@ button.home-btn:hover{background:#0369a1;}
         <p>Línea de tiempo de arribos, operaciones y zarpes</p>
     </div>
 
-    <!-- Sección Usuario, Cerrar Sesión y HOME en la parte superior derecha -->
+    <!-- Sección Usuario, Salir y HOME hacia home.html en la parte superior derecha -->
     <div style="display: flex; align-items: center; gap: 10px; background: rgba(0, 0, 0, 0.2); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.15);">
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 32px; height: 32px; border-radius: 50%; background: #7f1d1d; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff;">
@@ -94,7 +94,7 @@ button.home-btn:hover{background:#0369a1;}
 
         <div style="height: 24px; width: 1px; background: rgba(255, 255, 255, 0.3); margin: 0 2px;"></div>
 
-        <button class="home-btn" onclick="irAFechaActual()" style="height: 32px; padding: 0 10px; font-size: 12px; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-house"></i> HOME</button>
+        <button class="home-btn" onclick="irAHome()" style="height: 32px; padding: 0 10px; font-size: 12px; display: flex; align-items: center; gap: 5px;"><i class="fa-solid fa-house"></i> HOME</button>
         <button class="secundario" onclick="cerrarSesion()" style="height: 32px; padding: 0 10px; font-size: 12px; background: #7f1d1d; display: flex; align-items: center; gap: 5px;" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
     </div>
 </header>
@@ -105,7 +105,6 @@ button.home-btn:hover{background:#0369a1;}
 <button onclick="consultar()">CONSULTAR</button>
 <button class="secundario" onclick="hoy()">HOY</button>
 <button class="secundario" onclick="rango7()">7 DÍAS</button>
-<button class="home-btn" onclick="irAFechaActual()">🏠 HOME</button>
 <div class="zoom-box">
 <label>ESCALA</label>
 <button type="button" class="secundario" onclick="cambiarZoom(-6)">−</button>
@@ -197,16 +196,8 @@ function fechaLocalInput(d){ return `${d.getFullYear()}-${String(d.getMonth()+1)
 function hoy(){ const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(a); consultar(); }
 function rango7(){ const a = new Date(), b = new Date(a); b.setDate(b.getDate()+6); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(b); consultar(); }
 
-function irAFechaActual() {
-  hoy();
-  setTimeout(() => {
-    const scrollEl = document.getElementById('scroll');
-    const ahoraEl = scrollEl.querySelector('.ahora');
-    if (ahoraEl && ultimoInicio) {
-      const xPos = parseFloat(ahoraEl.style.left) || 0;
-      scrollEl.scrollTo({ left: xPos - (scrollEl.clientWidth / 2), behavior: 'smooth' });
-    }
-  }, 300);
+function irAHome() {
+    window.location.href = 'home.html';
 }
 
 function cambiarZoom(delta){ const z = document.getElementById('zoom'); z.value = Math.max(+z.min, Math.min(+z.max, +z.value + delta)); aplicarZoom(z.value); }
