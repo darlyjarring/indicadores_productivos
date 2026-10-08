@@ -8,6 +8,17 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script>
+    // --- VERIFICACIÓN DE ACCESO Y GESTIÓN DE HISTORIAL ---
+    const usuarioActual = localStorage.getItem('usuarioLogueado');
+    if (!usuarioActual) {
+        window.location.replace('index.html');
+    }
+
+    // Reemplaza el historial actual para que el botón "Atrás" del navegador envíe a home.html en vez del login
+    history.replaceState(null, '', 'home.html');
+</script>
+
 <style>
 *{box-sizing:border-box}
 :root{
@@ -26,7 +37,14 @@ header{
 }
 .header-left h1{margin:0;font-size:18px}
 .header-left p{margin:4px 0 0;font-size:11px;opacity:.9}
-.header-right{text-align:right;font-size:11px}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.header-info{text-align:right;font-size:11px}
+.btn-home{
+ height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.35);border-radius:6px;
+ background:rgba(255,255,255,.2);color:#fff;font-weight:bold;cursor:pointer;text-decoration:none;
+ display:inline-flex;align-items:center;justify-content:center;font-size:11px;transition:background .2s
+}
+.btn-home:hover{background:rgba(255,255,255,.35)}
 .btn-refresh{height:34px;padding:0 14px;border:1px solid rgba(255,255,255,.35);border-radius:6px;background:rgba(255,255,255,.14);color:#fff;font-weight:bold;cursor:pointer}
 .btn-refresh:hover{background:rgba(255,255,255,.22)}
 
@@ -103,7 +121,7 @@ tr:hover{background:#f8fafc}
 .badge-warn{background:#fef3c7;color:#92400e;padding:3px 7px;border-radius:4px;font-weight:bold;font-size:10px}
 .footer-note{text-align:right;font-size:10px;color:#64748b;margin-top:8px}
 
-/* REGLAS RESPONSIVAS PARA MÓVILES Y TABLETS */
+/* REGLAS RESPONSIVAS */
 @media(max-width:1200px){
  .kpi-grid{grid-template-columns:repeat(3,1fr)}
  .resumen-grid{grid-template-columns:repeat(3,1fr)}
@@ -112,8 +130,8 @@ tr:hover{background:#f8fafc}
 
 @media(max-width:768px){
  header{flex-direction:column;align-items:flex-start}
- .header-right{text-align:left;width:100%;margin-top:8px}
- .btn-refresh{width:100%}
+ .header-right{width:100%;margin-top:8px;justify-content:space-between}
+ .btn-home, .btn-refresh{flex:1}
  .filtros-bar{flex-direction:column;align-items:stretch}
  .campo{min-width:100%}
  .btn-consultar{max-width:100%}
@@ -139,8 +157,9 @@ tr:hover{background:#f8fafc}
   <p>Tasa de Transferencia, Productividad de Muelle y Tiempos Muertos · Navis N4 · QC / Berth Operations</p>
  </div>
  <div class="header-right">
-  <button class="btn-refresh" onclick="cargarDashboard()">↻ Actualizar Datos</button>
-  <div id="ultimaActualizacion" style="margin-top:5px">Última actualización: —</div>
+  <a href="home.html" class="btn-home">🏠 Home</a>
+  <button class="btn-refresh" onclick="cargarDashboard()">↻ Actualizar</button>
+  <div class="header-info" id="ultimaActualizacion">Última actualización: —</div>
  </div>
 </header>
 
