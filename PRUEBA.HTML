@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Chart.js Core -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Plugin Oficial para mostrar datos permanentes en gráficos sin hacer hover -->
+  <!-- Plugin DataLabels para números fijos en gráficos -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
   <!-- SheetJS para lectura de Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -22,6 +22,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans">
 
+  <!-- Header -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
       <div class="flex items-center space-x-3">
@@ -42,8 +43,10 @@
     </div>
   </header>
 
+  <!-- Container -->
   <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
 
+    <!-- Vessel Overview Banner -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-wrap justify-between items-center gap-4">
       <div>
         <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider">Detalle del Buque</span>
@@ -58,6 +61,7 @@
       </div>
     </div>
 
+    <!-- Executive KPI Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
         <span class="text-xs font-semibold text-slate-400">Total Movimientos</span>
@@ -90,6 +94,7 @@
       </div>
     </div>
 
+    <!-- MATRIZ DESGLOSE POR LÍNEA NAVIERA -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 lg:col-span-2">
         <h3 class="text-sm font-semibold text-white mb-3 flex items-center">
@@ -127,6 +132,7 @@
       </div>
     </div>
 
+    <!-- Charts Row 1 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-industry text-blue-400 mr-2"></i> Movimientos por Grúa (QC)</h3>
@@ -143,6 +149,7 @@
       </div>
     </div>
 
+    <!-- Charts Row 2 -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
         <h3 class="text-sm font-semibold text-white mb-4"><i class="fa-solid fa-ship text-indigo-400 mr-2"></i> Distribución por Bahías del Buque</h3>
@@ -166,6 +173,7 @@
       </div>
     </div>
 
+    <!-- Table -->
     <div class="bg-slate-900 border border-slate-800 rounded-xl p-5">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-list-check text-slate-400 mr-2"></i> Registro de Movimientos Procesados</h3>
@@ -542,7 +550,12 @@
           },
           scales: {
             x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
-            y: { stacked: true, grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+            y: {
+              stacked: true,
+              grid: { color: 'rgba(51, 65, 85, 0.2)' },
+              ticks: { color: '#94a3b8' },
+              grace: '10%'
+            }
           }
         }
       });
@@ -570,13 +583,16 @@
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: { right: 35 }
+          },
           plugins: {
             legend: { display: false },
             datalabels: {
               anchor: 'end',
-              align: 'end',
+              align: 'right',
               color: '#34d399',
-              font: { weight: 'bold', size: 11 },
+              font: { weight: 'bold', size: 10 },
               formatter: function(val) { return val; }
             }
           },
@@ -584,115 +600,4 @@
             x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
             y: {
               grid: { display: false },
-              ticks: { color: '#cbd5e1', font: { weight: 'bold', size: 11 }, autoSkip: false }
-            }
-          }
-        }
-      });
-      setInst(newInst);
-    }
-
-    // 3. GRAFICO DE DONA/PASTEL CON CANTIDADES Y PORCENTAJES FIJOS VISIBLES
-    function renderDoughnutChartWithLabels(canvasId, instance, labels, data, setInst) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (instance) instance.destroy();
-
-      const totalSum = data.reduce(function(a, b) { return a + b; }, 0);
-
-      const newInst = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            data: data,
-            backgroundColor: ['#06b6d4', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'],
-            borderWidth: 2,
-            borderColor: '#0f172a'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 10 } },
-            datalabels: {
-              color: '#ffffff',
-              font: { weight: 'bold', size: 11 },
-              formatter: function(value) {
-                const percentage = totalSum > 0 ? ((value / totalSum) * 100).toFixed(1) + '%' : '';
-                return `${value}\n(${percentage})`;
-              },
-              textAlign: 'center'
-            }
-          }
-        }
-      });
-      setInst(newInst);
-    }
-
-    // 4. BARRAS GENERALES CON NÚMEROS PERMANENTES
-    function renderBarChart(canvasId, instance, labels, data, label, color, setInst) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (instance) instance.destroy();
-
-      const newInst = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: label,
-            data: data,
-            backgroundColor: color + 'cc',
-            borderColor: color,
-            borderWidth: 1,
-            borderRadius: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#e2e8f0',
-              font: { weight: 'bold', size: 10 },
-              formatter: function(val) { return val > 0 ? val : ''; }
-            }
-          },
-          scales: {
-            x: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } },
-            y: { grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
-          }
-        }
-      });
-      setInst(newInst);
-    }
-
-    function renderTable(rows) {
-      const tbody = document.getElementById('moveTableBody');
-      tbody.innerHTML = '';
-      document.getElementById('recordCount').innerText = `${rows.length} registros`;
-
-      for (let i = 0; i < Math.min(rows.length, 100); i++) {
-        const r = rows[i];
-        const tr = document.createElement('tr');
-        tr.className = "hover:bg-slate-800/40 transition-colors";
-        tr.innerHTML = `
-          <td class="py-2 px-3 text-slate-400">${r.timeStr}</td>
-          <td class="py-2 px-3 font-semibold text-blue-400">${r.moveKind}</td>
-          <td class="py-2 px-3 text-purple-300">${r.category}</td>
-          <td class="py-2 px-3 text-white font-bold">${r.unitNbr}</td>
-          <td class="py-2 px-3">${r.iso}</td>
-          <td class="py-2 px-3"><span class="bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700 text-slate-300">${r.line}</span></td>
-          <td class="py-2 px-3 text-emerald-400 font-bold">${r.qc}</td>
-          <td class="py-2 px-3 text-emerald-300 font-semibold">${r.yardBlock}</td>
-          <td class="py-2 px-3 text-indigo-300 font-semibold">${r.vesselBay}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-  </script>
-</body>
-</html>
+              ticks: { color: '#
