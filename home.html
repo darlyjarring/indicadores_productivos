@@ -8,11 +8,11 @@
     <!-- Script de seguridad estricto anti-bypasses y anti-caché -->
     <script>
         if (!localStorage.getItem('usuarioLogueado')) {
-            window.location.replace('login.html');
+            window.location.replace('index.html');
         }
         window.addEventListener('pageshow', function(event) {
             if (event.persisted || !localStorage.getItem('usuarioLogueado')) {
-                window.location.replace('login.html');
+                window.location.replace('index.html');
             }
         });
     </script>
@@ -243,7 +243,7 @@
         // Función segura para cerrar sesión
         function cerrarSesion() {
             localStorage.clear();
-            window.location.replace('login.html');
+            window.location.replace('index.html');
         }
     </script>
 </body>
