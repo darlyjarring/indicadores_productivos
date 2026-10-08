@@ -12,10 +12,12 @@
 body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--fondo);color:#1f2937}
 header{background:#a51f35;color:#fff;padding:16px 20px}
 header h1{margin:0 0 4px;font-size:25px} header p{margin:0;opacity:.92}
-.panel{max-width:1700px;margin:16px auto;padding:0 12px}
+.panel{max-width:1700px;margin:16px auto;padding:0 12px;overflow:hidden;}
 .controles{background:#fff;padding:13px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.08);display:flex;flex-wrap:wrap;align-items:end;gap:9px}
 .campo{display:flex;flex-direction:column;gap:4px}.campo label{font-size:12px;font-weight:bold}.campo input{height:38px;padding:7px 9px;border:1px solid #cbd5e1;border-radius:6px}
 button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--azul);color:#fff;font-weight:bold;cursor:pointer}button:hover{opacity:.9}button.secundario{background:#64748b}
+button.home-btn{background:#0284c7;}
+button.home-btn:hover{background:#0369a1;}
 .zoom-box{display:flex;align-items:center;gap:7px;background:#f8fafc;border:1px solid var(--borde);padding:4px 7px;border-radius:7px;height:38px}.zoom-box label{font-size:12px;font-weight:bold}.zoom-box input{width:120px}.zoom-num{min-width:46px;text-align:center;font-size:12px;font-weight:bold}
 .fuente{margin-top:8px;font-size:12px;color:#64748b}.fuente.ok{color:#166534}.fuente.error{color:#b91c1c}
 .resumen{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}.resumen span{background:#fff;padding:8px 12px;border-radius:7px;box-shadow:0 2px 6px rgba(0,0,0,.06);font-size:13px}
@@ -81,6 +83,7 @@ button{height:38px;padding:0 14px;border:0;border-radius:6px;background:var(--az
 <button onclick="consultar()">CONSULTAR</button>
 <button class="secundario" onclick="hoy()">HOY</button>
 <button class="secundario" onclick="rango7()">7 DÍAS</button>
+<button class="home-btn" onclick="irAFechaActual()">🏠 HOME</button>
 <div class="zoom-box">
 <label>ESCALA</label>
 <button type="button" class="secundario" onclick="cambiarZoom(-6)">−</button>
@@ -171,6 +174,19 @@ function estado(n){
 function fechaLocalInput(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}` }
 function hoy(){ const a = new Date(); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(a); consultar(); }
 function rango7(){ const a = new Date(), b = new Date(a); b.setDate(b.getDate()+6); document.getElementById('fechaDesde').value = fechaLocalInput(a); document.getElementById('fechaHasta').value = fechaLocalInput(b); consultar(); }
+
+function irAFechaActual() {
+  hoy();
+  setTimeout(() => {
+    const scrollEl = document.getElementById('scroll');
+    const ahoraEl = scrollEl.querySelector('.ahora');
+    if (ahoraEl && ultimoInicio) {
+      const xPos = parseFloat(ahoraEl.style.left) || 0;
+      scrollEl.scrollTo({ left: xPos - (scrollEl.clientWidth / 2), behavior: 'smooth' });
+    }
+  }, 300);
+}
+
 function cambiarZoom(delta){ const z = document.getElementById('zoom'); z.value = Math.max(+z.min, Math.min(+z.max, +z.value + delta)); aplicarZoom(z.value); }
 function aplicarZoom(v){ PX_HORA = +v; document.getElementById('zoom').value = v; document.getElementById('zoomNum').textContent = v + ' px/h'; if(ultimoInicio && ultimoFin) dibujarTimeline(ultimoFiltrado, ultimoInicio, ultimoFin); }
 
@@ -323,7 +339,6 @@ async function abrirModal(n) {
   document.getElementById('modalEstado').innerHTML = '';
   document.getElementById('modalFondo').style.display = 'flex';
 
-  // Consulta contenedores de la nave en Supabase
   let contenedores = [];
   try {
     const { data, error } = await dbClient
@@ -335,48 +350,32 @@ async function abrirModal(n) {
     console.warn('Error al cargar contenedores de la nave:', err);
   }
 
-  // ==========================================
-  // 1. LÓGICA TABLA IZQUIERDA: TOTALES (TOT)
-  // ==========================================
-  // DIS (Descarga / Importación Total Programada)
   const dis_tot_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL').length;
   const dis_tot_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP').length;
   const dis_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
   const dis_tot_sum = dis_tot_fcl + dis_tot_mty + dis_tot_rst;
 
-  // LOA (Embarque / Exportación Total Programada)
   const loa_tot_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL').length;
   const loa_tot_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP').length;
   const loa_tot_rst = contenedores.filter(c => c.categoria === 'restiba').length;
   const loa_tot_sum = loa_tot_fcl + loa_tot_mty + loa_tot_rst;
 
-  // ==========================================
-  // 2. LÓGICA TABLA DERECHA: REMANENTE (REMAIN)
-  // ==========================================
-  // DIS REMAIN: Descargas pendientes (Aún NO tienen fecha_descarga)
   const dis_rem_fcl = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'FCL' && !c.fecha_descarga).length;
   const dis_rem_mty = contenedores.filter(c => c.categoria === 'descarga' && c.status === 'EMP' && !c.fecha_descarga).length;
   const dis_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_descarga).length;
   const dis_rem_sum = dis_rem_fcl + dis_rem_mty + dis_rem_rst;
 
-  // LOA REMAIN: Embarques pendientes (Aún NO tienen fecha_embarque)
   const loa_rem_fcl = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'FCL' && !c.fecha_embarque).length;
   const loa_rem_mty = contenedores.filter(c => c.categoria === 'embarque' && c.status === 'EMP' && !c.fecha_embarque).length;
   const loa_rem_rst = contenedores.filter(c => c.categoria === 'restiba' && !c.fecha_embarque).length;
   const loa_rem_sum = loa_rem_fcl + loa_rem_mty + loa_rem_rst;
 
-  // ==========================================
-  // 3. PATIO POSORJA (YARD): Contenedores sin fecha_embarque o stat != 'EMBARCADO'
-  // ==========================================
   const patio_contenedores = contenedores.filter(c => c.categoria === 'embarque' && !c.fecha_embarque && c.stat !== 'EMBARCADO');
   const yard_empty = patio_contenedores.filter(c => c.status === 'EMP').length;
   const yard_dry = patio_contenedores.filter(c => c.status === 'FCL' && c.tipo !== '40HR').length;
-  const yard_rh = patio_contenedores.filter(c => c.tipo === '40HR').length; // Reefer
+  const yard_rh = patio_contenedores.filter(c => c.tipo === '40HR').length;
   const yard_total = yard_empty + yard_dry + yard_rh;
 
-  // ==========================================
-  // 4. PREEMBARQUES Y BLOQUEOS
-  // ==========================================
   const preembarque_total_inicial = contenedores.filter(c => c.fecha_preembarque != null).length;
   const bloqueados_count = contenedores.filter(c => c.fecha_preembarque != null && (c.bloqueo_alarma === true || c.fecha_bloqueo != null)).length;
   const preembarque_total_efectivo = Math.max(0, preembarque_total_inicial - bloqueados_count);
@@ -386,7 +385,6 @@ async function abrirModal(n) {
   const promedio_qc = n.promedio_qc || '2.5';
 
   modalDatos.innerHTML = `
-    <!-- Hitos Real Time -->
     <div class="ops-section">
       <div class="ops-title-bar">Real Time</div>
       <div class="grid-timeline">
@@ -398,7 +396,6 @@ async function abrirModal(n) {
       </div>
     </div>
 
-    <!-- Tabla Movimientos TOT (Manifestado) vs REMAIN (Pendientes) -->
     <div class="ops-section">
       <table class="ops-table">
         <thead>
@@ -436,9 +433,7 @@ async function abrirModal(n) {
       </table>
     </div>
 
-    <!-- Sección de Patio Posorja (YARD) y Preembarques / Bloqueos -->
     <div class="grid-ops-body">
-      <!-- Tabla Patio Posorja -->
       <div class="card-yard">
         <div style="text-align:center; font-weight:bold; color:#123b5d; margin-bottom:6px; font-size:11px;">YARD - Patio Posorja (Pendientes Embarque)</div>
         <table class="ops-table">
@@ -453,7 +448,6 @@ async function abrirModal(n) {
           </tbody>
         </table>
 
-        <!-- Métricas de Preembarques y Bloqueos -->
         <div class="info-box-row" style="margin-top:10px;">
           <strong>Preembarques (Pendientes / Total):</strong>
           <span class="info-box-val">${preembarques_pendientes} / ${preembarque_total_efectivo}</span>
@@ -468,7 +462,6 @@ async function abrirModal(n) {
         </div>
       </div>
 
-      <!-- Rendimientos GMPH -->
       <div class="card-yard">
         <div style="font-size:11px; margin-bottom:8px;">
           Rendt. Bruto Prom Nave/Cnt/Hr: <span class="rend-badge">${n.rend_bruto || '0.00'}</span>
@@ -480,8 +473,6 @@ async function abrirModal(n) {
         <button class="btn-gmph" style="width:100%; background:#0284c7;" onclick="alert('Generando detalle de Preembarques...')">GMPH Línea</button>
       </div>
     </div>
-
-   
   `;
 
   document.getElementById('modalEstado').innerHTML = `<div class="estado-grande">Estado actual: ${estado(n)} | Muelle: ${n.muelle}</div>`;
