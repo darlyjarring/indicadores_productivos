@@ -545,7 +545,7 @@
       });
     }
 
-    function renderLineCompareChart(matrix) {
+  function renderLineCompareChart(matrix) {
       const ctx = document.getElementById('chartLineCompare').getContext('2d');
       if (chartLineCompareInstance) chartLineCompareInstance.destroy();
 
@@ -565,17 +565,30 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: { top: 20 }
+          },
           plugins: {
             legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } },
             datalabels: {
               color: '#ffffff',
               font: { weight: 'bold', size: 10 },
-              formatter: function(val) { return val > 0 ? val : ''; }
+              // Centra el texto dentro de cada segmento apilado y oculta ceros o valores imperceptibles
+              anchor: 'center',
+              align: 'center',
+              formatter: function(val) {
+                return val > 5 ? val : '';
+              }
             }
           },
           scales: {
             x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
-            y: { stacked: true, grid: { color: 'rgba(51, 65, 85, 0.2)' }, ticks: { color: '#94a3b8' } }
+            y: { 
+              stacked: true, 
+              grid: { color: 'rgba(51, 65, 85, 0.2)' }, 
+              ticks: { color: '#94a3b8' },
+              grace: '20%' // Margen superior para evitar cortes en barras altas
+            }
           }
         }
       });
