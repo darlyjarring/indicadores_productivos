@@ -73,7 +73,7 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;color:#3
     // Si no existe la sesión guardada en localStorage, redirige al login inmediatamente
     const usuarioActual = localStorage.getItem('usuarioLogueado');
     if (!usuarioActual) {
-        window.location.replace('login.html'); // Cambia 'login.html' por el nombre de tu archivo de login si es distinto
+        window.location.replace('index.html'); // Cambia 'login.html' por el nombre de tu archivo de login si es distinto
     }
 </script>
 
@@ -172,7 +172,7 @@ document.getElementById('lblUsuarioLogueado').textContent = `Usuario: ${usuarioA
 function cerrarSesion() {
     localStorage.removeItem('usuarioLogueado');
     localStorage.removeItem('rolUsuario');
-    window.location.replace('login.html');
+    window.location.replace('index.html');
 }
 
 // Carga de Naves
