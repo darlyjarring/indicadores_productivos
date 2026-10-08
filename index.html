@@ -131,9 +131,9 @@
             btnSubmit.disabled = true;
 
             try {
-                // 1. Validar credenciales consultando la tabla 'logeo' usando 'password_hash'
+                // 1. Validar credenciales consultando la tabla 'usuarios'
                 const { data: userData, error: userError } = await supabaseClient
-                    .from('logeo')
+                    .from('usuarios')
                     .select('*')
                     .eq('username', user)
                     .eq('password_hash', pass)
@@ -144,20 +144,20 @@
                     throw new Error('Credenciales inválidas');
                 }
 
-                // 2. Buscar el rol del usuario en la tabla intermedia 'rol_permisos'
+                // 2. Buscar el rol del usuario en la tabla 'usuario_roles'
                 let nombreRolAsignado = 'Usuario';
-                const { data: permisoData, error: permisoError } = await supabaseClient
-                    .from('rol_permisos')
+                const { data: rolRelacion, error: relError } = await supabaseClient
+                    .from('usuario_roles')
                     .select('rol_id')
-                    .eq('usuario', userData.id)
+                    .eq('usuario_id', userData.id)
                     .single();
 
-                if (!permisoError && permisoData) {
+                if (!relError && rolRelacion) {
                     // 3. Obtener el nombre del rol desde la tabla 'roles'
                     const { data: rolData } = await supabaseClient
                         .from('roles')
                         .select('nombre_rol')
-                        .eq('id', permisoData.rol_id)
+                        .eq('id', rolRelacion.rol_id)
                         .single();
 
                     if (rolData) {
