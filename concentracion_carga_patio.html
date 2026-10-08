@@ -85,55 +85,44 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Aria
 </div>
 
 <script>
-// --- SEGURIDAD Y CONTROL DE NAVEGACION ---
-// Prevenir retroceso/avance y redireccionar al home si se intenta actualizar o usar historial
-history.pushState(null, null, location.href);
-window.addEventListener('popstate', function () {
-  window.location.href = 'home.html';
+// --- SEGURIDAD Y CONTROL DE SESIÓN ---
+
+// 1. Validar sesión y cargar nombre de usuario al cargar la vista
+window.addEventListener('DOMContentLoaded', () => {
+  const savedUser = localStorage.getItem('dp_user') || localStorage.getItem('usuario');
+  
+  // Si no hay sesión activa, expulsar inmediatamente al home
+  if (!savedUser) {
+    window.location.replace('home.html');
+    return;
+  }
+
+  // Mostrar el nombre en el badge
+  const badge = document.getElementById('userBadge');
+  if(badge) badge.textContent = `👤 ${savedUser}`;
 });
 
-// Detectar recarga de página (F5 o botón recargar del navegador) y enviar a home.html
-if (performance.navigation && performance.navigation.type === performance.navigation.TYPE_RELOAD) {
-  window.location.href = 'home.html';
-} else {
-  // Compatibilidad con la API moderna de rendimiento
-  const entries = performance.getEntriesByType("navigation");
-  if (entries.length > 0 && entries[0].type === "reload") {
-    window.location.href = 'home.html';
-  }
-}
-
-function cerrarSesion() {
-  if(confirm("¿Desea cerrar sesión y volver al inicio?")) {
-    // 1. Limpiar los datos de sesión almacenados
-    localStorage.removeItem('dp_user');
-    localStorage.removeItem('usuario');
-    // Si usas sessionStorage o tokens, limpia todo:
-    sessionStorage.clear();
-    
-    // 2. Reemplazar la historia actual para que no se pueda volver con "Atrás"
-    history.replaceState(null, null, 'home.html');
-    
-    // 3. Redirigir
-    window.location.href = 'home.html';
-  }
-}
-
-// Validar sesión al cargar la página o cuando se restaura desde el caché del navegador (botón Atrás)
+// 2. Prevenir acceso mediante el botón "Atrás" del navegador si ya se cerró sesión (BFCache)
 window.addEventListener('pageshow', function(event) {
-  // event.persisted es true si la página se cargó desde la memoria caché (Back/Forward cache)
-  const usuarioActivo = localStorage.getItem('dp_user') || localStorage.getItem('usuario');
-  if (!usuarioActivo && window.location.pathname.indexOf('home.html') === -1) {
+  const savedUser = localStorage.getItem('dp_user') || localStorage.getItem('usuario');
+  if (!savedUser) {
     window.location.replace('home.html');
   }
 });
 
-// Cargar información del usuario logueado (si existe en localStorage)
-window.addEventListener('DOMContentLoaded', () => {
-  const savedUser = localStorage.getItem('dp_user') || localStorage.getItem('usuario') || 'Jose Jarrin';
-  const badge = document.getElementById('userBadge');
-  if(badge) badge.textContent = `👤 ${savedUser}`;
-});
+// 3. Función segura para cerrar sesión
+function cerrarSesion() {
+  if(confirm("¿Desea cerrar sesión y volver al inicio?")) {
+    // Borrar credenciales
+    localStorage.removeItem('dp_user');
+    localStorage.removeItem('usuario');
+    sessionStorage.clear();
+    
+    // Reemplazar historial y redirigir
+    history.replaceState(null, null, 'home.html');
+    window.location.replace('home.html');
+  }
+}
 
 const SUPABASE_URL="https://owykvbhrvhopbqfyarzz.supabase.co";
 const SUPABASE_KEY="sb_publishable_vkSoyz0lMObgW1AuSjHQMQ_0TFlGC9T";
@@ -142,7 +131,7 @@ let datos=[];let chT=null,chO=null,chB=null,chM=null;
 let tipoGraficaActivaModal = null;
 
 const n=v=>Number.isFinite(Number(v))?Number(v):0;
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;S'}[m]||m));
 const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
 function nivel(b){let s=String(b.nivel_saturacion||'').toUpperCase();if(s==='CRITICO'||b.tareas_pendientes>=35)return'CRITICO';if(s==='MEDIO'||b.tareas_pendientes>=15)return'MEDIO';return'BAJO'}
 function color(s){return s==='CRITICO'?'#ef4444':s==='MEDIO'?'#f97316':'#10b981'}
