@@ -624,7 +624,7 @@
       setInst(newInst);
     }
 
-   function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
+ function renderDoughnutChart(canvasId, instance, labels, data, setInst) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (instance) instance.destroy();
 
@@ -647,16 +647,40 @@
           maintainAspectRatio: false,
           layout: {
             padding: {
-              top: 35,    // Espacio superior suficiente para que las etiquetas externas no se corten
-              bottom: 10,
-              left: 20,
-              right: 20
+              top: 40,
+              bottom: 15,
+              left: 30,
+              right: 30
             }
           },
           plugins: {
             legend: { 
               position: 'bottom', 
-              labels: { color: '#94a3b8', boxWidth: 10, font: { size: 11 } } 
+              labels: { 
+                color: '#cbd5e1', 
+                boxWidth: 12, 
+                font: { size: 11, weight: '500' },
+                // Muestra la cantidad y porcentaje directo en la leyenda para lectura clara
+                generateLabels: function(chart) {
+                  const data = chart.data;
+                  if (data.labels.length && data.datasets.length) {
+                    return data.labels.map(function(label, i) {
+                      const val = data.datasets[0].data[i];
+                      const pct = totalSum > 0 ? ((val / totalSum) * 100).toFixed(1) : '0';
+                      const fill = data.datasets[0].backgroundColor[i];
+                      return {
+                        text: `${label}: ${val} (${pct}%)`,
+                        fillStyle: fill,
+                        strokeStyle: fill,
+                        lineWidth: 0,
+                        hidden: false,
+                        index: i
+                      };
+                    });
+                  }
+                  return [];
+                }
+              } 
             },
             datalabels: {
               color: '#ffffff',
@@ -667,6 +691,7 @@
                 return `${value} (${percentage})`;
               },
               textAlign: 'center',
+              // Si la porción es grande la ubica dentro; si es pequeña, la aleja hacia afuera
               anchor: function(context) {
                 const val = context.dataset.data[context.dataIndex];
                 const pct = totalSum > 0 ? (val / totalSum) * 100 : 0;
@@ -675,12 +700,16 @@
               align: function(context) {
                 const val = context.dataset.data[context.dataIndex];
                 const pct = totalSum > 0 ? (val / totalSum) * 100 : 0;
-                return pct < 8 ? 'end' : 'center';
+                // Abre el ángulo hacia la izquierda o derecha para evitar colisión
+                if (pct < 8) {
+                  return context.dataIndex % 2 === 0 ? 'start' : 'end';
+                }
+                return 'center';
               },
               offset: function(context) {
                 const val = context.dataset.data[context.dataIndex];
                 const pct = totalSum > 0 ? (val / totalSum) * 100 : 0;
-                return pct < 8 ? 12 : 0;
+                return pct < 8 ? 14 : 0;
               }
             }
           }
