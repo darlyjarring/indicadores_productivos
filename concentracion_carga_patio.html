@@ -105,9 +105,28 @@ if (performance.navigation && performance.navigation.type === performance.naviga
 
 function cerrarSesion() {
   if(confirm("¿Desea cerrar sesión y volver al inicio?")) {
+    // 1. Limpiar los datos de sesión almacenados
+    localStorage.removeItem('dp_user');
+    localStorage.removeItem('usuario');
+    // Si usas sessionStorage o tokens, limpia todo:
+    sessionStorage.clear();
+    
+    // 2. Reemplazar la historia actual para que no se pueda volver con "Atrás"
+    history.replaceState(null, null, 'home.html');
+    
+    // 3. Redirigir
     window.location.href = 'home.html';
   }
 }
+
+// Validar sesión al cargar la página o cuando se restaura desde el caché del navegador (botón Atrás)
+window.addEventListener('pageshow', function(event) {
+  // event.persisted es true si la página se cargó desde la memoria caché (Back/Forward cache)
+  const usuarioActivo = localStorage.getItem('dp_user') || localStorage.getItem('usuario');
+  if (!usuarioActivo && window.location.pathname.indexOf('home.html') === -1) {
+    window.location.replace('home.html');
+  }
+});
 
 // Cargar información del usuario logueado (si existe en localStorage)
 window.addEventListener('DOMContentLoaded', () => {
