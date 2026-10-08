@@ -4,11 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indicadores Productivos - DP World Posorja</title>
+    
+    <!-- Script de seguridad estricto anti-bypasses y anti-caché -->
+    <script>
+        if (!localStorage.getItem('usuarioLogueado')) {
+            window.location.replace('login.html');
+        }
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || !localStorage.getItem('usuarioLogueado')) {
+                window.location.replace('login.html');
+            }
+        });
+    </script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f9; }
 
-        /* Encabezado */
         header {
             background-color: #0072ce;
             color: white;
@@ -64,7 +76,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Grid de Tarjetas */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -90,7 +101,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
-        /* Colores según categoría */
         .card.orange { background-color: #ff8200; }
         .card.green { background-color: #00a859; }
 
@@ -125,16 +135,6 @@
 </head>
 <body>
 
-    <!-- Validar sesión activa al cargar la página -->
-    <script>
-        const usuarioLogueado = localStorage.getItem('usuarioLogueado');
-        const rolUsuario = localStorage.getItem('rolUsuario'); // 'Administrador', 'Operador Muelle', 'Operador Patio'
-
-        if (!usuarioLogueado) {
-            window.location.href = 'login.html';
-        }
-    </script>
-
     <header>
         <span>DP WORLD POSORJA - MESA DE SERVICIO</span>
         <div class="user-section">
@@ -152,9 +152,8 @@
         <!-- SECCIÓN A: OPERACIONES DE MUELLE Y BUQUES -->
         <div id="seccionMuelleContainer">
             <div class="section-label">A. Muelle y Buques (QC / Berth Operations)</div>
-            <div class="grid-container" id="gridMuelle">
-                
-                <div class="card" data-url="nave.html">
+            <div class="grid-container">
+                <div class="card">
                     <div>
                         <div class="card-title">Rendimientos Nave (MPH / BMPH)</div>
                         <div class="card-subtitle">Moves Per Hour por QC y Productividad Global de Buque</div>
@@ -162,7 +161,7 @@
                     <a href="nave.html?view=mph" class="card-link">Consultar &#10140;</a>
                 </div>
 
-                <div class="card" data-url="tasaytiempos.html">
+                <div class="card">
                     <div>
                         <div class="card-title">Tasa de Transferencia & Tiempos Muertos</div>
                         <div class="card-subtitle">Gross vs Net Rate e Idle Time por Grúa QC</div>
@@ -170,15 +169,14 @@
                     <a href="tasaytiempos.html?view=idle" class="card-link">Consultar &#10140;</a>
                 </div>
 
-                <div class="card" data-url="muelle.html">
+                <div class="card">
                     <div>
                         <div class="card-title">MUELLES: Planificación en Muelle</div>
                         <div class="card-subtitle">Secuencia de atranque y ventana de buques</div>
                     </div>
                     <a href="muelle.html?view=plan" class="card-link">Consultar &#10140;</a>
                 </div>
-
-                <div class="card" data-url="concentracion_carga_patio.html">
+                <div class="card">
                     <div>
                         <div class="card-title">PATIO: Balanceo & Reubicación</div>
                         <div class="card-subtitle">Matriz de Recomendación de Reubicación de maquinas</div>
@@ -191,9 +189,8 @@
         <!-- SECCIÓN B: FLUJO DE CAMIONES EXTERNOS -->
         <div id="seccionCamionesContainer">
             <div class="section-label">B. Flujo de Camiones Externos (Gate & Yard)</div>
-            <div class="grid-container" id="gridCamiones">
-
-                <div class="card orange" data-url="monitor_camiones.html">
+            <div class="grid-container">
+                <div class="card orange">
                     <div>
                         <div class="card-title">Monitor de Camiones (Turn-Time Total)</div>
                         <div class="card-subtitle">Tiempo total transcurrido desde Gate-In hasta Gate-Out</div>
@@ -201,7 +198,7 @@
                     <a href="monitor_camiones.html?view=turntime" class="card-link">Consultar &#10140;</a>
                 </div>
 
-                <div class="card orange" data-url="cuello_botella_camiones.html">
+                <div class="card orange">
                     <div>
                         <div class="card-title">Tiempos en Patio & Cuellos de Botella</div>
                         <div class="card-subtitle">Dwelling Time, tiempo de RTG y congestión por Bloque</div>
@@ -209,44 +206,44 @@
                     <a href="cuello_botella_camiones.html?view=bloques" class="card-link">Consultar &#10140;</a>
                 </div>
 
-                <div class="card orange" data-url="equipo_servicioxpatio.html">
+                <div class="card orange">
                     <div>
                         <div class="card-title">EQUIPOS: Servicio de Atención Patio</div>
                         <div class="card-subtitle">Desempeño y tiempos de atención de RTG / Side Loader</div>
                     </div>
                     <a href="equipo_servicioxpatio.html?view=equipos" class="card-link">Consultar &#10140;</a>
                 </div>
-
-                <div class="card orange" data-url="disponibilidad_teus.html">
+                <div class="card orange">
                     <div>
                         <div class="card-title">PATIO: Capacidad espacio en Teus</div>
                         <div class="card-subtitle">Desempeño de los espacios disponible y ocupados / Side Loader</div>
                     </div>
                     <a href="disponibilidad_teus.html?view=equipos" class="card-link">Consultar &#10140;</a>
                 </div>
-
             </div>
         </div>
 
     </div>
 
     <script>
-        // Rellenar datos del usuario logueado en el encabezado
-        document.getElementById('lblUsuario').textContent = usuarioLogueado;
-        document.getElementById('lblRol').textContent = rolUsuario || 'Usuario';
+        // Cargar nombre y rol del usuario logueado
+        const usuarioLogueado = localStorage.getItem('usuarioLogueado');
+        const rolUsuario = localStorage.getItem('rolUsuario');
 
-        // Filtrar tarjetas según el rol obtenido de la base de datos
-        // (Administrador ve todo; Operador Muelle solo ve muelle; Operador Patio solo ve camiones/patio)
+        document.getElementById('lblUsuario').textContent = usuarioLogueado;
+        document.getElementById('lblRol').textContent = rolUsuario;
+
+        // Filtrar visualización de tarjetas según el rol obtenido de la base de datos
         if (rolUsuario === 'Operador Muelle') {
             document.getElementById('seccionCamionesContainer').style.display = 'none';
         } else if (rolUsuario === 'Operador Patio') {
             document.getElementById('seccionMuelleContainer').style.display = 'none';
         }
 
-        // Función para cerrar sesión
+        // Función segura para cerrar sesión
         function cerrarSesion() {
             localStorage.clear();
-            window.location.href = 'index.html';
+            window.location.replace('login.html');
         }
     </script>
 </body>
