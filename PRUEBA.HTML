@@ -558,28 +558,42 @@
         data: {
           labels: labels,
           datasets: [
-            { label: 'Embarque (LOAD)', data: loadData, backgroundColor: '#3b82f6' },
-            { label: 'Descarga (DISCHARGE)', data: dischargeData, backgroundColor: '#a855f7' }
+            { 
+              label: 'Embarque (LOAD)', 
+              data: loadData, 
+              backgroundColor: '#3b82f6',
+              datalabels: {
+                anchor: 'center',
+                align: 'center',
+                color: '#ffffff',
+                font: { weight: 'bold', size: 9 },
+                formatter: function(val) { return val > 0 ? val : ''; }
+              }
+            },
+            { 
+              label: 'Descarga (DISCHARGE)', 
+              data: dischargeData, 
+              backgroundColor: '#a855f7',
+              datalabels: {
+                // Saca el número de descarga a la parte superior de la barra para evitar solapamientos
+                anchor: 'end',
+                align: 'top',
+                offset: 4,
+                color: '#e9d5ff',
+                font: { weight: 'bold', size: 9 },
+                formatter: function(val) { return val > 0 ? val : ''; }
+              }
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           layout: {
-            padding: { top: 25 }
+            padding: { top: 30 } // Margen superior para alojar la etiqueta flotante de descarga
           },
           plugins: {
-            legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } },
-            datalabels: {
-              color: '#ffffff',
-              font: { weight: 'bold', size: 9 }, // Letra compacta y legible para todos los segmentos
-              anchor: 'center',
-              align: 'center',
-              formatter: function(val) {
-                // Muestra cualquier valor mayor a 0 con total precisión
-                return val > 0 ? val : '';
-              }
-            }
+            legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10 } }
           },
           scales: {
             x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8' } },
@@ -587,7 +601,7 @@
               stacked: true, 
               grid: { color: 'rgba(51, 65, 85, 0.2)' }, 
               ticks: { color: '#94a3b8' },
-              grace: '20%'
+              grace: '25%' // Espacio vertical extra para asegurar que las etiquetas superiores no se corten
             }
           }
         }
